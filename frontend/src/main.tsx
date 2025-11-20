@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import Layout from "./Layout"
 import { routes } from './routes/routes.config';
 import NotFound from './pages/NotFound';
+import "@fontsource/anta/400.css"; 
 
 const router = createBrowserRouter([
   {

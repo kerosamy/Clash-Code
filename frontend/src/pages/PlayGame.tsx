@@ -1,3 +1,3 @@
 export default function PlayGame() {
-    return <div>Play Game Page</div>
+    return <div className="text-white">Play Game Page</div>
 }

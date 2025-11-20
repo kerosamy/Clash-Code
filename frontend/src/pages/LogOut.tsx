@@ -1,3 +1,3 @@
 export default function LogOut() {
-    return <div>Log Out Page</div>
+    return <div className="text-white">Log Out Page</div>
 }

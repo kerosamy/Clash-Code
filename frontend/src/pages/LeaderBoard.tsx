@@ -1,3 +1,3 @@
 export default function LeaderBoard() {
-    return <div>LeaderBoard Page</div>
+    return <div className="text-white">LeaderBoard Page</div>
 }

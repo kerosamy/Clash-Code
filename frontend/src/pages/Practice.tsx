@@ -1,3 +1,3 @@
 export default function Practice() {
-    return <div>Practice Page</div>
+    return <div className="text-white">Practice Page</div>
 }
