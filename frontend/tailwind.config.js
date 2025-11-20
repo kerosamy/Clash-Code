@@ -14,6 +14,7 @@ export default {
         orange: "#EC7438",
         black: "#000000",
         white: "#FFFFFF",
+        text: "#D1D5DB",
 
         // STATUS COLORS
         winGreen: "#81B64C",
@@ -49,9 +50,10 @@ export default {
       // FIXED SIDEBAR WIDTH (stable + elegant)
       width: {
         sidebar: "15%",
+        icon: "1.5rem",
       },
       minWidth: {
-        sidebar: "150px",
+        sidebar: "200px",
       },
 
       // BUTTON RADII
