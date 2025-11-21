@@ -32,7 +32,7 @@ public class ProblemResponsDto {
 
     private ProblemRate rate ;
 
-    private List<ProblemTags> topics = new ArrayList<>();
+    private List<ProblemTags> tags = new ArrayList<>();
 
     private List<TestCaseResponsDto> visibleTestCases = new ArrayList<>();
 

@@ -21,5 +21,4 @@ public enum ProblemRate {
     RATE_1800,
     RATE_1900,
     RATE_2000
-
 }

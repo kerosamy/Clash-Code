@@ -2,18 +2,19 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponsDto;
+import com.clashcode.backend.enums.Judge0Language;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+
 import java.util.List;
 
 @Service
 public class ProblemService {
-    @Autowired
+
 
     private final ProblemRepository problemRepository;
     private final TestCaseService testCaseService;
@@ -38,7 +39,7 @@ public class ProblemService {
                         .memoryLimit(problem.getMemoryLimit())
                         .timeLimit(problem.getTimeLimit())
                         .rate(problem.getRate())
-                        .topics(problem.getTopics())
+                        .tags(problem.getTags())
                         .visibleTestCases(testCaseService.getVisbleTestCasesForProblem(problem))
                         .build();
     }
@@ -46,10 +47,6 @@ public class ProblemService {
     public ProblemResponsDto addProblem (ProblemRequestDto problemRequestDto) {
         Problem problem = mappingRequestDtoToProblem(problemRequestDto);
         List<TestCase> testCases = testCaseService.getTestCasesFromRequestDto(problemRequestDto , problem);
-        for (TestCase testCase : testCases) {
-            System.out.println(testCase.getInput());
-            System.out.println(testCase.isVisible());
-        }
         problem.setTestCases(testCases);
         return mappingProblemToResponsDto(problemRepository.save(problem));
     }
@@ -64,8 +61,9 @@ public class ProblemService {
                 .memoryLimit(problemRequestDto.getMemoryLimit())
                 .timeLimit(problemRequestDto.getTimeLimit())
                 .rate(problemRequestDto.getRate())
-                .topics(problemRequestDto.getTopics())
+                .tags(problemRequestDto.getTags())
                 .mainSolution(problemRequestDto.getMainSolution())
+                .judge0Language(Judge0Language.fromLabel(problemRequestDto.getSolutionLanguage()))
                 .build();
     }
 

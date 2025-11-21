@@ -1,5 +1,6 @@
 package com.clashcode.backend.model;
 
+import com.clashcode.backend.enums.Judge0Language;
 import com.clashcode.backend.enums.ProblemRate;
 import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.enums.ProblemTags;
@@ -56,6 +57,10 @@ public class Problem {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    private Judge0Language judge0Language ;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private ProblemRate rate ;
 
     @ElementCollection(targetClass = ProblemTags.class)
@@ -64,11 +69,9 @@ public class Problem {
             name = "problem_topics",
             joinColumns = @JoinColumn(name = "problem_id")
     )
-    @Column(name = "topic")
-    private List<ProblemTags> topics = new ArrayList<>();
+    @Column(name = "tags")
+    private List<ProblemTags> tags = new ArrayList<>();
 
     @OneToMany(mappedBy = "problem" , cascade = CascadeType.ALL , fetch = FetchType.LAZY)
     private List<TestCase> testCases = new ArrayList<>();
-
-
 }

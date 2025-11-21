@@ -25,13 +25,15 @@ public class ProblemRequestDto {
 
     private String mainSolution ;
 
+    private String solutionLanguage ;
+
     private Integer timeLimit ;
 
     private Integer memoryLimit ;
 
     private ProblemRate rate ;
 
-    private List<ProblemTags> topics = new ArrayList<>();
+    private List<ProblemTags> tags = new ArrayList<>();
 
     private List<TestCaseRequestDto> TestCases = new ArrayList<>();
 }
