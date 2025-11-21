@@ -6,7 +6,6 @@ import com.clashcode.backend.enums.Judge0Language;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
@@ -30,7 +29,9 @@ public class ProblemService {
 
     public ProblemResponsDto mappingProblemToResponsDto (Problem problem) {
         return ProblemResponsDto
-                        .builder().submissionsCount(problem.getSubmissionsCount())
+                        .builder()
+                        .id(problem.getId())
+                        .submissionsCount(problem.getSubmissionsCount())
                         .title(problem.getTitle())
                         .inputFormat(problem.getInputFormat())
                         .outputFormat(problem.getOutputFormat())
@@ -44,11 +45,11 @@ public class ProblemService {
                         .build();
     }
 
-    public ProblemResponsDto addProblem (ProblemRequestDto problemRequestDto) {
+    public void addProblem (ProblemRequestDto problemRequestDto) {
         Problem problem = mappingRequestDtoToProblem(problemRequestDto);
         List<TestCase> testCases = testCaseService.getTestCasesFromRequestDto(problemRequestDto , problem);
         problem.setTestCases(testCases);
-        return mappingProblemToResponsDto(problemRepository.save(problem));
+        problemRepository.save(problem);
     }
 
     public Problem mappingRequestDtoToProblem (ProblemRequestDto problemRequestDto) {

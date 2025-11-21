@@ -2,6 +2,7 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponsDto;
 import com.clashcode.backend.service.ProblemService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,8 +18,9 @@ public class ProblemController {
     }
 
     @PostMapping("/problem/add-problem")
-    public ProblemResponsDto addProblem(@RequestBody ProblemRequestDto problemRequestDto) {
-        return problemService.addProblem(problemRequestDto);
+    public ResponseEntity<Void> addProblem(@RequestBody ProblemRequestDto problemRequestDto) {
+        problemService.addProblem(problemRequestDto);
+        return ResponseEntity.ok().build();
     }
 
 }

@@ -14,6 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 public class ProblemResponsDto {
 
+    private Long id;
+
     private Long submissionsCount ;
 
     private String title ;
