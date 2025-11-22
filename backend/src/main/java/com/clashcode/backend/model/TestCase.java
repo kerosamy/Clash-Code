@@ -21,7 +21,7 @@ public class TestCase {
     @Column(nullable = false)
     private boolean visible;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id" , nullable = false)
     private Problem problem;
 
