@@ -1,10 +1,14 @@
+import { getStatusColor } from "../../utils/getStatusColor";
+import { getDifficultyColor } from "../../utils/getDifficultyColor";
+import { Status } from "../../enums/Status";
+
 export interface ProblemRowProps {
     id: number;
     name: string;
     tags: string[];
     difficulty: number;
     solvers: number;
-    status?: "solved" | "attempted" | "unsolved";
+    status?: Status;
     onClick?: () => void;
     className?: string;
 }
@@ -16,22 +20,13 @@ export default function ProblemRow({
     tags,
     difficulty,
     solvers,
-    status = "unsolved",
+    status = Status.Unsolved,
     onClick,
     className = "",
   }: ProblemRowProps) {
-    const statusColor = {
-      solved: "text-green-500",
-      attempted: "text-yellow-500",
-      unsolved: "text-red-500",
-    }[status];
-  
-    const difficultyColor =
-      difficulty < 1200
-        ? "text-green-500"
-        : difficulty < 2000
-        ? "text-yellow-500"
-        : "text-red-500";
+
+    const statusColor = getStatusColor(status);
+    const difficultyColor = getDifficultyColor(difficulty);
   
     return (
       <div
