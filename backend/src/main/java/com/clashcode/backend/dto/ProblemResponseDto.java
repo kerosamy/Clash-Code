@@ -11,7 +11,11 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProblemRequestDto {
+public class ProblemResponseDto {
+
+    private Long id;
+
+    private Long submissionsCount;
 
     private String title;
 
@@ -23,10 +27,6 @@ public class ProblemRequestDto {
 
     private String notes;
 
-    private String mainSolution;
-
-    private String solutionLanguage;
-
     private Integer timeLimit;
 
     private Integer memoryLimit;
@@ -37,5 +37,6 @@ public class ProblemRequestDto {
     private List<ProblemTags> tags = new ArrayList<>();
 
     @Builder.Default
-    private List<TestCaseRequestDto> testCases = new ArrayList<>();
+    private List<TestCaseResponseDto> visibleTestCases = new ArrayList<>();
+
 }

@@ -1,42 +1,32 @@
 package com.clashcode.backend.service;
+
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.TestCaseRequestDto;
-import com.clashcode.backend.dto.TestCaseResponsDto;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
+import com.clashcode.backend.mapper.TestCaseMapper;
+import com.clashcode.backend.repository.TestCaseRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class TestCaseServiceTest {
 
-    private final TestCaseService testCaseService = new TestCaseService();
+    private TestCaseRepository testCaseRepository;
+    private TestCaseMapper testCaseMapper;
+    private TestCaseService testCaseService;
 
-    @Test
-    void testGetVisibleTestCasesForProblem() {
-        Problem problem = new Problem();
-        TestCase tc1 = new TestCase();
-        tc1.setInput("1 2");
-        tc1.setVisible(true);
-
-        TestCase tc2 = new TestCase();
-        tc2.setInput("3 4");
-        tc2.setVisible(false);
-
-        TestCase tc3 = new TestCase();
-        tc3.setInput("5 6");
-        tc3.setVisible(true);
-
-        problem.setTestCases(Arrays.asList(tc1, tc2, tc3));
-
-        List<TestCaseResponsDto> visible = testCaseService.getVisbleTestCasesForProblem(problem);
-
-        assertEquals(2, visible.size());
-        assertEquals("1 2", visible.get(0).getInput());
-        assertEquals("5 6", visible.get(1).getInput());
+    @BeforeEach
+    void setUp() {
+        testCaseRepository = Mockito.mock(TestCaseRepository.class);
+        testCaseMapper = Mockito.mock(TestCaseMapper.class);
+        testCaseService = new TestCaseService(testCaseRepository, testCaseMapper);
     }
 
     @Test
@@ -55,6 +45,20 @@ class TestCaseServiceTest {
 
         Problem problem = new Problem();
 
+        // Mock mapper behavior
+        TestCase tc1 = new TestCase();
+        tc1.setInput("10 20");
+        tc1.setVisible(true);
+        tc1.setProblem(problem);
+
+        TestCase tc2 = new TestCase();
+        tc2.setInput("30 40");
+        tc2.setVisible(false);
+        tc2.setProblem(problem);
+
+        when(testCaseMapper.toEntity(tcReq1, problem)).thenReturn(tc1);
+        when(testCaseMapper.toEntity(tcReq2, problem)).thenReturn(tc2);
+
         List<TestCase> testCases = testCaseService.getTestCasesFromRequestDto(request, problem);
 
         assertEquals(2, testCases.size());
@@ -66,5 +70,9 @@ class TestCaseServiceTest {
         assertEquals("30 40", testCases.get(1).getInput());
         assertFalse(testCases.get(1).isVisible());
         assertEquals(problem, testCases.get(1).getProblem());
+
+        // Verify mapper calls
+        verify(testCaseMapper, times(1)).toEntity(tcReq1, problem);
+        verify(testCaseMapper, times(1)).toEntity(tcReq2, problem);
     }
 }

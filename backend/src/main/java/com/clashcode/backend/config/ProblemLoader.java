@@ -1,9 +1,10 @@
 package com.clashcode.backend.config;
 
-import com.clashcode.backend.enums.Judge0Language;
+import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.enums.ProblemRate;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.model.Problem;
+import com.clashcode.backend.model.Solution;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -20,24 +21,17 @@ public class ProblemLoader {
         }
         return args -> {
             // Create a problem
+            Solution solution = new Solution();
+            solution.setSolutionCode("#include <bits/stdc++.h>\\nusing namespace std;\\nint main() {\\n    int a, b;\\n    cin >> a >> b;\\n    cout << a + b;\\n    return 0;\\n}\\n");
+            solution.setLanguageVersion(LanguageVersion.C_GCC_7_4);
             Problem problem1 = new Problem();
             problem1.setTitle("Add Two Integers");
             problem1.setInputFormat("Two integers a and b.");
             problem1.setOutputFormat("Print a + b.");
             problem1.setStatement("Given two integers a and b, print their sum.");
             problem1.setNotes("a and b can be negative.");
-            problem1.setJudge0Language(Judge0Language.CPP_GCC_9_2_0);
-            problem1.setMainSolution("""
-                    #include <bits/stdc++.h>
-                    using namespace std;
-                    int main() {
-                        int a, b;
-                        cin >> a >> b;
-                        cout << a + b;
-                        return 0;
-                    }
-                    """);
-            problem1.setTimeLimit(1000);       // in ms
+            problem1.setSolution(solution);
+            problem1.setTimeLimit(1000);     // in ms
             problem1.setMemoryLimit(64);    // in MB
             problem1.setRate(ProblemRate.RATE_200);
             problem1.setTags(Arrays.asList(ProblemTags.MATH, ProblemTags.IMPLEMENTATION));

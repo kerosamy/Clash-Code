@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TestCaseResponsDto {
+public class TestCaseResponseDto {
 
     private String input;
 

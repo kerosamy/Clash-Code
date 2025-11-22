@@ -13,16 +13,16 @@ import lombok.*;
 public class TestCase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id ;
+    private Long id;
+
+    @Column(nullable = false , columnDefinition = "TEXT")
+    private String input;
 
     @Column(nullable = false)
-    private String input ;
-
-    @Column(nullable = false)
-    private boolean visible ;
+    private boolean visible;
 
     @ManyToOne
-    @JoinColumn(name = "problem_id")
-    private Problem problem ;
+    @JoinColumn(name = "problem_id" , nullable = false)
+    private Problem problem;
 
 }
