@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class TestCaseMapper {
     public TestCaseResponseDto toResponseDto(TestCase testCase) {
-        return TestCaseResponseDto.builder()
-                .input(testCase.getInput())
-                .build();
+        TestCaseResponseDto responseDto = new TestCaseResponseDto();
+        responseDto.setInput(testCase.getInput());
+        return responseDto ;
     }
 
     public TestCase toEntity(TestCaseRequestDto dto, Problem problem) {

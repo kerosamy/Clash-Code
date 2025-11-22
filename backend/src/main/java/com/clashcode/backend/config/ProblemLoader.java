@@ -1,7 +1,6 @@
 package com.clashcode.backend.config;
 
 import com.clashcode.backend.enums.LanguageVersion;
-import com.clashcode.backend.enums.ProblemRate;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.Solution;
@@ -33,7 +32,7 @@ public class ProblemLoader {
             problem1.setSolution(solution);
             problem1.setTimeLimit(1000);     // in ms
             problem1.setMemoryLimit(64);    // in MB
-            problem1.setRate(ProblemRate.RATE_200);
+            problem1.setRate(200);
             problem1.setTags(Arrays.asList(ProblemTags.MATH, ProblemTags.IMPLEMENTATION));
 
             // Create test cases

@@ -4,7 +4,6 @@ import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
 import com.clashcode.backend.dto.TestCaseResponseDto;
 import com.clashcode.backend.enums.LanguageVersion;
-import com.clashcode.backend.enums.ProblemRate;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.Solution;
@@ -35,7 +34,7 @@ class ProblemMapperTest {
         request.setNotes("Notes about problem.");
         request.setMemoryLimit(64);
         request.setTimeLimit(1);
-        request.setRate(ProblemRate.RATE_200);
+        request.setRate(200);
         request.setTags(Collections.singletonList(ProblemTags.MATH));
         request.setMainSolution("print(a + b)");
         request.setSolutionLanguage("PYTHON_3_8"); // must match enum constant
@@ -51,7 +50,7 @@ class ProblemMapperTest {
         assertEquals("Notes about problem.", problem.getNotes());
         assertEquals(64, problem.getMemoryLimit());
         assertEquals(1, problem.getTimeLimit());
-        assertEquals(ProblemRate.RATE_200, problem.getRate());
+        assertEquals(200, problem.getRate());
         assertEquals(Collections.singletonList(ProblemTags.MATH), problem.getTags());
 
         Solution solution = problem.getSolution();
@@ -67,7 +66,7 @@ class ProblemMapperTest {
                 .title("Sample Problem")
                 .memoryLimit(128)
                 .timeLimit(2)
-                .rate(ProblemRate.RATE_300)
+                .rate(300)
                 .tags(Collections.singletonList(ProblemTags.MATH))
                 .submissionsCount(10L)
                 .build();
@@ -85,7 +84,7 @@ class ProblemMapperTest {
         assertEquals("Sample Problem", dto.getTitle());
         assertEquals(128, dto.getMemoryLimit());
         assertEquals(2, dto.getTimeLimit());
-        assertEquals(ProblemRate.RATE_300, dto.getRate());
+        assertEquals(300, dto.getRate());
         assertEquals(Collections.singletonList(ProblemTags.MATH), dto.getTags());
         assertEquals(10, dto.getSubmissionsCount());
         assertEquals(testCases, dto.getVisibleTestCases());

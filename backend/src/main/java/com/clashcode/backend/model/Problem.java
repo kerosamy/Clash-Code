@@ -1,5 +1,4 @@
 package com.clashcode.backend.model;
-import com.clashcode.backend.enums.ProblemRate;
 import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.enums.ProblemTags;
 import jakarta.validation.constraints.Max;
@@ -26,7 +25,7 @@ public class Problem {
     @Column(nullable = false)
     private Long submissionsCount = 0L;
 
-    @Column(nullable = false , length = 100)
+    @Column(nullable = false , columnDefinition = "TEXT")
     private String title;
 
     @Column(nullable = false , columnDefinition = "TEXT")
@@ -44,12 +43,12 @@ public class Problem {
     @Min(250) //ms
     @Max(10000)
     @Column(nullable = false)
-    private Integer timeLimit;
+    private int timeLimit;
 
     @Min(4) //MB
     @Max(512)
     @Column(nullable = false)
-    private Integer memoryLimit;
+    private int memoryLimit;
 
     @Builder.Default
     @Column(nullable = false)
@@ -59,9 +58,10 @@ public class Problem {
     @Embedded
     private Solution solution;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ProblemRate rate;
+    @Min(100)
+    @Max(2000)
+    @Column(nullable = false , columnDefinition = "INT CHECK (rate % 100 = 0)")
+    private int rate;
 
     @ElementCollection(targetClass = ProblemTags.class)
     @Enumerated(EnumType.STRING)
