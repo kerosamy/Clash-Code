@@ -28,6 +28,17 @@ export default {
         master: "#8A2BE2",
         champion: "#4169E1",
         legend: "#80FFA1",
+
+        // STATUS COLORS
+        statusSolved: "#22C55E",      // green-500
+        statusAttempted: "#EAB308",   // yellow-500
+        statusUnsolved: "#EF4444",    // red-500",
+
+        // DIFFICULTY COLORS
+        difficultyEasy: "#22C55E",   
+        difficultyMedium: "#EAB308", 
+        difficultyHard: "#EF4444",  
+        
       },
 
       fontFamily: {
