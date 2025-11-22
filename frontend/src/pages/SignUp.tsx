@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import InputField from "../components/InputField.tsx";
-import PasswordField from "../components/PasswordField.tsx";
-import RecoveryQuestionModal from "../components/RecoveryQuestionModal.tsx";
+import InputField from "../components/authentication/InputField.tsx";
+import PasswordField from "../components/authentication/PasswordField.tsx";
+import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal.tsx";
 
 export default function SignUp() {
   const [username, setUsername] = useState("");
