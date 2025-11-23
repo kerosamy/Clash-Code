@@ -1,52 +1,52 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.UserDto;
-import com.clashcode.backend.model.UserModel;
-import com.clashcode.backend.repository.UserRepo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.clashcode.backend.model.User;
+import com.clashcode.backend.repository.UserRepository;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final UserRepository userRepository;
 
-    private final UserRepo userRepo;
-
-    public UserService(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
-
 
     public UserDto handleOAuth2Signup(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        UserModel userExist = userRepo.findByEmail(email);
-        UserDto dto;
+        User userExist = userRepository.findByEmail(email);
         if (userExist == null) {
-            return saveUser(email);
+            UserDto dto = new UserDto();
+            dto.setEmail(email);
+            return dto;
         }
-        dto = UserDto.builder()
-                .id(userExist.getId())
-                .username(userExist.getUsername())
-                .build();
-        log.info("Logged in user: {}", dto);
-        return dto;
+        return convertToDto(userExist);
     }
 
-    public UserDto saveUser(String email) {
-        UserModel user = UserModel.builder()
-                         .email(email)
-                         .username(email)
-                         .password(null)
-                         .build();
-        UserModel savedUser = this.userRepo.save(user);
-        log.info("User saved successfully!");
+    public UserDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
+        String email = oauthToken.getPrincipal().getAttribute("email");
+        String username = request.getUsername();
+        User userWithSameUsername = userRepository.findByUsername(username);
+        if (userWithSameUsername != null) {
+            throw new RuntimeException("Username already taken");
+        }
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setUsername(username);
+        User saved_user = userRepository.save(newUser);
+        return convertToDto(saved_user);
+    }
+
+    private UserDto convertToDto(User user) {
         return UserDto.builder()
-                .id(savedUser.getId())
-                .username((savedUser.getEmail()))
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
                 .build();
     }
 }
