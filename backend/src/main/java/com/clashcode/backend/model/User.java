@@ -44,10 +44,8 @@ public class User {
     private Integer currentRate = 0;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private RecoveryQuestion recoveryQuestion;
 
-    @Column(nullable = false)
     private String recoveryAnswer;
 
 }

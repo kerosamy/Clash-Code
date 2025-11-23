@@ -54,7 +54,7 @@ public class UserControllerTest {
         when(userService.handleOAuth2Signup(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
 
-        mockMvc.perform(get("/GoogleSignUp").with(oauth2Login()))
+        mockMvc.perform(get("/users/GoogleSignUp").with(oauth2Login()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.username").doesNotExist());
@@ -74,7 +74,7 @@ public class UserControllerTest {
         when(userService.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
                 .thenReturn(mockResponse);
 
-        mockMvc.perform(post("/GoogleSignUp/completeRegistration")
+        mockMvc.perform(post("/users/GoogleSignUp/completeRegistration")
                         .with(oauth2Login())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
