@@ -7,6 +7,9 @@ import PlayGame from '../pages/PlayGame';
 import LeaderBoard from '../pages/LeaderBoard';
 import AddProblem from '../pages/AddProblem';
 import Settings from '../pages/Settings';
+import SignUp from '../pages/SignUp';
+import NotFound from '../pages/NotFound';
+
 
 // Import SVG icons from assets
 import ProfileIcon from '../assets/icons/profile.svg';
@@ -18,6 +21,20 @@ import AddProblemIcon from '../assets/icons/add-problem.svg';
 import SettingsIcon from '../assets/icons/settings.svg';
 import LogoutIcon from '../assets/icons/logout.svg';
 
+//Non-sidebar pages
+export interface PageConfig {
+  path: string;
+  component: ComponentType;
+}
+
+export const pages: PageConfig[] = [
+  { path: '/sign-up', component: SignUp },
+{ path: '/not-found', component: NotFound },
+
+];
+
+
+//Sidebar pages
 export interface RouteConfig {
     path: string;
     name: string;
@@ -34,4 +51,5 @@ export const routes: RouteConfig[] = [
     { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
     { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
     { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
+
 ];
