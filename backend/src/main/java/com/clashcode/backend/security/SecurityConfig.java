@@ -1,6 +1,5 @@
 package com.clashcode.backend.security;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,7 +12,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf->csrf.disable())
                 .authorizeHttpRequests(auth ->auth
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())     //for now all apis are public and don't require to be authenticated
                 .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/GoogleSignUp", true))
 //                .logout(logout -> logout
 //                        .logoutSuccessUrl("https://accounts.google.com/Logout")

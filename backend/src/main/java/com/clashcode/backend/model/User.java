@@ -1,5 +1,6 @@
 package com.clashcode.backend.model;
 
+import com.clashcode.backend.enums.RecoveryQuestion;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -39,8 +40,8 @@ public class User {
 
     private Integer currentRate;
 
-//    @Enumerated(EnumType.STRING)
-//    private RecoveryQuestion recoveryQuestion;
+    @Enumerated(EnumType.STRING)
+    private RecoveryQuestion recoveryQuestion;
 
     private String recoveryAnswer;
 

@@ -1,0 +1,122 @@
+package com.clashcode.backend.service;
+
+import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.model.User;
+import com.clashcode.backend.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private OAuth2AuthenticationToken oAuth2Token;
+
+    @Mock
+    private OAuth2User oAuth2User;
+
+    @InjectMocks
+    private UserService userService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testHandleOAuth2Signup_NewUser() {
+        // Arrange
+        when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
+        when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
+        when(userRepository.findByEmail("newuser@example.com")).thenReturn(null);
+
+        // Act
+        UserDto result = userService.handleOAuth2Signup(oAuth2Token);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("newuser@example.com", result.getEmail());
+        assertNull(result.getUsername());
+
+        verify(userRepository).findByEmail("newuser@example.com");
+    }
+
+    @Test
+    void testHandleOAuth2Signup_ExistingUser() {
+        // Arrange
+        User existingUser = new User();
+        existingUser.setId(1L);
+        existingUser.setEmail("existing@example.com");
+        existingUser.setUsername("existinguser");
+
+        when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
+        when(oAuth2User.getAttribute("email")).thenReturn("existing@example.com");
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(existingUser);
+
+        // Act
+        UserDto result = userService.handleOAuth2Signup(oAuth2Token);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("existing@example.com", result.getEmail());
+        assertEquals("existinguser", result.getUsername());
+        assertEquals(1L, result.getId());
+    }
+
+    @Test
+    void testCompleteSignUp_Success() {
+        // Arrange
+        SignUpCompletionDto request = new SignUpCompletionDto();
+        request.setUsername("newuser");
+
+        when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
+        when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
+        when(userRepository.findByUsername("newuser")).thenReturn(null);
+
+        User savedUser = new User();
+        savedUser.setId(1L);
+        savedUser.setEmail("newuser@example.com");
+        savedUser.setUsername("newuser");
+
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        // Act
+        UserDto result = userService.completeSignUp(request, oAuth2Token);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("newuser", result.getUsername());
+        assertEquals("newuser@example.com", result.getEmail());
+
+        verify(userRepository).findByUsername("newuser");
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void testCompleteSignUp_UsernameTaken() {
+        // Arrange
+        SignUpCompletionDto request = new SignUpCompletionDto();
+        request.setUsername("takenuser");
+
+        when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
+        when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
+        when(userRepository.findByUsername("takenuser")).thenReturn(new User());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> userService.completeSignUp(request, oAuth2Token));
+
+        assertEquals("Username already taken", exception.getMessage());
+    }
+}
