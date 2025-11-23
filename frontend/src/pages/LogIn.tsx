@@ -7,21 +7,32 @@ export default function LogIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ email: '', password: '' });
-
   const navigate = useNavigate();
+
+  const usernameRegex = /^[a-zA-Z0-9_-]{4,100}$/;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    let formValid = true;
     const newErrors = { email: '', password: '' };
+    let formValid = true;
 
+    // Validate email/username
     if (!email.trim()) {
       newErrors.email = 'Email/Username is required';
       formValid = false;
+    } else if (!usernameRegex.test(email)) {
+      newErrors.email =
+        '4–32 characters, only letters, numbers, "_" or "-" allowed';
+      formValid = false;
     }
+
+    // Validate password
     if (!password.trim()) {
       newErrors.password = 'Password is required';
+      formValid = false;
+    } else if (password.length < 8 || password.length > 64) {
+      newErrors.password = 'Password must be 8–64 characters long';
       formValid = false;
     }
 
@@ -29,13 +40,16 @@ export default function LogIn() {
 
     if (!formValid) return;
 
-    // TODO: Implement login API call
+    // TODO: Implement login API
     navigate('/profile');
   };
 
   const handleGoogleLogin = () => {
     // TODO: Implement Google login
   };
+
+  const isFormValid =
+    usernameRegex.test(email) && password.length >= 8 && password.length <= 64;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
@@ -67,9 +81,9 @@ export default function LogIn() {
 
           <button
             type="submit"
-            disabled={!email || !password}
+            disabled={!isFormValid}
             className={`bg-orange text-white py-2 rounded-button mt-2 transition-opacity
-              ${!email || !password ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
+              ${!isFormValid ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
             `}
           >
             Log In
