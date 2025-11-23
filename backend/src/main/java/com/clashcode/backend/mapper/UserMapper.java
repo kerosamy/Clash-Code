@@ -5,7 +5,7 @@ import com.clashcode.backend.model.User;
 
 public class UserMapper {
 
-    public static UserDto toDto(User user) {
+    public UserDto toUserResponseDto(User user) {
         if (user == null) return null;
         return UserDto.builder()
                 .id(user.getId())
@@ -13,5 +13,4 @@ public class UserMapper {
                 .email(user.getEmail())
                 .build();
     }
-
 }

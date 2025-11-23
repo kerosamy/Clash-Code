@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper = new UserMapper();
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -26,7 +27,7 @@ public class UserService {
             dto.setEmail(email);
             return dto;
         }
-        return UserMapper.toDto(userExist);
+        return userMapper.toUserResponseDto(userExist);
     }
 
     public UserDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
@@ -40,7 +41,7 @@ public class UserService {
         newUser.setEmail(email);
         newUser.setUsername(username);
         User saved_user = userRepository.save(newUser);
-        return UserMapper.toDto(saved_user);
+        return userMapper.toUserResponseDto(saved_user);
     }
 
 }
