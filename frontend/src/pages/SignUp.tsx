@@ -147,7 +147,7 @@ export default function SignUp() {
 
         <div className="text-center text-sm mt-4">
           <span>Already have an account? </span>
-          <Link to="/login" className="text-orange hover:underline">
+          <Link to="/log-in" className="text-orange hover:underline">
             Log in
           </Link>
         </div>

@@ -8,6 +8,7 @@ import LeaderBoard from '../pages/LeaderBoard';
 import AddProblem from '../pages/AddProblem';
 import Settings from '../pages/Settings';
 import SignUp from '../pages/SignUp';
+import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
 
 
@@ -28,8 +29,10 @@ export interface PageConfig {
 }
 
 export const pages: PageConfig[] = [
-  { path: '/sign-up', component: SignUp },
+{ path: '/sign-up', component: SignUp },
 { path: '/not-found', component: NotFound },
+{ path: '/log-in', component: LogIn },
+
 
 ];
 
