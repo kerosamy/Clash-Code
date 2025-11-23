@@ -25,24 +25,29 @@ public class User {
     private String email;
 
     @Column(length = 255)
-    private String password;
+    private String password = "";
 
+    @Column(nullable = false)
     private Boolean isAdmin = false;
 
-    @Column(nullable = false, updatable = false)
     @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(columnDefinition = "TEXT")
     private String imgUrl;
 
-    private Integer maxRate;
+    @Column(nullable = false)
+    private Integer maxRate = 0;
 
-    private Integer currentRate;
+    @Column(nullable = false)
+    private Integer currentRate = 0;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RecoveryQuestion recoveryQuestion;
 
+    @Column(nullable = false)
     private String recoveryAnswer;
 
 }

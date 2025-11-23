@@ -2,6 +2,7 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -25,7 +26,7 @@ public class UserService {
             dto.setEmail(email);
             return dto;
         }
-        return convertToDto(userExist);
+        return UserMapper.toDto(userExist);
     }
 
     public UserDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
@@ -39,14 +40,7 @@ public class UserService {
         newUser.setEmail(email);
         newUser.setUsername(username);
         User saved_user = userRepository.save(newUser);
-        return convertToDto(saved_user);
+        return UserMapper.toDto(saved_user);
     }
 
-    private UserDto convertToDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .build();
-    }
 }
