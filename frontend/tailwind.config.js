@@ -43,6 +43,9 @@ export default {
 
       fontFamily: {
         anta: ["Anta", "sans-serif"],
+        code: ['Fira Code', 'monospace'],
+         display: ['Inter', 'sans-serif'],
+
       },
 
       // CUSTOM FONT SIZES
@@ -50,12 +53,14 @@ export default {
         "container-title": ["1.25rem", { lineHeight: "1.3" }],
         "container-list": ["0.9375rem", { lineHeight: "1.8" }],
         "sideBar-list": ["1.1rem", { lineHeight: "1.5" }],
+        'problem-section': ['1.125rem', { lineHeight: '1.75' }],
       },
 
       // CUSTOM SPACING
       spacing: {
         "scroll-x": "1rem",
         "sideBar-pad": "0.75rem",
+        "problem-box-padding": "1rem",
       },
 
       // FIXED SIDEBAR WIDTH (stable + elegant)
@@ -70,6 +75,7 @@ export default {
       // BUTTON RADII
       borderRadius: {
         button: "12px",
+        "problem-box": "12px"
       },
     },
   },

@@ -10,7 +10,9 @@ import Settings from '../pages/Settings';
 import SignUp from '../pages/SignUp';
 import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
-
+import ProblemLayout from '../ProblemLayout';
+import ProblemDetails from '../pages/ProblemDetails';
+import SubmitSolution from '../pages/SubmitSolution';
 
 // Import SVG icons from assets
 import ProfileIcon from '../assets/icons/profile.svg';
@@ -21,6 +23,8 @@ import LeaderboardIcon from '../assets/icons/leaderboard.svg';
 import AddProblemIcon from '../assets/icons/add-problem.svg';
 import SettingsIcon from '../assets/icons/settings.svg';
 import LogoutIcon from '../assets/icons/logout.svg';
+
+
 
 //Non-sidebar pages
 export interface PageConfig {
@@ -55,4 +59,24 @@ export const routes: RouteConfig[] = [
     { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
     { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
 
+];
+
+
+
+ // Uses sidebar layout but NOT shown in the sidebar menu
+export interface LayoutOnlyRoute {
+  path: string;
+  element: ComponentType;
+  children?: { path?: string; index?: boolean; element: ComponentType }[];
+}
+
+export const layoutOnlyRoutes: LayoutOnlyRoute[] = [
+  {
+    path: 'problem/:id',
+    element: ProblemLayout,
+    children: [
+      { index: true, element: ProblemDetails }, // default page
+      { path: 'submit', element: SubmitSolution }, // /problem/:id/submit
+    ],
+  },
 ];
