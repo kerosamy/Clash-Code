@@ -1,27 +1,30 @@
+import { useEffect, useState } from "react";
 import Board from "../components/common/Board";
 import ProblemRow, { type ProblemRowProps } from "../components/common/ProblemRow";
+import { fetchProblems } from "../services/problem/browse.service";
+import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
 
-const SAMPLE_PROBLEMS: ProblemRowProps[] = [
-  {
-    id: 9099090990900991,
-    name: "Sample Problem",
-    tags: ["DP", "Two Pointers"],
-    difficulty: 200,
-    solvers: 19090909909099999,
-    status: "solved",
-  },
-  {
-    id: 2,
-    name: "Sample Problem",
-    tags: ["Greedy"],
-    difficulty: 2000,
-    solvers: 10000000,
-    status: "unsolved",
-  },
-];
+
 
 
 export default function Practice() {
+
+  const [problems, setProblems] = useState<ProblemRowProps[]>([]);
+
+  async function loadProblems(page = 0) {
+    try {
+      const backendPage = await fetchProblems(page, 10);
+      const mapped = backendPage.content.map(mapProblemDtoToProblemRow);
+      setProblems(mapped);
+    } catch (err) {
+      console.error("Failed to fetch problems", err);
+    }
+  }
+
+  useEffect(() => {
+    loadProblems();
+  }, []);
+  
   const handleProblemClick = (problem: ProblemRowProps) => {
     console.log("Problem clicked:", problem);
   };
@@ -29,7 +32,7 @@ export default function Practice() {
   return (
     <div className="space-y-6">
       <Board<ProblemRowProps>
-        data={SAMPLE_PROBLEMS}
+        data={problems}
         columns={["#", "Name", "Tags", "Diff", "#Solvers", "Stat"]}
         onRowClick={handleProblemClick}
         renderRow={(problem, onClick) => (

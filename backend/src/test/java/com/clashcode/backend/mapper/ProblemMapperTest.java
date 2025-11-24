@@ -1,5 +1,6 @@
 package com.clashcode.backend.mapper;
 
+import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
 import com.clashcode.backend.dto.TestCaseResponseDto;
@@ -89,4 +90,28 @@ class ProblemMapperTest {
         assertEquals(10, dto.getSubmissionsCount());
         assertEquals(testCases, dto.getVisibleTestCases());
     }
+
+    @Test
+    void testToListDto() {
+
+        Problem problem = Problem.builder()
+                .id(5L)
+                .title("Two Sum")
+                .submissionsCount(42L)
+                .tags(Collections.singletonList(ProblemTags.MATH))
+                .rate(150)
+                .build();
+
+
+        ProblemListDto dto = problemMapper.toListDto(problem);
+
+
+        assertEquals(5L, dto.getId());
+        assertEquals("Two Sum", dto.getTitle());
+        assertEquals(42L, dto.getSubmissionsCount());
+        assertEquals(Collections.singletonList(ProblemTags.MATH), dto.getTags());
+        assertEquals(150, dto.getRate());
+        assertEquals("unsolved", dto.getAttempted()); // matches the placeholder
+    }
+
 }
