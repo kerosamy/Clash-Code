@@ -1,41 +1,34 @@
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { data, useParams } from "react-router-dom";
 import ProblemSection from "../components/ProblemSectionProps";
 import TestCases from "../components/TestCase";
+import { fetchProblemById } from "../services/problem.service";
 
 export default function ProblemDetails() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>(); // useParams always returns string
+  const problemId = Number(id); // convert to integer
+  const [problem, setProblem] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy problem data
-  const problem = {
-    title: "A. Watermelon",
-    timeLimit: "1 second",
-    memoryLimit: "256 MB",
-    statement:
-      "You are given a watermelon. You need to check if you can split it into two parts such that each part weighs an even number of kilos. " +
-      "You are given a watermelon. You need to check if you can split it into two parts such that each part weighs an even number of kilos. " +
-      "You are given a watermelon. You need to check if you can split it into two parts such that each part weighs an even number of kilos.",
-    inputFormat:
-      "Single integer w (1 ≤ w ≤ 100) — the weight of the watermelon.",
-    outputFormat:
-      "Print 'YES' if the watermelon can be split. Otherwise, print 'NO'.",
-    testcases: [
-      { input: "8 \n1 2 3 4 5 6 7 8 ", output: "YES" },
-      { input: "3", output: "NO" },
-      { input: "10", output: "YES" },
-    ],
-    notes: "The weight must be divided into two positive integers.",
-  };
+  useEffect(() => {
+    if (!problemId) return;
+    fetchProblemById(problemId)
+      .then((data) => setProblem(data))
+      .finally(() => setLoading(false));
+  }, [problemId]);
+
+  if (loading) return <p>Loading...</p>;
+  if (!problem) return <p>Problem not found</p>;
 
   return (
     <div className="w-full text-white font-anta">
-      {/* Content Container */}
       <div className="max-w-6xl mx-auto w-full">
         {/* Title + Limits */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl mb-3">{problem.title}</h1>
           <div className="text-sm text-text space-y-1">
-            <p>Time Limit: {problem.timeLimit}</p>
-            <p>Memory Limit: {problem.memoryLimit}</p>
+            <p>Time Limit Per Test: {problem.timeLimit} MS</p>
+            <p>Memory Limit Per Test: {problem.memoryLimit} MB</p>
           </div>
         </div>
 
@@ -55,7 +48,7 @@ export default function ProblemDetails() {
         </ProblemSection>
 
         {/* Test Cases */}
-        <TestCases testcases={problem.testcases} />
+       <TestCases testcases={problem.visibleTestCases || []} />
 
         {/* Notes */}
         {problem.notes && (

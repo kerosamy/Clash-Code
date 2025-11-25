@@ -3,7 +3,7 @@ import Board from "../components/common/Board";
 import ProblemRow, { type ProblemRowProps } from "../components/common/ProblemRow";
 import { fetchProblems } from "../services/problem.service";
 import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
-
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -11,6 +11,7 @@ export default function Practice() {
 
   const [problems, setProblems] = useState<ProblemRowProps[]>([]);
   const [loadParams, setLoadParams] = useState({ query: '', category: '' });
+  const navigate = useNavigate();
 
   async function loadProblems(page = 0, filters = {}) {
     try {
@@ -28,6 +29,7 @@ export default function Practice() {
   
   const handleProblemClick = (problem: ProblemRowProps) => {
     console.log("Problem clicked:", problem);
+    navigate(`/problem/${problem.id}`);
   };
 
   return (
