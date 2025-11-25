@@ -10,7 +10,8 @@ import Settings from '../pages/Settings';
 import SignUp from '../pages/SignUp';
 import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
-
+import CompleteRegistration from '../pages/CompleteRegistration';
+import OAuthCallback from '../pages/OAuthCallback';
 
 // Import SVG icons from assets
 import ProfileIcon from '../assets/icons/profile.svg';
@@ -32,7 +33,8 @@ export const pages: PageConfig[] = [
 { path: '/sign-up', component: SignUp },
 { path: '/not-found', component: NotFound },
 { path: '/log-in', component: LogIn },
-
+{ path: '/auth/callback', component: OAuthCallback },
+{ path: '/complete-registration', component: CompleteRegistration },
 
 ];
 
