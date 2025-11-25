@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Board from "../components/common/Board";
 import ProblemRow, { type ProblemRowProps } from "../components/common/ProblemRow";
-import { fetchProblems } from "../services/problem/browse.service";
+import { fetchProblems } from "../services/problem.service";
 import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
 
 
@@ -10,12 +10,13 @@ import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
 export default function Practice() {
 
   const [problems, setProblems] = useState<ProblemRowProps[]>([]);
+  const [loadParams, setLoadParams] = useState({ query: '', category: '' });
 
-  async function loadProblems(page = 0) {
+  async function loadProblems(page = 0, filters = {}) {
     try {
       const backendPage = await fetchProblems(page, 10);
       const mapped = backendPage.content.map(mapProblemDtoToProblemRow);
-      setProblems(mapped);
+      setProblems(prev => page === 0 ? mapped : [...prev, ...mapped]);
     } catch (err) {
       console.error("Failed to fetch problems", err);
     }
@@ -23,7 +24,7 @@ export default function Practice() {
 
   useEffect(() => {
     loadProblems();
-  }, []);
+  }, [loadParams]);  // re-run when loadParams change supposting filtering in future
   
   const handleProblemClick = (problem: ProblemRowProps) => {
     console.log("Problem clicked:", problem);
