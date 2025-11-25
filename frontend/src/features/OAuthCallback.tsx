@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 
+export interface UserResponseDto {
+  id: number;
+  username?: string; 
+  email: string;
+}
+
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -9,8 +15,7 @@ export default function OAuthCallback() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const user = await authService.getGoogleUser();
-        console.log("User data:", user);
+        const user: UserResponseDto = await authService.getGoogleUser();
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
 

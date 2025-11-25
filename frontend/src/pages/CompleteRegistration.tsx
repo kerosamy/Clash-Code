@@ -31,12 +31,10 @@ export default function CompleteRegistration() {
     setErrors({});
 
     try {
-      const user = await authService.completeRegistration(username);
-      console.log("Registration completed:", user);
+      await authService.completeRegistration(username);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate("/profile");
     } catch (err: any) {
-      console.error("Registration failed:", err);
       setErrors({ 
         username: err.response?.data?.message || "Username already taken or an error occurred." 
       });
@@ -52,7 +50,6 @@ export default function CompleteRegistration() {
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
         </div>
       
-
         <h2 className="text-2xl mb-4 text-center">Complete Your Registration</h2>
         <p className="text-gray-400 mb-6 text-center text-sm">Email: {email}</p>
 
@@ -62,8 +59,7 @@ export default function CompleteRegistration() {
             onChange={(e) => setUsername(e.target.value)}
             error={errors.username}
           />
-
-         
+   
         {/* Divider */}
         <div className="flex items-center my-4">
         </div>
