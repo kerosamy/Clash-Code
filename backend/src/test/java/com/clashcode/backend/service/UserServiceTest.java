@@ -65,7 +65,7 @@ public class UserServiceTest {
 
         when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn("existing@example.com");
-        when(userRepository.findByEmail("existing@example.com")).thenReturn(existingUser);
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
 
         // Act
         UserResponseDto result = userService.handleOAuth2(oAuth2Token);
@@ -110,7 +110,8 @@ public class UserServiceTest {
 
         when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
-        when(userRepository.findByUsername("takenuser")).thenReturn(new User());
+        when(userRepository.findByUsername("takenuser"))
+                .thenReturn(Optional.of(new User()));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> userService.completeSignUp(request, oAuth2Token));

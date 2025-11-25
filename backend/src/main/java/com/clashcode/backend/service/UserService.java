@@ -26,22 +26,23 @@ public class UserService {
     public UserResponseDto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        User userExist = userRepository.findByEmail(email);
-        if (userExist == null) {
-            UserResponseDto dto = new UserResponseDto();
-            dto.setEmail(email);
-            return dto;
-        }
-        return userMapper.toUserResponseDto(userExist);
+        // Repo now returns Optional<User>
+        return userRepository.findByEmail(email)
+                .map(userMapper::toUserResponseDto) // user exists → return mapped response
+                .orElseGet(() -> {  // user does NOT exist → create partial dto with only email
+                    UserResponseDto dto = new UserResponseDto();
+                    dto.setEmail(email);
+                    return dto;
+                });
     }
 
     public UserResponseDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
         String email = oauthToken.getPrincipal().getAttribute("email");
         String username = request.getUsername();
-        User userWithSameUsername = userRepository.findByUsername(username);
-        if (userWithSameUsername != null) {
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already taken");
         }
+
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setUsername(username);
