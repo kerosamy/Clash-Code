@@ -35,4 +35,10 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getAllProblems(page, size));
     }
 
+//    @GetMapping("/submit/{id}")
+//    public ResponseEntity<ProblemResponseDto> submit(@PathVariable Long id) {
+//
+//
+//    }
+
 }
