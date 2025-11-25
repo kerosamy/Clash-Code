@@ -1,7 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -18,19 +18,19 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserDto handleOAuth2Signup(OAuth2AuthenticationToken authenticationToken) {
+    public UserResponseDto handleOAuth2Signup(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         User userExist = userRepository.findByEmail(email);
         if (userExist == null) {
-            UserDto dto = new UserDto();
+            UserResponseDto dto = new UserResponseDto();
             dto.setEmail(email);
             return dto;
         }
         return userMapper.toUserResponseDto(userExist);
     }
 
-    public UserDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
+    public UserResponseDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
         String email = oauthToken.getPrincipal().getAttribute("email");
         String username = request.getUsername();
         User userWithSameUsername = userRepository.findByUsername(username);

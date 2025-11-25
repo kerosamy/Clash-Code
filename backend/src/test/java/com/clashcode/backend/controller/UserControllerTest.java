@@ -1,7 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ public class UserControllerTest {
         OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
         when(token.getPrincipal()).thenReturn(oAuth2User);
 
-        UserDto mockResponse = new UserDto();
+        UserResponseDto mockResponse = new UserResponseDto();
         mockResponse.setEmail("newuser@example.com");
         when(userService.handleOAuth2Signup(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
@@ -64,7 +64,7 @@ public class UserControllerTest {
         SignUpCompletionDto request = new SignUpCompletionDto();
         request.setUsername("newuser");
 
-        UserDto mockResponse = new UserDto();
+        UserResponseDto mockResponse = new UserResponseDto();
         mockResponse.setId(1L);
         mockResponse.setUsername("newuser");
         mockResponse.setEmail("newuser@example.com");
