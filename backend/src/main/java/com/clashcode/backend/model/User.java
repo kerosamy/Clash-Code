@@ -25,9 +25,10 @@ public class User {
     private String email;
 
     @Column(length = 255)
-    private String password = "";
+    private String password;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isAdmin = false;
 
     @CreationTimestamp
@@ -38,9 +39,11 @@ public class User {
     private String imgUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer maxRate = 0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer currentRate = 0;
 
     @Enumerated(EnumType.STRING)

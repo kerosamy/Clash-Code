@@ -48,9 +48,8 @@ public class UserControllerTest {
         OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
         when(token.getPrincipal()).thenReturn(oAuth2User);
 
-        UserDto mockResponse = UserDto.builder()
-                .email("newuser@example.com")
-                .build();
+        UserDto mockResponse = new UserDto();
+        mockResponse.setEmail("newuser@example.com");
         when(userService.handleOAuth2Signup(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
 
@@ -65,11 +64,10 @@ public class UserControllerTest {
         SignUpCompletionDto request = new SignUpCompletionDto();
         request.setUsername("newuser");
 
-        UserDto mockResponse = UserDto.builder()
-                .id(1L)
-                .username("newuser")
-                .email("newuser@example.com")
-                .build();
+        UserDto mockResponse = new UserDto();
+        mockResponse.setId(1L);
+        mockResponse.setUsername("newuser");
+        mockResponse.setEmail("newuser@example.com");
 
         when(userService.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
                 .thenReturn(mockResponse);

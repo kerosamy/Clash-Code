@@ -11,7 +11,7 @@ import SignUp from '../pages/SignUp';
 import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
 import CompleteRegistration from '../pages/CompleteRegistration';
-import OAuthCallback from '../pages/OAuthCallback';
+import OAuthCallback from '../features/OAuthCallback';
 
 // Import SVG icons from assets
 import ProfileIcon from '../assets/icons/profile.svg';

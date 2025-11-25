@@ -66,7 +66,6 @@ export default function CompleteRegistration() {
          
         {/* Divider */}
         <div className="flex items-center my-4">
-     
         </div>
        
         <button
