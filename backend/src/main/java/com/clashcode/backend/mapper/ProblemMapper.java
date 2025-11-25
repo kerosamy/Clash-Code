@@ -1,5 +1,6 @@
 package com.clashcode.backend.mapper;
 
+import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
 import com.clashcode.backend.dto.TestCaseResponseDto;
@@ -47,4 +48,17 @@ public class ProblemMapper {
                 .visibleTestCases(visibleTestCases)
                 .build();
     }
+
+    public ProblemListDto toListDto(Problem problem) {
+        return ProblemListDto.builder()
+                .id(problem.getId())
+                .title(problem.getTitle())
+                .submissionsCount(problem.getSubmissionsCount())
+                .tags(problem.getTags())
+                .rate(problem.getRate())
+                .attempted("unsolved")   // placeholder
+                .build();
+    }
+
+
 }
