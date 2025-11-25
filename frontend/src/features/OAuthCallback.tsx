@@ -16,13 +16,22 @@ export default function OAuthCallback() {
     const checkAuthStatus = async () => {
       try {
         const user: UserResponseDto = await authService.getGoogleUser();
+        const flow = sessionStorage.getItem('oauth_flow');
+        console.log("Flow :", flow);
+
+        sessionStorage.removeItem('oauth_flow');
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
         if (user.username) {
           navigate("/profile");
         } else {
-          navigate("/complete-registration", { state: { email: user.email } });
+            if (flow === "signup") {
+            navigate("/complete-registration", { state: { email: user.email } });
+          } else {
+            alert("User not found. Please sign up first.");
+            navigate("/sign-up");
+          }
         }
       } catch (err) {
         setError("Authentication failed. Please try again.");

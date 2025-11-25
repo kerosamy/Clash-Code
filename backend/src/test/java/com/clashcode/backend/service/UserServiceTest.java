@@ -34,14 +34,14 @@ public class UserServiceTest {
     }
 
     @Test
-    void testHandleOAuth2Signup_NewUser() {
+    void testHandleOAuth2_NewUser() {
         // Arrange
         when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
         when(userRepository.findByEmail("newuser@example.com")).thenReturn(null);
 
         // Act
-        UserResponseDto result = userService.handleOAuth2Signup(oAuth2Token);
+        UserResponseDto result = userService.handleOAuth2(oAuth2Token);
 
         // Assert
         assertNotNull(result);
@@ -52,7 +52,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testHandleOAuth2Signup_ExistingUser() {
+    void testHandleOAuth2_ExistingUser() {
         // Arrange
         User existingUser = new User();
         existingUser.setId(1L);
@@ -64,7 +64,7 @@ public class UserServiceTest {
         when(userRepository.findByEmail("existing@example.com")).thenReturn(existingUser);
 
         // Act
-        UserResponseDto result = userService.handleOAuth2Signup(oAuth2Token);
+        UserResponseDto result = userService.handleOAuth2(oAuth2Token);
 
         // Assert
         assertNotNull(result);

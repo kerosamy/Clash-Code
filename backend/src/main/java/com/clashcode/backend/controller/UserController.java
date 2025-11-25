@@ -16,10 +16,11 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/GoogleSignUp")
-    public UserResponseDto signUpWithGoogle(OAuth2AuthenticationToken authenticationToken) {
-        return userService.handleOAuth2Signup(authenticationToken);
+    @GetMapping("/OAuthCallback")
+    public UserResponseDto handleGoogleOAuth(OAuth2AuthenticationToken authenticationToken) {
+        return userService.handleOAuth2(authenticationToken);
     }
+
 
     @PostMapping("/GoogleSignUp/completeRegistration")
     public ResponseEntity<UserResponseDto> completeSignUp(@RequestBody SignUpCompletionDto request, OAuth2AuthenticationToken oauToken) {

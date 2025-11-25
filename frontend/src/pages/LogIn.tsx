@@ -45,7 +45,8 @@ export default function LogIn() {
   };
 
   const handleGoogleLogin = () => {
-    // TODO: Implement Google login
+    sessionStorage.setItem('oauth_flow', 'login');
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
   const isFormValid =
@@ -97,7 +98,7 @@ export default function LogIn() {
         </div>
 
         <button
-          onClick={handleGoogleLogin}
+          onClick={ handleGoogleLogin } 
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
         >
           <img src="src/assets/google-icon-1.png" alt="Google Icon" className="w-7 h-7" />

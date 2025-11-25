@@ -18,7 +18,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserResponseDto handleOAuth2Signup(OAuth2AuthenticationToken authenticationToken) {
+    public UserResponseDto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         User userExist = userRepository.findByEmail(email);

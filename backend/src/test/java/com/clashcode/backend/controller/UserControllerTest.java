@@ -39,7 +39,7 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void testHandleOAuth2Signup_NewUser() throws Exception {
+    void testHandleOAuth2_NewUser() throws Exception {
         OAuth2User oAuth2User = new DefaultOAuth2User(
                 Collections.emptyList(),
                 Map.of("email", "newuser@example.com"),
@@ -48,12 +48,13 @@ public class UserControllerTest {
         OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
         when(token.getPrincipal()).thenReturn(oAuth2User);
 
-        UserResponseDto mockResponse = new UserResponseDto();
-        mockResponse.setEmail("newuser@example.com");
-        when(userService.handleOAuth2Signup(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
+        UserResponseDto mockResponse = UserResponseDto.builder()
+                .email("newuser@example.com")
+                .build();
+        when(userService.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
 
-        mockMvc.perform(get("/users/GoogleSignUp").with(oauth2Login()))
+        mockMvc.perform(get("/users/OAuthCallback").with(oauth2Login()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.username").doesNotExist());

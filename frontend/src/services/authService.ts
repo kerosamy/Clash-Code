@@ -5,7 +5,7 @@ const API_BASE = "http://localhost:8080/users";
 export const authService = {
   getGoogleUser: async () => {
     const res = await axios.get(
-      `${API_BASE}/GoogleSignUp`,
+      `${API_BASE}/OAuthCallback`,
       { withCredentials: true });
     return res.data;
   },
@@ -18,5 +18,4 @@ export const authService = {
     );
     return res.data; 
   },
-
 };
