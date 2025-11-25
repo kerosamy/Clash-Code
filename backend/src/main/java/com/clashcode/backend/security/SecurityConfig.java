@@ -13,7 +13,7 @@ public class SecurityConfig {
                 .csrf(csrf->csrf.disable())
                 .authorizeHttpRequests(auth ->auth
                         .anyRequest().permitAll())     //for now all apis are public and don't require to be authenticated
-                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/GoogleSignUp", true))
+                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("http://localhost:5173/auth/callback", true))
 //                .logout(logout -> logout
 //                        .logoutSuccessUrl("https://accounts.google.com/Logout")
 //                        .invalidateHttpSession(true)

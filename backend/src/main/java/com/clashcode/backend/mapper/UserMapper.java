@@ -1,13 +1,13 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.model.User;
 
 public class UserMapper {
 
-    public UserDto toUserResponseDto(User user) {
+    public UserResponseDto toUserResponseDto(User user) {
         if (user == null) return null;
-        return UserDto.builder()
+        return UserResponseDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())

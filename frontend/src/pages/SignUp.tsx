@@ -138,7 +138,7 @@ export default function SignUp() {
         </div>
 
         <button
-          onClick={() => alert("TODO: Google Signup")}
+          onClick={() => (window.location.href = "http://localhost:8080/oauth2/authorization/google")}
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
         >
           <img src="/src/assets/google-icon-1.png" alt="Google Icon" className="w-7 h-7" />
