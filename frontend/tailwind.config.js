@@ -54,7 +54,7 @@ export default {
 
       // CUSTOM SPACING
       spacing: {
-        "scroll-x": "1rem",
+        "scroll-x": "2rem",
         "sideBar-pad": "0.75rem",
       },
 

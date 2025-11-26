@@ -13,6 +13,11 @@ import NotFound from '../pages/NotFound';
 import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
 
+// Profile sub-pages
+import ProfileOverview from '../pages/profile/ProfileOverview';
+import Submissions from '../pages/profile/Submissions';
+import Matches from '../pages/profile/Matches';
+
 // Import SVG icons from assets
 import ProfileIcon from '../assets/icons/profile.svg';
 import FriendsIcon from '../assets/icons/friends.svg';
@@ -42,10 +47,10 @@ export const pages: PageConfig[] = [
 
 //Sidebar pages
 export interface RouteConfig {
-    path: string;
-    name: string;
-    icon: string;
-    component: ComponentType;
+  path: string;
+  name: string;
+  icon: string;
+  component: ComponentType;
 }
 
 export const routes: RouteConfig[] = [
