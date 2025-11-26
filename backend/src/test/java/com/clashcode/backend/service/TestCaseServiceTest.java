@@ -67,26 +67,48 @@ class TestCaseServiceTest {
         Problem problem = new Problem();
         problem.setId(1L);
 
-        TestCase tc1 = TestCase.builder().id(101L).problem(problem).visible(true).build();
-        TestCase tc2 = TestCase.builder().id(102L).problem(problem).visible(true).build();
+        // Mock test cases with input/output paths
+        TestCase tc1 = TestCase.builder()
+                .id(101L)
+                .problem(problem)
+                .visible(true)
+                .inputPath("path/to/input1.txt")
+                .outputPath("path/to/output1.txt")
+                .build();
+
+        TestCase tc2 = TestCase.builder()
+                .id(102L)
+                .problem(problem)
+                .visible(true)
+                .inputPath("path/to/input2.txt")
+                .outputPath("path/to/output2.txt")
+                .build();
 
         when(testCaseRepository.findByProblemAndVisibleTrue(problem)).thenReturn(List.of(tc1, tc2));
 
-        TestCaseResponseDto dto1 = new TestCaseResponseDto();
-        TestCaseResponseDto dto2 = new TestCaseResponseDto();
+        TestCaseResponseDto dto1 = new TestCaseResponseDto("input1", "output1");
+        TestCaseResponseDto dto2 = new TestCaseResponseDto("input2", "output2");
 
-        when(fileStorageService.getTestCaseContent(1L, 101L)).thenReturn(dto1);
-        when(fileStorageService.getTestCaseContent(1L, 102L)).thenReturn(dto2);
+        when(fileStorageService.getTestCaseContent("path/to/input1.txt")).thenReturn("input1");
+        when(fileStorageService.getTestCaseContent("path/to/output1.txt")).thenReturn("output1");
+        when(fileStorageService.getTestCaseContent("path/to/input2.txt")).thenReturn("input2");
+        when(fileStorageService.getTestCaseContent("path/to/output2.txt")).thenReturn("output2");
 
         List<TestCaseResponseDto> result = testCaseService.getVisibleTestCasesForProblem(problem);
 
-        // Verify calls
+        // Verify repository and file storage calls
         verify(testCaseRepository).findByProblemAndVisibleTrue(problem);
-        verify(fileStorageService).getTestCaseContent(1L, 101L);
-        verify(fileStorageService).getTestCaseContent(1L, 102L);
+        verify(fileStorageService).getTestCaseContent("path/to/input1.txt");
+        verify(fileStorageService).getTestCaseContent("path/to/output1.txt");
+        verify(fileStorageService).getTestCaseContent("path/to/input2.txt");
+        verify(fileStorageService).getTestCaseContent("path/to/output2.txt");
 
+        // Check result
         assertEquals(2, result.size());
-        assertSame(dto1, result.get(0));
-        assertSame(dto2, result.get(1));
+        assertEquals("input1", result.get(0).getInput());
+        assertEquals("output1", result.get(0).getOutput());
+        assertEquals("input2", result.get(1).getInput());
+        assertEquals("output2", result.get(1).getOutput());
     }
+
 }

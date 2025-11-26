@@ -44,26 +44,17 @@ public class FileStorageService {
         }
     }
 
-
-    public TestCaseResponseDto getTestCaseContent(Long problemId, Long testCaseId) {
-        Path problemDir = Paths.get(basePath, String.valueOf(problemId));
+    public String getTestCaseContent(String testCasePathStr) {
+        if (testCasePathStr == null || testCasePathStr.isBlank()) {
+            return null; // avoid NullPointerException
+        }
 
         try {
-            if (!Files.exists(problemDir) || !Files.isDirectory(problemDir)) {
-                throw new IOException("Problem folder does not exist");
-            }
-
-            Path inputFile = problemDir.resolve("testcase_" + testCaseId + "_input.txt");
-            Path outputFile = problemDir.resolve("testcase_" + testCaseId + "_output.txt");
-
-            String inputContent = Files.exists(inputFile) ? Files.readString(inputFile) : null;
-            String outputContent = Files.exists(outputFile) ? Files.readString(outputFile) : null;
-
-            return new TestCaseResponseDto(inputContent, outputContent);
-
+            Path testCasePath = Paths.get(testCasePathStr.trim());
+            return Files.exists(testCasePath) ? Files.readString(testCasePath) : null;
         } catch (IOException e) {
             System.err.println("Error reading test case: " + e.getMessage());
-            return new TestCaseResponseDto(null, null);
+            return null;
         }
     }
 

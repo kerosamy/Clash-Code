@@ -65,7 +65,10 @@ public class TestCaseService {
         List<TestCaseResponseDto> visibleTestCases = new ArrayList<>();
 
         for (TestCase testCase : testCaseRepository.findByProblemAndVisibleTrue(problem)) {
-                visibleTestCases.add(fileStorageService.getTestCaseContent(problem.getId() , testCase.getId()));
+            TestCaseResponseDto testCaseResponseDto = new TestCaseResponseDto();
+            testCaseResponseDto.setInput(fileStorageService.getTestCaseContent(testCase.getInputPath()));
+            testCaseResponseDto.setOutput(fileStorageService.getTestCaseContent(testCase.getOutputPath()));
+            visibleTestCases.add(testCaseResponseDto);
         }
 
         return visibleTestCases;
