@@ -13,15 +13,33 @@ import java.util.List;
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     @Query("SELECT DISTINCT p FROM Problem p WHERE p.rate = :rate")
-    Page<Problem> findByRate(@Param("rate") Integer rate, Pageable pageable);
+    Page<Problem> findByRate(@Param("rate") Integer rate,
+                             Pageable pageable);
 
-    @Query("SELECT DISTINCT p FROM Problem p LEFT JOIN p.tags t WHERE t IN :tags")
-    Page<Problem> findByTags(@Param("tags") List<ProblemTags> tags, Pageable pageable);
+    @Query("""
+        SELECT p
+        FROM Problem p
+        JOIN p.tags t
+        WHERE t IN :tags
+        GROUP BY p
+        HAVING COUNT(DISTINCT t) = :tagsSize
+    """)
+    Page<Problem> findByTags(@Param("tags") List<ProblemTags> tags,
+                             @Param("tagsSize") long tagsSize,
+                             Pageable pageable);
 
-    @Query("SELECT DISTINCT p FROM Problem p LEFT JOIN p.tags t " +
-            "WHERE t IN :tags AND p.rate = :rate")
+    @Query("""
+        SELECT p
+        FROM Problem p
+        JOIN p.tags t
+        WHERE t IN :tags
+        AND p.rate = :rate
+        GROUP BY p
+        HAVING COUNT(DISTINCT t) = :tagsSize
+    """)
     Page<Problem> findByTagsAndRate(
             @Param("tags") List<ProblemTags> tags,
+            @Param("tagsSize") long tagsSize,
             @Param("rate") Integer rate,
             Pageable pageable
     );

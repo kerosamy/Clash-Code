@@ -66,10 +66,12 @@ public class ProblemService {
         }
 
         Page<Problem> problemPage;
+        long tagsSize = tags != null ? tags.size() : 0;
+
         if (tags != null && rate != null) {
-            problemPage = problemRepository.findByTagsAndRate(tags, rate, pageRequest);
+            problemPage = problemRepository.findByTagsAndRate(tags, tagsSize, rate, pageRequest);
         } else if (tags != null) {
-            problemPage = problemRepository.findByTags(tags, pageRequest);
+            problemPage = problemRepository.findByTags(tags, tagsSize, pageRequest);
         } else if (rate != null) {
             problemPage = problemRepository.findByRate(rate, pageRequest);
         } else {
