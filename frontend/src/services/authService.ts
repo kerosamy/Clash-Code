@@ -7,6 +7,7 @@ export const authService = {
     const res = await axios.get(
       `${API_BASE}/OAuthCallback`,
       { withCredentials: true });
+      console.log(res.data);
     return res.data;
   },
 
@@ -16,6 +17,7 @@ export const authService = {
       { username },
       { withCredentials: true }
     );
+          console.log(res.data);
     return res.data; 
   },
 };

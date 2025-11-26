@@ -47,27 +47,22 @@ public class SecurityConfig {
 
                 // ===== Authorization rules =====
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints for signup/login
                         .requestMatchers("/auth/**").permitAll()
-
-                        // Public endpoints for Google OAuth2 login
                         .requestMatchers("/oauth2/**", "/users/GoogleSignUp/**").permitAll()
-
-                        // Everything else requires authentication (JWT)
                         .anyRequest().authenticated()
                 )
 
-                // ===== OAuth2 login for browser only =====
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/users/GoogleSignUp", false)
+                        .defaultSuccessUrl("http://localhost:5173/auth/callback", false)
                 )
 
-                // ===== Stateless session for JWT =====
+                // --- CHANGE THIS SECTION ---
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        // Change STATELESS to IF_REQUIRED so the OAuth session persists
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
+                // ---------------------------
 
-                // ===== Authentication provider & JWT filter =====
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -77,7 +72,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://app-backend.com", "http://localhost:8080"));
+
+        config.setAllowedOrigins(List.of("https://app-backend.com", "http://localhost:8080","http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);

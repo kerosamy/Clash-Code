@@ -14,6 +14,8 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -26,15 +28,15 @@ public class UserService {
     public UserResponseDto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        // Repo now returns Optional<User>
-        return userRepository.findByEmail(email)
-                .map(userMapper::toUserResponseDto) // user exists → return mapped response
-                .orElseGet(() -> {  // user does NOT exist → create partial dto with only email
-                    UserResponseDto dto = new UserResponseDto();
-                    dto.setEmail(email);
-                    return dto;
-                });
+        Optional<User> userExist = userRepository.findByEmail(email);
+        if (userExist.isEmpty()) {
+            UserResponseDto dto = new UserResponseDto();
+            dto.setEmail(email);
+            return dto;
+        }
+        return userMapper.toUserResponseDto(userExist.orElse(null));
     }
+
 
     public UserResponseDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
         String email = oauthToken.getPrincipal().getAttribute("email");
