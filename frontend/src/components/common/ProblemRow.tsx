@@ -34,7 +34,7 @@ export default function ProblemRow({
         className={`grid grid-cols-[80px_1fr_2fr_100px_100px_60px] gap-4 px-6 py-3 items-center hover:bg-sidebar/20 transition-colors ${className}`}
       >
         <span className="text-text text-center font-anta text-sm truncate">{id}</span>
-        <span className="text-text font-anta text-sm truncate">{name}</span>
+        <span className="text-text text-center font-anta text-sm truncate">{name}</span>
         <div className="flex flex-wrap gap-1">
           {tags.map((tag) => (
             <span
