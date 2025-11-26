@@ -29,7 +29,7 @@ export default function OAuthCallback() {
             if (flow === "signup") {
             navigate("/complete-registration", { state: { email: user.email } });
           } else {
-            //alert("User not found. Please sign up first.");
+            alert("User not found. Please sign up first.");
             navigate("/sign-up");
           }
         }
