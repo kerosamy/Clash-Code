@@ -2,8 +2,8 @@ package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.dto.UserSearchResponse;
+import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.service.UserService;
 
 import java.util.List;
@@ -14,22 +14,22 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class OAuth2Controller {
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public OAuth2Controller(UserService userService) {
         this.userService = userService;
     }
 
     @GetMapping("/OAuthCallback")
-    public UserResponseDto handleGoogleOAuth(OAuth2AuthenticationToken authenticationToken) {
+    public OAuth2Dto handleGoogleOAuth(OAuth2AuthenticationToken authenticationToken) {
         return userService.handleOAuth2(authenticationToken);
     }
 
 
     @PostMapping("/GoogleSignUp/completeRegistration")
-    public ResponseEntity<UserResponseDto> completeSignUp(@RequestBody SignUpCompletionDto request, OAuth2AuthenticationToken oauToken) {
-        UserResponseDto user = userService.completeSignUp(request, oauToken);
+    public ResponseEntity<OAuth2Dto> completeSignUp(@RequestBody SignUpCompletionDto request, OAuth2AuthenticationToken oauToken) {
+        OAuth2Dto user = userService.completeSignUp(request, oauToken);
         return ResponseEntity.ok(user);
     }
 

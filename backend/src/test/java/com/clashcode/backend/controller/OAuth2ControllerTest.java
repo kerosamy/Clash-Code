@@ -4,9 +4,9 @@ import com.clashcode.backend.dto.CategoryDto;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.StatsDto;
-import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -33,8 +33,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
-public class UserControllerTest {
+@WebMvcTest(OAuth2Controller.class)
+public class OAuth2ControllerTest {
 
         @Autowired
         private MockMvc mockMvc;
@@ -54,7 +54,7 @@ public class UserControllerTest {
                 OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
                 when(token.getPrincipal()).thenReturn(oAuth2User);
 
-                UserResponseDto mockResponse = UserResponseDto.builder()
+                OAuth2Dto mockResponse = OAuth2Dto.builder()
                                 .email("newuser@example.com")
                                 .build();
                 when(userService.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
@@ -70,7 +70,7 @@ public class UserControllerTest {
                 SignUpCompletionDto request = new SignUpCompletionDto();
                 request.setUsername("newuser");
 
-                UserResponseDto mockResponse = new UserResponseDto();
+                OAuth2Dto mockResponse = new OAuth2Dto();
                 mockResponse.setId(1L);
                 mockResponse.setUsername("newuser");
                 mockResponse.setEmail("newuser@example.com");
@@ -111,7 +111,7 @@ public class UserControllerTest {
                 .build();
 
         when(userService.getProfile(1L)).thenReturn(mockProfile);
-
+        
         mockMvc.perform(get("/users/profile/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("mina"))

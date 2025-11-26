@@ -4,6 +4,8 @@ import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.enums.Ranks;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -25,12 +27,12 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserResponseDto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
+    public OAuth2Dto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         Optional<User> userExist = userRepository.findByEmail(email);
         if (userExist.isEmpty()) {
-            UserResponseDto dto = new UserResponseDto();
+            OAuth2Dto dto = new OAuth2Dto();
             dto.setEmail(email);
             return dto;
         }
@@ -38,7 +40,7 @@ public class UserService {
     }
 
 
-    public UserResponseDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
+    public OAuth2Dto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
         String email = oauthToken.getPrincipal().getAttribute("email");
         String username = request.getUsername();
         if (userRepository.findByUsername(username).isPresent()) {

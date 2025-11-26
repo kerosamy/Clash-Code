@@ -2,9 +2,9 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +68,7 @@ public class UserServiceTest {
         when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
 
         // Act
-        UserResponseDto result = userService.handleOAuth2(oAuth2Token);
+        OAuth2Dto result = userService.handleOAuth2(oAuth2Token);
 
         assertNotNull(result);
         assertEquals("existing@example.com", result.getEmail());
@@ -92,7 +92,8 @@ public class UserServiceTest {
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        UserResponseDto result = userService.completeSignUp(request, oAuth2Token);
+        // Act
+        OAuth2Dto result = userService.completeSignUp(request, oAuth2Token);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
