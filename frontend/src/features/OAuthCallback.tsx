@@ -29,8 +29,8 @@ export default function OAuthCallback() {
             if (flow === "signup") {
             navigate("/complete-registration", { state: { email: user.email } });
           } else {
-            alert("User not found. Please sign up first.");
-            navigate("/sign-up");
+            setError("User not found. Please sign up first.");
+            setTimeout(() => navigate("/sign-up"), 3000);
           }
         }
       } catch (err) {

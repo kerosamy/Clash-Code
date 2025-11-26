@@ -29,58 +29,56 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @WebMvcTest(UserController.class)
 public class UserControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private UserService userService;
+        @MockitoBean
+        private UserService userService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @Test
-    void testHandleOAuth2_NewUser() throws Exception {
-        OAuth2User oAuth2User = new DefaultOAuth2User(
-                Collections.emptyList(),
-                Map.of("email", "newuser@example.com"),
-                "email"
-        );
-        OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
-        when(token.getPrincipal()).thenReturn(oAuth2User);
+        @Test
+        void testHandleOAuth2_NewUser() throws Exception {
+                OAuth2User oAuth2User = new DefaultOAuth2User(
+                                Collections.emptyList(),
+                                Map.of("email", "newuser@example.com"),
+                                "email");
+                OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
+                when(token.getPrincipal()).thenReturn(oAuth2User);
 
-        UserResponseDto mockResponse = UserResponseDto.builder()
-                .email("newuser@example.com")
-                .build();
-        when(userService.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
+                UserResponseDto mockResponse = UserResponseDto.builder()
+                                .email("newuser@example.com")
+                                .build();
+                when(userService.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
+                mockMvc.perform(get("/users/OAuthCallback").with(oauth2Login()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.email").value("newuser@example.com"))
+                                .andExpect(jsonPath("$.username").doesNotExist());
+        }
 
-        mockMvc.perform(get("/users/OAuthCallback").with(oauth2Login()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("newuser@example.com"))
-                .andExpect(jsonPath("$.username").doesNotExist());
-    }
+        @Test
+        void testCompleteSignUp() throws Exception {
+                SignUpCompletionDto request = new SignUpCompletionDto();
+                request.setUsername("newuser");
 
-    @Test
-    void testCompleteSignUp() throws Exception {
-        SignUpCompletionDto request = new SignUpCompletionDto();
-        request.setUsername("newuser");
+                UserResponseDto mockResponse = new UserResponseDto();
+                mockResponse.setId(1L);
+                mockResponse.setUsername("newuser");
+                mockResponse.setEmail("newuser@example.com");
 
-        UserResponseDto mockResponse = new UserResponseDto();
-        mockResponse.setId(1L);
-        mockResponse.setUsername("newuser");
-        mockResponse.setEmail("newuser@example.com");
+                when(userService.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
+                                .thenReturn(mockResponse);
 
-        when(userService.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
-                .thenReturn(mockResponse);
-
-        mockMvc.perform(post("/users/GoogleSignUp/completeRegistration")
-                        .with(oauth2Login())
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.username").value("newuser"))
-                .andExpect(jsonPath("$.email").value("newuser@example.com"));
-    }
+                mockMvc.perform(post("/users/GoogleSignUp/completeRegistration")
+                                .with(oauth2Login())
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.username").value("newuser"))
+                                .andExpect(jsonPath("$.email").value("newuser@example.com"));
+        }
 }
