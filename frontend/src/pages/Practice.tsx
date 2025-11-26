@@ -5,6 +5,8 @@ import { fetchProblems } from "../services/problem.service";
 import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
 import TagsMultiSelectDropdown from "../components/common/TagsMultiSelectDropDown";
 import { TagsFrontendValues } from "../utils/mapTags";
+import DifficultySelector from "../components/common/DifficultySelector";
+import { DifficultyLevel } from "../enums/DifficultyLevel";
 
 
 
@@ -14,6 +16,8 @@ export default function Practice() {
   const [problems, setProblems] = useState<ProblemRowProps[]>([]);
   const [loadParams, setLoadParams] = useState({ query: '', category: '' });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [minDifficulty, setMinDifficulty] = useState<number>(DifficultyLevel.MIN);
+  const [maxDifficulty, setMaxDifficulty] = useState<number>(DifficultyLevel.HARD_MAX);
 
   async function loadProblems(page = 0, filters = {}) {
     try {
@@ -35,29 +39,37 @@ export default function Practice() {
 
   return (
     <div className="space-y-6">
-          <div className="flex items-center justify-between flex-wrap">
+        <div className="flex items-center justify-between flex-wrap">
 
-      <TagsMultiSelectDropdown
-        label="Choose Problem Tags"
-        options={TagsFrontendValues}
-        value={selectedTags}        
-        onChange={setSelectedTags}   
-      />
-
-      </div>
-      <Board<ProblemRowProps>
-        data={problems}
-        columns={["#", "Name", "Tags", "Diff", "#Solvers", "Stat"]}
-        onRowClick={handleProblemClick}
-        renderRow={(problem, onClick) => (
-          <ProblemRow
-            key={problem.id}
-            {...problem}
-            onClick={onClick}
-            className="cursor-pointer"
+          <TagsMultiSelectDropdown
+            label="Choose Problem Tags"
+            options={TagsFrontendValues}
+            value={selectedTags}        
+            onChange={setSelectedTags}   
           />
-        )}
-      />
+
+          <DifficultySelector
+            min={minDifficulty}
+            max={maxDifficulty}
+            onMinChange={setMinDifficulty}
+            onMaxChange={setMaxDifficulty}
+          />
+
+        </div>
+
+        <Board<ProblemRowProps>
+          data={problems}
+          columns={["#", "Name", "Tags", "Diff", "#Solvers", "Stat"]}
+          onRowClick={handleProblemClick}
+          renderRow={(problem, onClick) => (
+            <ProblemRow
+              key={problem.id}
+              {...problem}
+              onClick={onClick}
+              className="cursor-pointer"
+            />
+          )}
+        />
     </div>
   );
 }
