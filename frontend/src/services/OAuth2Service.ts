@@ -20,4 +20,10 @@ export const authService = {
           console.log(res.data);
     return res.data; 
   },
+<<<<<<< HEAD:frontend/src/services/authService.ts
+=======
+
+  
+
+>>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication):frontend/src/services/OAuth2Service.ts
 };

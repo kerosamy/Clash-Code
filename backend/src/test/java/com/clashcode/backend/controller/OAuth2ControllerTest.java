@@ -7,7 +7,7 @@ import com.clashcode.backend.dto.StatsDto;
 import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.dto.OAuth2Dto;
-import com.clashcode.backend.service.UserService;
+import com.clashcode.backend.service.OAuth2Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +39,8 @@ public class OAuth2ControllerTest {
         @Autowired
         private MockMvc mockMvc;
 
-        @MockitoBean
-        private UserService userService;
+    @MockitoBean
+    private OAuth2Service OAuth2Service;
 
         @Autowired
         private ObjectMapper objectMapper;
@@ -57,7 +57,7 @@ public class OAuth2ControllerTest {
                 OAuth2Dto mockResponse = OAuth2Dto.builder()
                                 .email("newuser@example.com")
                                 .build();
-                when(userService.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
+                when(OAuth2Service.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
                 mockMvc.perform(get("/users/OAuthCallback").with(oauth2Login()))
                                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ public class OAuth2ControllerTest {
                 mockResponse.setUsername("newuser");
                 mockResponse.setEmail("newuser@example.com");
 
-                when(userService.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
+                when(OAuth2Service.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
                                 .thenReturn(mockResponse);
 
                 mockMvc.perform(post("/users/GoogleSignUp/completeRegistration")
@@ -110,7 +110,7 @@ public class OAuth2ControllerTest {
                 })
                 .build();
 
-        when(userService.getProfile(1L)).thenReturn(mockProfile);
+        when(OAuth2Service.getProfile(1L)).thenReturn(mockProfile);
         
         mockMvc.perform(get("/users/profile/1"))
                 .andExpect(status().isOk())
@@ -128,7 +128,7 @@ public class OAuth2ControllerTest {
     @Test
     @WithMockUser
     void testGetProfile_UserNotFound() throws Exception {
-        when(userService.getProfile(99L)).thenThrow(new UserNotFoundException("User not found"));
+        when(OAuth2Service.getProfile(99L)).thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(get("/users/profile/99"))
                 .andExpect(status().isNotFound());
@@ -141,7 +141,7 @@ public class OAuth2ControllerTest {
         UserSearchResponse user1 = new UserSearchResponse("alice", "DIAMOND");
         UserSearchResponse user2 = new UserSearchResponse("alicia", "MASTER");
 
-        when(userService.searchByUsername("ali")).thenReturn(List.of(user1, user2));
+        when(OAuth2Service.searchByUsername("ali")).thenReturn(List.of(user1, user2));
 
         mockMvc.perform(get("/users/search")
                         .param("username", "ali")
@@ -157,7 +157,7 @@ public class OAuth2ControllerTest {
     @Test
     @WithMockUser
     void testSearchUsers_NoMatch() throws Exception {
-        when(userService.searchByUsername("nomatch")).thenReturn(List.of());
+        when(OAuth2Service.searchByUsername("nomatch")).thenReturn(List.of());
 
         mockMvc.perform(get("/users/search")
                         .param("username", "nomatch")

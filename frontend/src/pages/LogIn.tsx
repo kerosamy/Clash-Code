@@ -2,32 +2,35 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../components/authentication/InputField';
 import PasswordField from '../components/authentication/PasswordField';
+// ADJUST THIS PATH: Import the login function and type from your api file
+import { loginUser, type LoginRequest } from '../services/AuthService';
 
 export default function LogIn() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(''); // Acts as 'username' or 'email'
   const [password, setPassword] = useState('');
+  
+  // UI States
   const [errors, setErrors] = useState({ email: '', password: '' });
+  const [apiError, setApiError] = useState(''); // For backend errors (e.g. "Bad credentials")
+  const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
 
-  const usernameRegex = /^[a-zA-Z0-9_-]{4,100}$/;
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = { email: '', password: '' };
+    setApiError('');
     let formValid = true;
 
-    // Validate email/username
     if (!email.trim()) {
       newErrors.email = 'Email/Username is required';
       formValid = false;
-    } else if (!usernameRegex.test(email)) {
-      newErrors.email =
-        '4–32 characters, only letters, numbers, "_" or "-" allowed';
+    } else if (email.length < 4) {
+      newErrors.email = 'Username/Email is too short';
       formValid = false;
     }
 
-    // Validate password
     if (!password.trim()) {
       newErrors.password = 'Password is required';
       formValid = false;
@@ -37,9 +40,9 @@ export default function LogIn() {
     }
 
     setErrors(newErrors);
-
     if (!formValid) return;
 
+<<<<<<< HEAD
     // TODO: Implement login API
     navigate('/profile/1/overview');
   };
@@ -47,10 +50,36 @@ export default function LogIn() {
   const handleGoogleLogin = () => {
     sessionStorage.setItem('oauth_flow', 'login');
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
+=======
+    setIsLoading(true);
+    
+    try {
+      const credentials: LoginRequest = {
+        email: email,
+        password: password
+      };
+
+      const response = await loginUser(credentials);
+      console.log(response);
+      localStorage.setItem('token', response.token); 
+    
+      navigate('/profile');
+      
+    } catch (err: any) {
+      setApiError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const isFormValid =
-    usernameRegex.test(email) && password.length >= 8 && password.length <= 64;
+  const handleGoogleLogin = () => {
+    // TODO: Implement Google login
+    console.log("Google login clicked");
+>>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication)
+  };
+
+  // Basic check for button enable state
+  const isFormValid = email.length >= 4 && password.length >= 8 && password.length <= 64;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
@@ -58,6 +87,13 @@ export default function LogIn() {
         <div className="flex justify-center mb-6">
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
         </div>
+
+        {/* Global API Error Message */}
+        {apiError && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500 text-red-100 text-sm rounded text-center">
+            {apiError}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <InputField
@@ -82,12 +118,17 @@ export default function LogIn() {
 
           <button
             type="submit"
-            disabled={!isFormValid}
-            className={`bg-orange text-white py-2 rounded-button mt-2 transition-opacity
-              ${!isFormValid ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
+            disabled={!isFormValid || isLoading}
+            className={`bg-orange text-white py-2 rounded-button mt-2 transition-all flex justify-center items-center
+              ${(!isFormValid || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
             `}
           >
-            Log In
+            {isLoading ? (
+               // Simple Loading Spinner or Text
+               <span>Logging in...</span>
+            ) : (
+               "Log In"
+            )}
           </button>
         </form>
 
@@ -98,8 +139,15 @@ export default function LogIn() {
         </div>
 
         <button
+<<<<<<< HEAD
           onClick={ handleGoogleLogin } 
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
+=======
+          onClick={handleGoogleLogin}
+          type="button" 
+          disabled={isLoading}
+          className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full hover:bg-gray-800 transition-colors"
+>>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication)
         >
           <img src="src/assets/google-icon-1.png" alt="Google Icon" className="w-7 h-7" />
           Log in with Google

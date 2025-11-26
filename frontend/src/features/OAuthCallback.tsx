@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { authService } from "../services/OAuth2Service";
 
 export interface UserResponseDto {
   id: number;
@@ -34,6 +34,7 @@ export default function OAuthCallback() {
           }
         }
       } catch (err) {
+        console.error(err);
         setError("Authentication failed. Please try again.");
         setTimeout(() => navigate("/sign-up"), 3000);
       }

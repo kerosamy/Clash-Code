@@ -19,11 +19,11 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class OAuth2Service {
     private final UserRepository userRepository;
     private final UserMapper userMapper = new UserMapper();
 
-    public UserService(UserRepository userRepository) {
+    public OAuth2Service(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

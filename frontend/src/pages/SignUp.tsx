@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { registerUser } from "../services/AuthService.ts";
 import InputField from "../components/authentication/InputField.tsx";
 import PasswordField from "../components/authentication/PasswordField.tsx";
 import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal.tsx";
@@ -49,11 +50,25 @@ export default function SignUp() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Clear previous errors before new attempt
+    setErrors({});
+
     if (!validateInputs()) return;
 
+    // Prepare data to match RegisterRequest interface
+    const requestData = {
+      username: username,
+      email: emailOrHandle, // Mapping 'emailOrHandle' to 'email'
+      password: password,
+      recoveryQuestion: recoveryQuestion,
+      recoveryAnswer: recoveryAnswer,
+    };
+
     try {
+<<<<<<< HEAD
       const mockApiResponse = {
         success: true, // set to false to test UI
         field: "email",
@@ -68,6 +83,23 @@ export default function SignUp() {
       navigate('/profile/1/overview');
     } catch {
       alert("Something went wrong. Try again later.");
+=======
+      await registerUser(requestData);
+      navigate("/profile");
+    } catch (err) {
+
+      if (err instanceof Error) {
+        const errorMessage = err.message.toLowerCase();
+
+        if (errorMessage.includes("email")) {
+          setErrors({ email: err.message });
+        } else if (errorMessage.includes("username")) {
+          setErrors({ username: err.message });
+        } else {
+          alert(err.message || "Something went wrong. Try again later.");
+        }
+      }
+>>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication)
     }
   };
 
@@ -143,10 +175,21 @@ export default function SignUp() {
         </div>
 
         <button
+<<<<<<< HEAD
           onClick={ handleGoogleSignUP }
+=======
+          onClick={() =>
+            (window.location.href =
+              "http://localhost:8080/oauth2/authorization/google")
+          }
+>>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication)
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
         >
-          <img src="/src/assets/google-icon-1.png" alt="Google Icon" className="w-7 h-7" />
+          <img
+            src="/src/assets/google-icon-1.png"
+            alt="Google Icon"
+            className="w-7 h-7"
+          />
           Sign up with Google
         </button>
 
@@ -158,7 +201,6 @@ export default function SignUp() {
         </div>
       </div>
 
-      {/* Reusable Modal Component */}
       <RecoveryQuestionModal
         isOpen={isRecoveryModalOpen}
         onClose={() => setIsRecoveryModalOpen(false)}

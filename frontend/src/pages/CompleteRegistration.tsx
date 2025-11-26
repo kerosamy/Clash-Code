@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
-import { authService } from "../services/authService";
+import { authService } from "../services/OAuth2Service.ts";
 
 
 export default function CompleteRegistration() {
@@ -34,7 +34,7 @@ export default function CompleteRegistration() {
       await authService.completeRegistration(username);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate("/profile");
-    } catch (err: any) {
+    } catch (err:any) {
       setErrors({ 
         username: err.response?.data?.message || "Username already taken or an error occurred." 
       });
