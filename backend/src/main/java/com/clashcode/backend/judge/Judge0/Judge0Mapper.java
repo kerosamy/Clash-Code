@@ -1,10 +1,11 @@
-package com.clashcode.backend.mapper;
+package com.clashcode.backend.judge.Judge0;
 
+import com.clashcode.backend.dto.ExecutionResultDto;
 import com.clashcode.backend.enums.LanguageVersion;
 
 public class Judge0Mapper {
 
-    public static int mapToJudge0Id(LanguageVersion lv) {
+    public int mapToJudge0Id(LanguageVersion lv) {
         return switch (lv) {
             // Python
             case PYTHON_3_8 -> 71;
@@ -81,4 +82,17 @@ public class Judge0Mapper {
             case EXECUTABLE -> 44;
         };
     }
+
+    public ExecutionResultDto toExecutionResultDto (Judge0ResponseDto judge0ResponseDto){
+        ExecutionResultDto result = ExecutionResultDto.builder()
+                                    .timeTaken((int)(judge0ResponseDto.getTime()*100))
+                                    .memoryTaken((int)(judge0ResponseDto.getMemory()*100))
+                                    .status(judge0ResponseDto.getStatus().getDescription())
+                                    .result(judge0ResponseDto.getStdout())
+                                    .build();
+
+        return result;
+    }
 }
+
+
