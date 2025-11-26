@@ -15,8 +15,11 @@ public class TestCase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false , columnDefinition = "TEXT")
-    private String input;
+    @Column(columnDefinition = "TEXT")
+    private String inputPath;
+
+    @Column(columnDefinition = "TEXT")
+    private String outputPath;
 
     @Column(nullable = false)
     private boolean visible;

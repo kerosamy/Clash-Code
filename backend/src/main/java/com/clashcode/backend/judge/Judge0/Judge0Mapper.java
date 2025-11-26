@@ -3,7 +3,7 @@ package com.clashcode.backend.judge.Judge0;
 import com.clashcode.backend.dto.ExecutionResultDto;
 import com.clashcode.backend.enums.LanguageVersion;
 
-public class Judge0Mapper {
+public class    Judge0Mapper {
 
     public int mapToJudge0Id(LanguageVersion lv) {
         return switch (lv) {

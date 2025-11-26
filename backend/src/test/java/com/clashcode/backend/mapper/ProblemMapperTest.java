@@ -73,8 +73,8 @@ class ProblemMapperTest {
                 .build();
 
         List<TestCaseResponseDto> testCases = List.of(
-                new TestCaseResponseDto("input1"),
-                new TestCaseResponseDto("input2")
+                new TestCaseResponseDto("input1" , "input1"),
+                new TestCaseResponseDto("input2" , "input2")
         );
 
         // Act

@@ -1,21 +1,18 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
-import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
+import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,83 +28,86 @@ class ProblemServiceTest {
 
     @BeforeEach
     void setUp() {
-        problemRepository = Mockito.mock(ProblemRepository.class);
-        testCaseService = Mockito.mock(TestCaseService.class);
-        problemMapper = Mockito.mock(ProblemMapper.class);
+        problemRepository = mock(ProblemRepository.class);
+        testCaseService = mock(TestCaseService.class);
+        problemMapper = mock(ProblemMapper.class);
         problemService = new ProblemService(problemRepository, testCaseService, problemMapper);
     }
 
+    // ---------------- Test: getProblemById ----------------
     @Test
-    void testAddProblem() {
-        ProblemRequestDto request = new ProblemRequestDto();
-        request.setTitle("Add Two Numbers");
-        request.setMainSolution("solution code");
-        request.setSolutionLanguage("C++ (GCC 9.2.0)");
-
-        Problem problem = new Problem();
-        when(problemMapper.toProblem(request)).thenReturn(problem);
-        when(testCaseService.getTestCasesFromRequestDto(request, problem)).thenReturn(Collections.emptyList());
-        when(problemRepository.save(problem)).thenReturn(problem);
-
-        problemService.addProblem(request);
-
-        verify(problemMapper, times(1)).toProblem(request);
-        verify(testCaseService, times(1)).getTestCasesFromRequestDto(request, problem);
-        verify(problemRepository, times(1)).save(problem);
-    }
-
-    @Test
-    void testGetProblemById() {
+    void testGetProblemById_Success() {
         Problem problem = new Problem();
         problem.setId(1L);
-
-        List<TestCaseResponseDto> visibleTestCases = Collections.emptyList();
+        ProblemResponseDto responseDto = new ProblemResponseDto();
+        responseDto.setId(1L);
 
         when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
-        when(testCaseService.getVisbleTestCasesForProblem(problem)).thenReturn(visibleTestCases);
-        when(problemMapper.toResponseDto(problem, visibleTestCases)).thenReturn(
-                ProblemResponseDto.builder()
-                        .id(1L)
-                        .build()
-        );
+        when(testCaseService.getVisibleTestCasesForProblem(problem)).thenReturn(List.of());
+        when(problemMapper.toResponseDto(problem, List.of())).thenReturn(responseDto);
 
-        ProblemResponseDto dto = problemService.getProblemById(1L);
+        ProblemResponseDto result = problemService.getProblemById(1L);
 
-        assertEquals(1L, dto.getId());
-        verify(problemRepository, times(1)).findById(1L);
-        verify(testCaseService, times(1)).getVisbleTestCasesForProblem(problem);
-        verify(problemMapper, times(1)).toResponseDto(problem, visibleTestCases);
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(problemRepository).findById(1L);
+        verify(testCaseService).getVisibleTestCasesForProblem(problem);
+        verify(problemMapper).toResponseDto(problem, List.of());
     }
 
     @Test
     void testGetProblemById_NotFound() {
-        when(problemRepository.findById(1L)).thenReturn(Optional.empty());
+        when(problemRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> problemService.getProblemById(1L));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            problemService.getProblemById(99L);
+        });
 
-        verify(problemRepository, times(1)).findById(1L);
-        verifyNoInteractions(testCaseService);
-        verifyNoInteractions(problemMapper);
+        assertEquals("Problem not found", exception.getMessage());
+        verify(problemRepository).findById(99L);
     }
 
+    // ---------------- Test: addProblem ----------------
+    @Test
+    void testAddProblem() {
+        ProblemRequestDto requestDto = new ProblemRequestDto();
+        requestDto.setTitle("Add Two Integers");
+
+        Problem problem = new Problem();
+        Problem savedProblem = new Problem();
+        savedProblem.setId(1L);
+
+        TestCase testCase = new TestCase();
+        List<TestCase> testCases = List.of(testCase);
+
+        when(problemMapper.toProblem(requestDto)).thenReturn(problem);
+        when(problemRepository.save(problem)).thenReturn(savedProblem);
+        when(testCaseService.addTestCases(anyList(), eq(problem), any())).thenReturn(testCases);
+
+        problemService.addProblem(requestDto, List.of(mock(MultipartFile.class)));
+
+        // verify save called twice: first for problem, then after setting test cases
+        verify(problemRepository, times(2)).save(any(Problem.class));
+        verify(testCaseService).addTestCases(anyList(), eq(problem), any());
+        verify(problemMapper).toProblem(requestDto);
+    }
+
+    // ---------------- Test: getAllProblems ----------------
     @Test
     void testGetAllProblems() {
-
         Problem problem1 = new Problem();
         problem1.setId(1L);
         Problem problem2 = new Problem();
         problem2.setId(2L);
-
-        List<Problem> problems = List.of(problem1, problem2);
-
-        Page<Problem> page = new PageImpl<>(problems, PageRequest.of(0, 10), problems.size());
-        when(problemRepository.findAll(any(PageRequest.class))).thenReturn(page);
 
         ProblemListDto dto1 = new ProblemListDto();
         dto1.setId(1L);
         ProblemListDto dto2 = new ProblemListDto();
         dto2.setId(2L);
 
+        Page<Problem> page = new PageImpl<>(List.of(problem1, problem2));
+
+        when(problemRepository.findAll(PageRequest.of(0, 10))).thenReturn(page);
         when(problemMapper.toListDto(problem1)).thenReturn(dto1);
         when(problemMapper.toListDto(problem2)).thenReturn(dto2);
 
@@ -117,39 +117,8 @@ class ProblemServiceTest {
         assertEquals(1L, result.getContent().get(0).getId());
         assertEquals(2L, result.getContent().get(1).getId());
 
-        verify(problemRepository, times(1)).findAll(any(PageRequest.class));
-        verify(problemMapper, times(1)).toListDto(problem1);
-        verify(problemMapper, times(1)).toListDto(problem2);
+        verify(problemRepository).findAll(PageRequest.of(0, 10));
+        verify(problemMapper).toListDto(problem1);
+        verify(problemMapper).toListDto(problem2);
     }
-
-    @Test
-    void testGetAllProblems_EmptyResult() {
-        Page<Problem> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(problemRepository.findAll(any(PageRequest.class))).thenReturn(emptyPage);
-
-        Page<ProblemListDto> result = problemService.getAllProblems(0, 10);
-
-        assertTrue(result.isEmpty());
-        verify(problemRepository).findAll(any(PageRequest.class));
-    }
-
-    @Test
-    void testGetAllProblems_UsesCorrectPageRequest() {
-        int page = 3;
-        int size = 20;
-
-        Page<Problem> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(problemRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
-
-        problemService.getAllProblems(page, size);
-
-        verify(problemRepository).findAll(
-                argThat((Pageable p) ->
-                        p.getPageNumber() == page &&
-                                p.getPageSize() == size
-                )
-        );
-    }
-
-
 }

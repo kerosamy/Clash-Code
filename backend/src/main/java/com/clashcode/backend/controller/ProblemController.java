@@ -6,6 +6,9 @@ import com.clashcode.backend.service.ProblemService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/problem")
@@ -22,8 +25,10 @@ public class ProblemController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> addProblem(@RequestBody ProblemRequestDto problemRequestDto) {
-        problemService.addProblem(problemRequestDto);
+    public ResponseEntity<Void> addProblem(@RequestPart("problem") ProblemRequestDto problemRequestDto,
+                                           @RequestPart("testcases") List<MultipartFile> files) {
+
+        problemService.addProblem(problemRequestDto , files );
         return ResponseEntity.ok().build();
     }
 
