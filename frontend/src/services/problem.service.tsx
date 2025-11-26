@@ -13,13 +13,15 @@ export async function fetchProblems(page = 0, size = 20) {
 
 export async function fetchFilteredProblems(
   tags: ProblemTags[] = [],
-  rate: number | null = null,
+  minRate: number | null = null,
+  maxRate: number | null = null,
   page = 0,
   size = 20
 ) {
   const payload = {
     tags,
-    rate,
+    minRate,
+    maxRate,
   };
 
   const response = await axios.post(`${API_BASE}/browse/filter`, payload, {

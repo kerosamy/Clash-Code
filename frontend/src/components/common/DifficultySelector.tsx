@@ -14,10 +14,10 @@ export default function DifficultySelector({
   onMaxChange,
 }: DifficultySelectorProps) {
 
-  const clampAndStep = (value: number) => {
+  const clamp = (value: number) => {
     if (!value) return DifficultyLevel.MIN;
-    //added round to nearest 100 ui testing
-    let v = Math.round(value / 100) * 100;
+
+    let v = value;
     if (v < DifficultyLevel.MIN) v = DifficultyLevel.MIN;
     if (v > DifficultyLevel.HARD_MAX) v = DifficultyLevel.HARD_MAX;
     return v;
@@ -28,8 +28,7 @@ export default function DifficultySelector({
     callback: (value: number) => void
   ) => {
     if (e.key === "Enter") {
-      const value = Number(e.currentTarget.value);
-      callback(clampAndStep(value));
+      callback(clamp(Number(e.currentTarget.value)));
       e.currentTarget.blur();
     }
   };
@@ -46,7 +45,7 @@ export default function DifficultySelector({
           type="number"
           value={min}
           onChange={(e) => onMinChange(Number(e.target.value))}
-          onBlur={(e) => onMinChange(clampAndStep(Number(e.target.value)))}
+          onBlur={(e) => onMinChange(clamp(Number(e.target.value)))}
           onKeyDown={(e) => handleKeyPress(e, onMinChange)}
           placeholder="min"
           className="bg-container text-text placeholder-text/50 px-3 py-2 rounded-xl border border-sidebar/30 focus:outline-none focus:border-orange/50 transition-colors font-anta text-sm w-24 text-center"
@@ -58,7 +57,7 @@ export default function DifficultySelector({
           type="number"
           value={max}
           onChange={(e) => onMaxChange(Number(e.target.value))}
-          onBlur={(e) => onMaxChange(clampAndStep(Number(e.target.value)))}
+          onBlur={(e) => onMaxChange(clamp(Number(e.target.value)))}
           onKeyDown={(e) => handleKeyPress(e, onMaxChange)}
           placeholder="max"
           className="bg-container text-text placeholder-text/50 px-3 py-2 rounded-xl border border-sidebar/30 focus:outline-none focus:border-orange/50 transition-colors font-anta text-sm w-24 text-center"

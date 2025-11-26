@@ -24,11 +24,15 @@ export default function Practice() {
   async function loadProblems(pageToLoad = 0) {
     try {
       const backendTags = mapFrontendTagsToEnum(selectedTags);
-      const rate = minDifficulty > DifficultyLevel.MIN ? minDifficulty : null;
+      const minRate = minDifficulty;
+      const maxRate = maxDifficulty;
+      
 
       const backendPage =
-      backendTags.length > 0 || rate
-        ? await fetchFilteredProblems(backendTags, rate, pageToLoad, 20)
+      backendTags.length > 0 ||
+      minRate !== DifficultyLevel.MIN ||
+      maxRate !== DifficultyLevel.HARD_MAX
+        ? await fetchFilteredProblems(backendTags, minRate, maxRate, pageToLoad, 20)
         : await fetchProblems(pageToLoad, 20);
 
 
@@ -60,7 +64,7 @@ export default function Practice() {
 
   return (
 
-      <div className="space-y-6 custom-scroll overflow-y-auto">
+      <div className="flex flex-col h-[90vh] space-y-6">
           <div className="flex items-center justify-between flex-wrap">
 
             <TagsMultiSelectDropdown
@@ -79,7 +83,7 @@ export default function Practice() {
 
           </div>
 
-          <div className="custom-scroll max-h-[80vh] overflow-y-auto">
+          <div className="flex-1 overflow-y-auto custom-scroll">
           <Board<ProblemRowProps>
             data={problems}
             columns={["#", "Name", "Tags", "Diff", "#Solvers", "Stat"]}
