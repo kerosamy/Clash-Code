@@ -1,7 +1,8 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserResponseDto;
+import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.ProblemTags;
+import com.clashcode.backend.enums.Ranks;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -44,4 +45,79 @@ public class UserService {
         return userMapper.toUserResponseDto(saved_user);
     }
 
+    private StatsDto getStats(User user){
+        //TODO
+        int solvedProblems = 750;
+        int attemptedProblems = 525;
+        int matchesPlayed = 330;
+        int matchesWon = 230;
+
+        return StatsDto.builder()
+                .solvedProblems(solvedProblems)
+                .attemptedProblems(attemptedProblems)
+                .matchesPlayed(matchesPlayed)
+                .matchesWon(matchesWon)
+                .build();
+    }
+
+    private CategoryDto[] getCategories(User user){
+        //TODO
+        return new CategoryDto[] {
+                CategoryDto.builder()
+                        .name(ProblemTags.DP.name())
+                        .value(20)
+                        .build(),
+
+                CategoryDto.builder()
+                        .name(ProblemTags.TWO_POINTERS.name())
+                        .value(40)
+                        .build(),
+
+                CategoryDto.builder()
+                        .name(ProblemTags.BRUTE_FORCE.name())
+                        .value(30)
+                        .build(),
+
+                CategoryDto.builder()
+                        .name(ProblemTags.BFS.name())
+                        .value(15)
+                        .build(),
+        };
+    }
+
+    private String getRank(int rate) {
+        int index = rate / 300;
+
+        if (index >= Ranks.values().length) {
+            index = Ranks.values().length - 1;
+        }
+
+        return Ranks.values()[index].name();
+    }
+
+    private int getFriendCount(long id){
+        //TODO
+        return 20;
+    }
+
+    public ProfileDto getProfile(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String rank = getRank(user.getCurrentRate());
+        int friendCount = getFriendCount(id);
+        StatsDto stats = getStats(user);
+        CategoryDto[] categories = getCategories(user);
+
+        return ProfileDto.builder()
+                .username(user.getUsername())
+                .rank(rank)
+                .currentRate(user.getCurrentRate())
+                .maxRate(user.getMaxRate())
+                .friendCount(friendCount)
+                .avatarUrl(user.getImgUrl())
+                .stats(stats)
+                .categories(categories)
+                .build();
+    }
 }
