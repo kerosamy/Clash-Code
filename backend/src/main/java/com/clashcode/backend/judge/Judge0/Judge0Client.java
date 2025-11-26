@@ -66,28 +66,32 @@ public class Judge0Client implements CodeExecutor {
     }
     public Judge0ResponseDto waitForResult(Judge0TokenDto token) {
         String url = JUDGE0_URL + "/submissions/" + token.getToken() + "?base64_encoded=false";
+        int maxRetries = 50;       // Maximum number of polls
+        long delayMillis = 300;    // Delay between polls
+        int attempt = 0;
 
-        while (true) {
+        while (attempt < maxRetries) {
             ResponseEntity<Judge0ResponseDto> response =
                     restTemplate.getForEntity(url, Judge0ResponseDto.class);
 
             Judge0ResponseDto body = response.getBody();
 
-            if (body == null || body.getStatus() == null) {
-                try { Thread.sleep(200); } catch (InterruptedException ignored) {}
-                continue;
+            if (body != null && body.getStatus() != null) {
+                int statusId = body.getStatus().getId();
+                if (statusId != 1 && statusId != 2) {
+                    return body;
+                }
             }
-
-            int statusId = body.getStatus().getId();
-
-            if (statusId != 1 && statusId != 2) {
-                return body;
-            }
-
+            attempt++;
             try {
-                Thread.sleep(300);
-            } catch (InterruptedException ignored) {}
+                Thread.sleep(delayMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Respect interruption
+                throw new RuntimeException("Polling interrupted", e);
+            }
         }
+        throw new RuntimeException("Timeout waiting for Judge0 result after " + (maxRetries * delayMillis) + " ms");
     }
+
 
 }

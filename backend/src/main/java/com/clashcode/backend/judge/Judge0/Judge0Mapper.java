@@ -85,8 +85,8 @@ public class Judge0Mapper {
 
     public ExecutionResultDto toExecutionResultDto (Judge0ResponseDto judge0ResponseDto){
         ExecutionResultDto result = ExecutionResultDto.builder()
-                                    .timeTaken((int)judge0ResponseDto.getTime()*100)
-                                    .memoryTaken((int)judge0ResponseDto.getMemory()*100)
+                                    .timeTaken((int)(judge0ResponseDto.getTime()*100))
+                                    .memoryTaken((int)(judge0ResponseDto.getMemory()*100))
                                     .status(judge0ResponseDto.getStatus().getDescription())
                                     .result(judge0ResponseDto.getStdout())
                                     .build();
