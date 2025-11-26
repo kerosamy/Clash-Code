@@ -1,4 +1,5 @@
 package com.clashcode.backend.controller;
+import com.clashcode.backend.dto.ProblemFilterDto;
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
@@ -40,10 +41,14 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getAllProblems(page, size));
     }
 
-//    @GetMapping("/submit/{id}")
-//    public ResponseEntity<ProblemResponseDto> submit(@PathVariable Long id) {
-//
-//
-//    }
-
+    @PostMapping("/browse/filter")
+    public ResponseEntity<Page<ProblemListDto>> browseFiltered(
+            @RequestBody ProblemFilterDto filterDto,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                problemService.getFilteredProblems(filterDto.getTags(), filterDto.getRate(), page, size)
+        );
+    }
 }

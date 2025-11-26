@@ -1,5 +1,9 @@
 package com.clashcode.backend.service;
-import com.clashcode.backend.dto.*;
+import com.clashcode.backend.dto.ProblemListDto;
+import com.clashcode.backend.dto.ProblemRequestDto;
+import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
@@ -52,6 +56,27 @@ public class ProblemService {
 
         return problemRepository.findAll(pageRequest)
                 .map(problemMapper::toListDto);
+    }
+
+    public Page<ProblemListDto> getFilteredProblems(List<ProblemTags> tags, Integer rate, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        if (tags != null && tags.isEmpty()) {
+            tags = null;
+        }
+
+        Page<Problem> problemPage;
+        if (tags != null && rate != null) {
+            problemPage = problemRepository.findByTagsAndRate(tags, rate, pageRequest);
+        } else if (tags != null) {
+            problemPage = problemRepository.findByTags(tags, pageRequest);
+        } else if (rate != null) {
+            problemPage = problemRepository.findByRate(rate, pageRequest);
+        } else {
+            problemPage = problemRepository.findAll(pageRequest);
+        }
+
+        return problemPage.map(problemMapper::toListDto);
     }
 
 
