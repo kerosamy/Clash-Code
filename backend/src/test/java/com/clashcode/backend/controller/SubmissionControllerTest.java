@@ -46,7 +46,7 @@ class SubmissionControllerTest {
 
         doNothing().when(submissionService).submitCode(any());
 
-        mockMvc.perform(post("/submissions/submit-code")
+        mockMvc.perform(post("/submissions/submit")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(requestDto))
                         .with(csrf()))

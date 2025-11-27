@@ -17,7 +17,7 @@ public class SubmissionController {
         this.submissionService = submissionService;
     }
 
-    @PostMapping("submit-code")
+    @PostMapping("submit")
     public ResponseEntity<Void> submitCode(@RequestBody SubmissionRequestDto submissionRequestDto) {
         submissionService.submitCode(submissionRequestDto);
         return ResponseEntity.ok().build();
