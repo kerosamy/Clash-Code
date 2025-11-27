@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.UserResponseDto;
+import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -10,13 +11,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class UserServiceTest {
@@ -142,5 +146,42 @@ public class UserServiceTest {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getProfile(99L));
+    }
+
+
+    @Test
+    void testSearchByUsername_Found() {
+        // Arrange
+        User user1 = new User();
+        user1.setUsername("alice");
+        user1.setCurrentRate(1200);
+
+        User user2 = new User();
+        user2.setUsername("alicia");
+        user2.setCurrentRate(1500);
+
+        when(userRepository.findByUsernameContainingIgnoreCase("ali"))
+                .thenReturn(List.of(user1, user2));
+
+        // Act
+        List<UserSearchResponse> results = userService.searchByUsername("ali");
+
+        // Assert
+        assertEquals(2, results.size());
+        assertEquals("alice", results.get(0).getUsername());
+        assertEquals("MASTER", results.get(0).getRank());
+        assertEquals("alicia", results.get(1).getUsername());
+        assertEquals("CHAMPION", results.get(1).getRank());
+    }
+
+
+    @Test
+    void testSearchByUsername_NoMatch() {
+        when(userRepository.findByUsernameContainingIgnoreCase("mo"))
+                .thenReturn(List.of());
+
+        List<UserSearchResponse> results = userService.searchByUsername("mo");
+
+        assertTrue(results.isEmpty());
     }
 }

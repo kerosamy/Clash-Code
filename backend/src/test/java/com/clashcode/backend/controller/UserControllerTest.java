@@ -5,6 +5,7 @@ import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.StatsDto;
 import com.clashcode.backend.dto.UserResponseDto;
+import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -131,4 +133,38 @@ public class UserControllerTest {
         mockMvc.perform(get("/users/profile/99"))
                 .andExpect(status().isNotFound());
     }
+
+
+    @Test
+    @WithMockUser
+    void testSearchUsers_Found() throws Exception {
+        UserSearchResponse user1 = new UserSearchResponse("alice", "DIAMOND");
+        UserSearchResponse user2 = new UserSearchResponse("alicia", "MASTER");
+
+        when(userService.searchByUsername("ali")).thenReturn(List.of(user1, user2));
+
+        mockMvc.perform(get("/users/search")
+                        .param("username", "ali")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].username").value("alice"))
+                .andExpect(jsonPath("$[0].rank").value("DIAMOND"))
+                .andExpect(jsonPath("$[1].username").value("alicia"))
+                .andExpect(jsonPath("$[1].rank").value("MASTER"));
+    }
+
+    @Test
+    @WithMockUser
+    void testSearchUsers_NoMatch() throws Exception {
+        when(userService.searchByUsername("nomatch")).thenReturn(List.of());
+
+        mockMvc.perform(get("/users/search")
+                        .param("username", "nomatch")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+
 }

@@ -2,6 +2,7 @@ interface BoardProps<T> {
     data: T[];
     columns: string[];
     onRowClick?: (item: T) => void;
+    gridCols?: string;
     renderRow: (item: T, onClick?: () => void) => React.ReactNode;
 }
 
@@ -10,10 +11,11 @@ export default function Board<T>({
     onRowClick,
     columns,
     renderRow,
+    gridCols = "grid-cols-[80px_1fr_2fr_100px_100px_60px]",
   }: BoardProps<T>) {
     return (
       <div className="bg-container rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[80px_1fr_2fr_100px_100px_60px] gap-4 bg-sidebar px-6 py-4 border-b border-sidebar items-center">
+       <div className={`grid ${gridCols} gap-4 bg-sidebar px-6 py-4 border-b border-sidebar items-center`}>
           {columns.map((col, index) => (
             <span key={index} className="text-orange font-anta text-sm text-center">
               {col}
