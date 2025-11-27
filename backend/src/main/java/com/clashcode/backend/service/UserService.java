@@ -8,9 +8,6 @@ import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 
-import jakarta.annotation.PostConstruct;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -141,6 +138,4 @@ public class UserService {
                 })
                 .toList();
     }
-
-
 }
