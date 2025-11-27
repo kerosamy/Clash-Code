@@ -4,6 +4,8 @@ import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.enums.Ranks;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -14,34 +16,37 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
-public class UserService {
+public class OAuth2Service {
     private final UserRepository userRepository;
     private final UserMapper userMapper = new UserMapper();
 
-    public UserService(UserRepository userRepository) {
+    public OAuth2Service(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public UserResponseDto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
+    public OAuth2Dto handleOAuth2(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oAuth2User = authenticationToken.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        User userExist = userRepository.findByEmail(email);
-        if (userExist == null) {
-            UserResponseDto dto = new UserResponseDto();
+        Optional<User> userExist = userRepository.findByEmail(email);
+        if (userExist.isEmpty()) {
+            OAuth2Dto dto = new OAuth2Dto();
             dto.setEmail(email);
             return dto;
         }
-        return userMapper.toUserResponseDto(userExist);
+        return userMapper.toUserResponseDto(userExist.orElse(null));
     }
 
-    public UserResponseDto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
+
+    public OAuth2Dto completeSignUp(SignUpCompletionDto request, OAuth2AuthenticationToken oauthToken) {
         String email = oauthToken.getPrincipal().getAttribute("email");
         String username = request.getUsername();
-        User userWithSameUsername = userRepository.findByUsername(username);
-        if (userWithSameUsername != null) {
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already taken");
         }
+
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setUsername(username);

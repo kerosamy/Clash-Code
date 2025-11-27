@@ -1,8 +1,11 @@
-const RECOVERY_QUESTIONS = [
-  "What is your mother's friend name?",
-  "What was the name of your first pet?",
-  "What was the first city you lived in?",
-  "What is your favorite movie?",
+
+// STEP 1: CHANGE THIS ARRAY
+// We separate the 'value' (sent to backend) from the 'label' (shown to user)
+const RECOVERY_OPTIONS = [
+  { value: "MOTHERS_FRIEND", label: "What is your mother's friend name?" },
+  { value: "FIRST_PET", label: "What was the name of your first pet?" },
+  { value: "FIRST_CITY", label: "What was the first city you lived in?" },
+  { value: "FAVORITE_MOVIE", label: "What is your favorite movie?" },
 ];
 
 interface RecoveryQuestionModalProps {
@@ -36,35 +39,43 @@ export default function RecoveryQuestionModal({
         <select
           value={recoveryQuestion}
           onChange={(e) => setRecoveryQuestion(e.target.value)}
-          className="w-full p-3 rounded-button bg-background text-white border border-gray-600"
+          className="w-full p-3 rounded-button bg-background text-white border border-gray-600 focus:outline-none focus:border-orange"
         >
           <option value="">Select recovery question</option>
-          {RECOVERY_QUESTIONS.map((q, i) => (
-            <option key={i} value={q}>
-              {q}
+          
+          {/* STEP 2: UPDATE THE MAP FUNCTION */}
+          {RECOVERY_OPTIONS.map((option) => (
+            <option 
+              key={option.value} 
+              value={option.value} // This sends "MOTHERS_FRIEND" to state/backend
+            >
+              {option.label}       {/* This shows "What is your mother..." to user */}
             </option>
           ))}
         </select>
-        {errorQuestion && <p className="text-red-500 text-sm">{errorQuestion}</p>}
+        
+        {errorQuestion && <p className="text-red-500 text-sm mt-1">{errorQuestion}</p>}
 
         <input
           type="text"
           placeholder="Recovery Answer"
           value={recoveryAnswer}
           onChange={(e) => setRecoveryAnswer(e.target.value)}
-          className="w-full p-3 mt-3 rounded-button bg-background text-white border border-gray-600"
+          className="w-full p-3 mt-3 rounded-button bg-background text-white border border-gray-600 focus:outline-none focus:border-orange"
         />
-        {errorAnswer && <p className="text-red-500 text-sm">{errorAnswer}</p>}
+        {errorAnswer && <p className="text-red-500 text-sm mt-1">{errorAnswer}</p>}
 
         <div className="flex justify-end gap-3 mt-4">
           <button
-            className="bg-background border border-gray-600 p-2 rounded-button"
+            type="button"
+            className="bg-background border border-gray-600 p-2 rounded-button text-gray-300 hover:text-white"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className="bg-orange p-2 rounded-button hover:opacity-90"
+            type="button"
+            className="bg-orange p-2 rounded-button hover:opacity-90 text-white"
             onClick={onClose}
           >
             Save

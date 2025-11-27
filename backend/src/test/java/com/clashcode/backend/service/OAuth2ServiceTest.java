@@ -2,9 +2,9 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class UserServiceTest {
+public class OAuth2ServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -35,7 +35,7 @@ public class UserServiceTest {
     private OAuth2User oAuth2User;
 
     @InjectMocks
-    private UserService userService;
+    private OAuth2Service OAuth2Service;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +50,7 @@ public class UserServiceTest {
         when(userRepository.findByEmail("newuser@example.com")).thenReturn(null);
 
         // Act
-        userService.handleOAuth2(oAuth2Token);
+        OAuth2Service.handleOAuth2(oAuth2Token);
 
         verify(userRepository).findByEmail("newuser@example.com");
     }
@@ -65,10 +65,10 @@ public class UserServiceTest {
 
         when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn("existing@example.com");
-        when(userRepository.findByEmail("existing@example.com")).thenReturn(existingUser);
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
 
         // Act
-        UserResponseDto result = userService.handleOAuth2(oAuth2Token);
+        OAuth2Dto result = OAuth2Service.handleOAuth2(oAuth2Token);
 
         assertNotNull(result);
         assertEquals("existing@example.com", result.getEmail());
@@ -92,7 +92,8 @@ public class UserServiceTest {
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        UserResponseDto result = userService.completeSignUp(request, oAuth2Token);
+        // Act
+        OAuth2Dto result = OAuth2Service.completeSignUp(request, oAuth2Token);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -110,10 +111,11 @@ public class UserServiceTest {
 
         when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
-        when(userRepository.findByUsername("takenuser")).thenReturn(new User());
+        when(userRepository.findByUsername("takenuser"))
+                .thenReturn(Optional.of(new User()));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> userService.completeSignUp(request, oAuth2Token));
+                () -> OAuth2Service.completeSignUp(request, oAuth2Token));
 
         assertEquals("Username already taken", exception.getMessage());
     }
@@ -129,7 +131,7 @@ public class UserServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        ProfileDto profile = userService.getProfile(1L);
+        ProfileDto profile = OAuth2Service.getProfile(1L);
 
         assertEquals("mina", profile.getUsername());
         assertEquals("DIAMOND", profile.getRank());
@@ -145,7 +147,7 @@ public class UserServiceTest {
     void testGetProfile_UserNotFound() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> userService.getProfile(99L));
+        assertThrows(UserNotFoundException.class, () -> OAuth2Service.getProfile(99L));
     }
 
 
@@ -164,7 +166,7 @@ public class UserServiceTest {
                 .thenReturn(List.of(user1, user2));
 
         // Act
-        List<UserSearchResponse> results = userService.searchByUsername("ali");
+        List<UserSearchResponse> results = OAuth2Service.searchByUsername("ali");
 
         // Assert
         assertEquals(2, results.size());
@@ -180,7 +182,7 @@ public class UserServiceTest {
         when(userRepository.findByUsernameContainingIgnoreCase("mo"))
                 .thenReturn(List.of());
 
-        List<UserSearchResponse> results = userService.searchByUsername("mo");
+        List<UserSearchResponse> results = OAuth2Service.searchByUsername("mo");
 
         assertTrue(results.isEmpty());
     }

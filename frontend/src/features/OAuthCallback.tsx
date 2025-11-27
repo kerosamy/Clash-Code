@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { authService } from "../services/OAuth2Service";
 
 export interface UserResponseDto {
   id: number;
@@ -16,17 +16,16 @@ export default function OAuthCallback() {
     const checkAuthStatus = async () => {
       try {
         const user: UserResponseDto = await authService.getGoogleUser();
-        const flow = sessionStorage.getItem('oauth_flow');
-        console.log("Flow :", flow);
-
-        sessionStorage.removeItem('oauth_flow');
+        const flow = sessionStorage.getItem("oauth_flow");
+        console.log("Flow:", flow);
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
         if (user.username) {
-          navigate("/profile");
+          sessionStorage.removeItem("oauth_flow");
+          navigate("/profile/1/overview");
         } else {
-            if (flow === "signup") {
+          if (flow === "signup") {
             navigate("/complete-registration", { state: { email: user.email } });
           } else {
             setError("User not found. Please sign up first.");

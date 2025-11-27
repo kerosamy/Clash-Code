@@ -4,10 +4,10 @@ import com.clashcode.backend.dto.CategoryDto;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.StatsDto;
-import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.exception.UserNotFoundException;
-import com.clashcode.backend.service.UserService;
+import com.clashcode.backend.dto.OAuth2Dto;
+import com.clashcode.backend.service.OAuth2Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +33,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
-public class UserControllerTest {
+@WebMvcTest(OAuth2Controller.class)
+public class OAuth2ControllerTest {
 
         @Autowired
         private MockMvc mockMvc;
 
-        @MockitoBean
-        private UserService userService;
+    @MockitoBean
+    private OAuth2Service OAuth2Service;
 
         @Autowired
         private ObjectMapper objectMapper;
@@ -54,10 +54,10 @@ public class UserControllerTest {
                 OAuth2AuthenticationToken token = org.mockito.Mockito.mock(OAuth2AuthenticationToken.class);
                 when(token.getPrincipal()).thenReturn(oAuth2User);
 
-                UserResponseDto mockResponse = UserResponseDto.builder()
+                OAuth2Dto mockResponse = OAuth2Dto.builder()
                                 .email("newuser@example.com")
                                 .build();
-                when(userService.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
+                when(OAuth2Service.handleOAuth2(any(OAuth2AuthenticationToken.class))).thenReturn(mockResponse);
 
                 mockMvc.perform(get("/users/OAuthCallback").with(oauth2Login()))
                                 .andExpect(status().isOk())
@@ -70,12 +70,12 @@ public class UserControllerTest {
                 SignUpCompletionDto request = new SignUpCompletionDto();
                 request.setUsername("newuser");
 
-                UserResponseDto mockResponse = new UserResponseDto();
+                OAuth2Dto mockResponse = new OAuth2Dto();
                 mockResponse.setId(1L);
                 mockResponse.setUsername("newuser");
                 mockResponse.setEmail("newuser@example.com");
 
-                when(userService.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
+                when(OAuth2Service.completeSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
                                 .thenReturn(mockResponse);
 
                 mockMvc.perform(post("/users/GoogleSignUp/completeRegistration")
@@ -110,8 +110,8 @@ public class UserControllerTest {
                 })
                 .build();
 
-        when(userService.getProfile(1L)).thenReturn(mockProfile);
-
+        when(OAuth2Service.getProfile(1L)).thenReturn(mockProfile);
+        
         mockMvc.perform(get("/users/profile/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("mina"))
@@ -128,7 +128,7 @@ public class UserControllerTest {
     @Test
     @WithMockUser
     void testGetProfile_UserNotFound() throws Exception {
-        when(userService.getProfile(99L)).thenThrow(new UserNotFoundException("User not found"));
+        when(OAuth2Service.getProfile(99L)).thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(get("/users/profile/99"))
                 .andExpect(status().isNotFound());
@@ -141,7 +141,7 @@ public class UserControllerTest {
         UserSearchResponse user1 = new UserSearchResponse("alice", "DIAMOND");
         UserSearchResponse user2 = new UserSearchResponse("alicia", "MASTER");
 
-        when(userService.searchByUsername("ali")).thenReturn(List.of(user1, user2));
+        when(OAuth2Service.searchByUsername("ali")).thenReturn(List.of(user1, user2));
 
         mockMvc.perform(get("/users/search")
                         .param("username", "ali")
@@ -157,7 +157,7 @@ public class UserControllerTest {
     @Test
     @WithMockUser
     void testSearchUsers_NoMatch() throws Exception {
-        when(userService.searchByUsername("nomatch")).thenReturn(List.of());
+        when(OAuth2Service.searchByUsername("nomatch")).thenReturn(List.of());
 
         mockMvc.perform(get("/users/search")
                         .param("username", "nomatch")
