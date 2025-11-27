@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/test/public").permitAll()  // Public test
                         .requestMatchers("/oauth2/**", "/users/GoogleSignUp/**").permitAll()
                         .anyRequest().authenticated()
+                        /*To permit all requests, change .authenticated() to .permitAll()*/
                 )
 
                 .oauth2Login(oauth2 -> oauth2

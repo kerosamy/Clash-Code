@@ -85,7 +85,7 @@ export default function SignUp() {
       alert("Something went wrong. Try again later.");
 =======
       await registerUser(requestData);
-      navigate("/profile");
+      navigate("/log-in");
     } catch (err) {
 
       if (err instanceof Error) {

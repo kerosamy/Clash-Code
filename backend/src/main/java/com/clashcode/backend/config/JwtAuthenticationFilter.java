@@ -35,6 +35,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.handlerExceptionResolver = handlerExceptionResolver;
     }
 
+    /* To strictly ignore JWTs replace doFilterInternal
+    with this implementation
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        // --- BYPASS MODE (Temporary for Testing) ---
+        // We strictly ignore the token.
+        // The SecurityContext remains empty (Anonymous).
+        // Authentication relies on manual UserID passing in the Controller.
+
+        filterChain.doFilter(request, response);
+    }
+     */
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
