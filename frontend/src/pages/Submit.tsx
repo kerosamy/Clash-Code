@@ -30,7 +30,7 @@ export default function Submit() {
             </h3>
 
             <textarea
-                className="w-full h-80 bg-black text-gray-200 p-4 rounded-lg resize-none font-mono 
+                className="w-full h-80 bg-gray-800 text-gray-200 p-4 rounded-lg resize-none font-mono 
                         border border-gray-700 focus:outline-none focus:border-orange-400"
                 placeholder="Your source code for the problem, Make sure it's valid solution"
                 onChange={event => setCode(event.target.value)}

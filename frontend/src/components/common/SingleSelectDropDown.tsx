@@ -106,7 +106,7 @@ export default function SingleSelectDropdown({
                   key={option}
                   onClick={() => selectItem(option)}
                   className={`w-full text-left px-3 py-2 transition-colors font-anta text-sm flex items-center justify-between truncate
-                    ${selected ? "bg-orange/20 text-orange" : "text-text hover:bg-sidebar"}
+                    ${selected ? "bg-orange/20 text-orange" : "text-text hover:bg-gray-800"}
                   `}
                 >
                   <span className="truncate">{option}</span>
