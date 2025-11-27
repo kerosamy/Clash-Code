@@ -65,7 +65,7 @@ export default function SignUp() {
         return;
       }
 
-      navigate("/profile");
+      navigate('/profile/1/overview');
     } catch {
       alert("Something went wrong. Try again later.");
     }

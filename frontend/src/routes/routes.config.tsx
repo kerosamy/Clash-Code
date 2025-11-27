@@ -1,5 +1,5 @@
-// Central configuration for all routes
 import type { ComponentType } from 'react';
+import { Navigate } from 'react-router-dom';
 import Profile from '../pages/Profile';
 import Friends from '../pages/Friends';
 import Practice from '../pages/Practice';
@@ -13,7 +13,12 @@ import NotFound from '../pages/NotFound';
 import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
 
-// Import SVG icons from assets
+// Profile sub-pages
+import ProfileOverview from '../pages/profile/ProfileOverview';
+import Submissions from '../pages/profile/Submissions';
+import Matches from '../pages/profile/Matches';
+
+// Icons
 import ProfileIcon from '../assets/icons/profile.svg';
 import FriendsIcon from '../assets/icons/friends.svg';
 import PracticeIcon from '../assets/icons/practice.svg';
@@ -22,8 +27,9 @@ import LeaderboardIcon from '../assets/icons/leaderboard.svg';
 import AddProblemIcon from '../assets/icons/add-problem.svg';
 import SettingsIcon from '../assets/icons/settings.svg';
 import LogoutIcon from '../assets/icons/logout.svg';
+import ListIcon from '../assets/icons/list.svg';
+import ScoreIcon from '../assets/icons/scoreboard.svg';
 
-//Non-sidebar pages
 export interface PageConfig {
   path: string;
   component: ComponentType;
@@ -39,22 +45,45 @@ export const pages: PageConfig[] = [
 { path: '/complete-registration', component: CompleteRegistration },
 ];
 
+export interface ChildRouteConfig {
+  path?: string;
+  index?: boolean;
+  component: ComponentType;
+}
 
-//Sidebar pages
 export interface RouteConfig {
-    path: string;
-    name: string;
-    icon: string;
-    component: ComponentType;
+  path: string;
+  name: string;
+  icon: string;
+  component: ComponentType;
+  children?: ChildRouteConfig[];
 }
 
 export const routes: RouteConfig[] = [
-    { path: 'profile', name: 'Profile', icon: ProfileIcon, component: Profile },
-    { path: 'friends', name: 'Friends', icon: FriendsIcon, component: Friends },
-    { path: 'practice', name: 'Practice', icon: PracticeIcon, component: Practice },
-    { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
-    { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
-    { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
-    { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
-    { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
+  {
+    path: 'profile/:id',
+    name: 'Profile',
+    icon: ProfileIcon,
+    component: Profile,
+    children: [
+      { index: true, component: () => <Navigate to="overview" replace /> },
+      { path: 'overview', component: ProfileOverview },
+      { path: 'submissions', component: Submissions },
+      { path: 'matches', component: Matches }
+    ]
+  },
+  { path: 'friends', name: 'Friends', icon: FriendsIcon, component: Friends },
+  { path: 'practice', name: 'Practice', icon: PracticeIcon, component: Practice },
+  { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
+  { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
+  { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
+  { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
+  { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
+];
+
+// Used by TopNavigator to render tabs
+export const profileSubRoutes: RouteConfig[] = [
+  { path: 'overview', name: 'Overview', icon: ProfileIcon, component: ProfileOverview },
+  { path: 'submissions', name: 'Submissions', icon: ListIcon, component: Submissions },
+  { path: 'matches', name: 'Matches', icon: ScoreIcon, component: Matches },
 ];

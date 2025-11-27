@@ -23,7 +23,7 @@ export default function Sidebar() {
             }
           >
             <img src={icon} className="w-icon h-icon flex-shrink-0" />
-            <span>{name}</span>
+            <span className="text-xl font-medium">{name}</span>
           </NavLink>
         ))}
       </nav>

@@ -41,7 +41,7 @@ export default function LogIn() {
     if (!formValid) return;
 
     // TODO: Implement login API
-    navigate('/profile');
+    navigate('/profile/1/overview');
   };
 
   const handleGoogleLogin = () => {
