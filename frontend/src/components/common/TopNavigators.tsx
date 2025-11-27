@@ -8,29 +8,30 @@ interface NavigatorItem {
 
 interface TopNavigatorProps {
   navigators: NavigatorItem[];
-  className?: string;
 }
 
 export default function TopNavigator({ navigators }: TopNavigatorProps) {
   return (
-    <nav 
-      className={"bg-slate-800 border-b border-slate-700"}
-    >
-      <div className="flex items-center justify-center gap-8 px-8 h-16">
+    <nav className="w-full pt-5">
+      <div className="flex items-center justify-evenly px-8 h-16">
         {navigators.map(({ name, path, icon }) => (
           <NavLink
             key={path}
             to={path}
             className={({ isActive }) =>
-              `flex items-center gap-2 px-6 py-2 rounded-lg transition-all relative
+              ` flex items-center justify-center gap-3
+                px-6 py-3
+                rounded-full
+                transition
+                font-anta text-white
               ${isActive 
-                ? 'bg-slate-700 text-white' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-white/15'
+                : 'bg-transparent hover:bg-white/10'
               }`
             }
           >
             <img src={icon} className="w-icon h-icon flex-shrink-0" />
-            <span className="font-medium">{name}</span>
+            <span className="font-medium text-xl">{name}</span>
           </NavLink>
         ))}
       </div>
