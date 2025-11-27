@@ -7,6 +7,9 @@ import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
+
+import java.util.List;
+
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -120,5 +123,19 @@ public class UserService {
                 .stats(stats)
                 .categories(categories)
                 .build();
+    }
+
+    public List<UserSearchResponse> searchByUsername(String username) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(username);
+
+        return users.stream()
+                .map(user -> {
+                    String rank = getRank(user.getCurrentRate());
+                    return new UserSearchResponse(
+                            user.getUsername(),
+                            rank
+                    );
+                })
+                .toList();
     }
 }

@@ -3,7 +3,11 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.UserResponseDto;
+import com.clashcode.backend.dto.UserSearchResponse;
 import com.clashcode.backend.service.UserService;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -34,4 +38,13 @@ public class UserController {
         ProfileDto profile= userService.getProfile(id);
         return ResponseEntity.ok(profile);
     }
+
+        
+    @GetMapping("/search")
+    public ResponseEntity<List<UserSearchResponse>> searchUsers (@RequestParam String username) {
+        List<UserSearchResponse> results = userService.searchByUsername(username);
+        return ResponseEntity.ok(results);
+    }
+
+
 }
