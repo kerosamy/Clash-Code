@@ -10,7 +10,6 @@ import Settings from '../pages/Settings';
 import SignUp from '../pages/SignUp';
 import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
-import Submit from '../pages/Submit';
 import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
 
@@ -57,5 +56,4 @@ export const routes: RouteConfig[] = [
     { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
     { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
     { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
-    { path: 'submit', name: 'Submit', icon: ProfileIcon, component: Submit }
 ];
