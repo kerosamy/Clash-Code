@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.UserResponseDto;
 import com.clashcode.backend.service.UserService;
@@ -26,5 +27,11 @@ public class UserController {
     public ResponseEntity<UserResponseDto> completeSignUp(@RequestBody SignUpCompletionDto request, OAuth2AuthenticationToken oauToken) {
         UserResponseDto user = userService.completeSignUp(request, oauToken);
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<ProfileDto> getProfile(@PathVariable Long id) {
+        ProfileDto profile= userService.getProfile(id);
+        return ResponseEntity.ok(profile);
     }
 }

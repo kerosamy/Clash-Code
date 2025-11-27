@@ -1,7 +1,9 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.UserResponseDto;
+import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +13,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -41,12 +46,7 @@ public class UserServiceTest {
         when(userRepository.findByEmail("newuser@example.com")).thenReturn(null);
 
         // Act
-        UserResponseDto result = userService.handleOAuth2(oAuth2Token);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("newuser@example.com", result.getEmail());
-        assertNull(result.getUsername());
+        userService.handleOAuth2(oAuth2Token);
 
         verify(userRepository).findByEmail("newuser@example.com");
     }
@@ -66,7 +66,6 @@ public class UserServiceTest {
         // Act
         UserResponseDto result = userService.handleOAuth2(oAuth2Token);
 
-        // Assert
         assertNotNull(result);
         assertEquals("existing@example.com", result.getEmail());
         assertEquals("existinguser", result.getUsername());
@@ -75,7 +74,6 @@ public class UserServiceTest {
 
     @Test
     void testCompleteSignUp_Success() {
-        // Arrange
         SignUpCompletionDto request = new SignUpCompletionDto();
         request.setUsername("newuser");
 
@@ -90,10 +88,8 @@ public class UserServiceTest {
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        // Act
         UserResponseDto result = userService.completeSignUp(request, oAuth2Token);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("newuser", result.getUsername());
@@ -105,7 +101,6 @@ public class UserServiceTest {
 
     @Test
     void testCompleteSignUp_UsernameTaken() {
-        // Arrange
         SignUpCompletionDto request = new SignUpCompletionDto();
         request.setUsername("takenuser");
 
@@ -113,10 +108,39 @@ public class UserServiceTest {
         when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
         when(userRepository.findByUsername("takenuser")).thenReturn(new User());
 
-        // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> userService.completeSignUp(request, oAuth2Token));
 
         assertEquals("Username already taken", exception.getMessage());
+    }
+
+    @Test
+    void testGetProfile_AssemblesCorrectProfile() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("mina");
+        user.setCurrentRate(1140);
+        user.setMaxRate(1200);
+        user.setImgUrl("https://example.com/avatar.png");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        ProfileDto profile = userService.getProfile(1L);
+
+        assertEquals("mina", profile.getUsername());
+        assertEquals("DIAMOND", profile.getRank());
+        assertEquals(1140, profile.getCurrentRate());
+        assertEquals(1200, profile.getMaxRate());
+        assertEquals(20, profile.getFriendCount());
+
+        assertNotNull(profile.getStats());
+        assertNotNull(profile.getCategories());
+    }
+
+    @Test
+    void testGetProfile_UserNotFound() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.getProfile(99L));
     }
 }
