@@ -6,11 +6,12 @@ import com.clashcode.backend.judge.CodeExecutor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.*;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Component
 public class Judge0Client implements CodeExecutor {
     private final String JUDGE0_URL = "http://localhost:2358";
     private final String JUDGE0_SUBMIT_URL = "/submissions/?base64_encoded=false&wait=false";
@@ -34,6 +35,27 @@ public class Judge0Client implements CodeExecutor {
         }
         return results;
     };
+    @Override
+    public String executeAndReturnOutput(String stdin, String sourceCode, String language) {
+        Judge0TokenDto token = submitCode(
+                sourceCode,
+                stdin,
+                language,
+                null
+        );
+        Judge0ResponseDto result = waitForResult(token);
+        if (result.getStdout() != null) {
+            return result.getStdout();
+        }
+        if (result.getCompileOutput() != null) {
+            return "Compilation Error:\n" + result.getCompileOutput();
+        }
+        if (result.getStderr() != null) {
+            return "Runtime Error:\n" + result.getStderr();
+        }
+        return "Unknown error occurred";
+    }
+
 
     public Judge0TokenDto submitCode (String sourceCode,
                                String testCase,
@@ -92,6 +114,7 @@ public class Judge0Client implements CodeExecutor {
         }
         throw new RuntimeException("Timeout waiting for Judge0 result after " + (maxRetries * delayMillis) + " ms");
     }
+
 
 
 }

@@ -1,16 +1,14 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.TestCaseRequestDto;
+import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
-import com.clashcode.backend.mapper.TestCaseMapper;
 import com.clashcode.backend.repository.TestCaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,60 +17,99 @@ import static org.mockito.Mockito.*;
 class TestCaseServiceTest {
 
     private TestCaseRepository testCaseRepository;
-    private TestCaseMapper testCaseMapper;
+    private FileStorageService fileStorageService;
     private TestCaseService testCaseService;
 
     @BeforeEach
     void setUp() {
-        testCaseRepository = Mockito.mock(TestCaseRepository.class);
-        testCaseMapper = Mockito.mock(TestCaseMapper.class);
-        testCaseService = new TestCaseService(testCaseRepository, testCaseMapper);
+        testCaseRepository = mock(TestCaseRepository.class);
+        fileStorageService = mock(FileStorageService.class);
+        Judge0Client judge0Client = mock(Judge0Client.class);
+        testCaseService = new TestCaseService(testCaseRepository, fileStorageService, judge0Client);
     }
 
     @Test
-    void testGetTestCasesFromRequestDto() {
-        ProblemRequestDto request = new ProblemRequestDto();
-
-        TestCaseRequestDto tcReq1 = new TestCaseRequestDto();
-        tcReq1.setInput("10 20");
-        tcReq1.setVisible(true);
-
-        TestCaseRequestDto tcReq2 = new TestCaseRequestDto();
-        tcReq2.setInput("30 40");
-        tcReq2.setVisible(false);
-
-        request.setTestCases(Arrays.asList(tcReq1, tcReq2));
-
+    void testAddTestCases() {
         Problem problem = new Problem();
+        problem.setId(1L);
 
-        // Mock mapper behavior
-        TestCase tc1 = new TestCase();
-        tc1.setInput("10 20");
-        tc1.setVisible(true);
-        tc1.setProblem(problem);
+        MultipartFile file1 = mock(MultipartFile.class);
+        MultipartFile file2 = mock(MultipartFile.class);
+        List<MultipartFile> files = List.of(file1, file2);
 
-        TestCase tc2 = new TestCase();
-        tc2.setInput("30 40");
-        tc2.setVisible(false);
-        tc2.setProblem(problem);
+        List<Boolean> visibleFlags = List.of(true, false);
 
-        when(testCaseMapper.toEntity(tcReq1, problem)).thenReturn(tc1);
-        when(testCaseMapper.toEntity(tcReq2, problem)).thenReturn(tc2);
+        // Mock repository saveAll to return test cases with IDs
+        TestCase tc1 = TestCase.builder().problem(problem).visible(true).id(101L).build();
+        TestCase tc2 = TestCase.builder().problem(problem).visible(false).id(102L).build();
+        when(testCaseRepository.saveAll(any())).thenReturn(List.of(tc1, tc2));
 
-        List<TestCase> testCases = testCaseService.getTestCasesFromRequestDto(request, problem);
+        // Mock file storage
+        when(fileStorageService.storeTestCase(file1, 1L, 101L)).thenReturn("path/input1.txt");
+        when(fileStorageService.storeTestCase(file2, 1L, 102L)).thenReturn("path/input2.txt");
 
-        assertEquals(2, testCases.size());
+        List<TestCase> result = testCaseService.addTestCases(files, problem, visibleFlags);
 
-        assertEquals("10 20", testCases.get(0).getInput());
-        assertTrue(testCases.get(0).isVisible());
-        assertEquals(problem, testCases.get(0).getProblem());
+        // Verify repository calls
+        verify(testCaseRepository, times(2)).saveAll(any());
 
-        assertEquals("30 40", testCases.get(1).getInput());
-        assertFalse(testCases.get(1).isVisible());
-        assertEquals(problem, testCases.get(1).getProblem());
+        // Verify file storage calls
+        verify(fileStorageService).storeTestCase(file1, 1L, 101L);
+        verify(fileStorageService).storeTestCase(file2, 1L, 102L);
 
-        // Verify mapper calls
-        verify(testCaseMapper, times(1)).toEntity(tcReq1, problem);
-        verify(testCaseMapper, times(1)).toEntity(tcReq2, problem);
+        // Assertions
+        assertEquals(2, result.size());
+        assertEquals("path/input1.txt", result.get(0).getInputPath());
+        assertEquals("path/input2.txt", result.get(1).getInputPath());
     }
+
+    @Test
+    void testGetVisibleTestCasesForProblem() {
+        Problem problem = new Problem();
+        problem.setId(1L);
+
+        // Mock test cases with input/output paths
+        TestCase tc1 = TestCase.builder()
+                .id(101L)
+                .problem(problem)
+                .visible(true)
+                .inputPath("path/to/input1.txt")
+                .outputPath("path/to/output1.txt")
+                .build();
+
+        TestCase tc2 = TestCase.builder()
+                .id(102L)
+                .problem(problem)
+                .visible(true)
+                .inputPath("path/to/input2.txt")
+                .outputPath("path/to/output2.txt")
+                .build();
+
+        when(testCaseRepository.findByProblemAndVisibleTrue(problem)).thenReturn(List.of(tc1, tc2));
+
+        TestCaseResponseDto dto1 = new TestCaseResponseDto("input1", "output1");
+        TestCaseResponseDto dto2 = new TestCaseResponseDto("input2", "output2");
+
+        when(fileStorageService.getTestCaseContent("path/to/input1.txt")).thenReturn("input1");
+        when(fileStorageService.getTestCaseContent("path/to/output1.txt")).thenReturn("output1");
+        when(fileStorageService.getTestCaseContent("path/to/input2.txt")).thenReturn("input2");
+        when(fileStorageService.getTestCaseContent("path/to/output2.txt")).thenReturn("output2");
+
+        List<TestCaseResponseDto> result = testCaseService.getVisibleTestCasesForProblem(problem);
+
+        // Verify repository and file storage calls
+        verify(testCaseRepository).findByProblemAndVisibleTrue(problem);
+        verify(fileStorageService).getTestCaseContent("path/to/input1.txt");
+        verify(fileStorageService).getTestCaseContent("path/to/output1.txt");
+        verify(fileStorageService).getTestCaseContent("path/to/input2.txt");
+        verify(fileStorageService).getTestCaseContent("path/to/output2.txt");
+
+        // Check result
+        assertEquals(2, result.size());
+        assertEquals("input1", result.get(0).getInput());
+        assertEquals("output1", result.get(0).getOutput());
+        assertEquals("input2", result.get(1).getInput());
+        assertEquals("output2", result.get(1).getOutput());
+    }
+
 }

@@ -11,4 +11,6 @@ public interface CodeExecutor {
                                           List<String> testCases,
                                           List<String> expectedResults );
 
+    String executeAndReturnOutput(String stdin, String sourceCode, String language);
+
 }

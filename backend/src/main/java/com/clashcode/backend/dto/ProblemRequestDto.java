@@ -35,5 +35,6 @@ public class ProblemRequestDto {
     private List<ProblemTags> tags = new ArrayList<>();
 
     @Builder.Default
-    private List<TestCaseRequestDto> testCases = new ArrayList<>();
+    private List<Boolean> visibleFlags = new ArrayList<>();
+
 }
