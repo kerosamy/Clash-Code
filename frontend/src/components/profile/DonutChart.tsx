@@ -30,6 +30,15 @@ export default function DonutChart({ categories, color }: DonutChartProps) {
   return (
     <div className="relative w-64 h-64 flex-shrink-0">
       <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#4B5563"
+          strokeWidth={strokeWidth}
+          className="opacity-50"
+        />
         {segments.map((segment, index) => (
           <circle
             key={index}

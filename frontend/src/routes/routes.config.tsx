@@ -27,6 +27,8 @@ import LeaderboardIcon from '../assets/icons/leaderboard.svg';
 import AddProblemIcon from '../assets/icons/add-problem.svg';
 import SettingsIcon from '../assets/icons/settings.svg';
 import LogoutIcon from '../assets/icons/logout.svg';
+import ListIcon from '../assets/icons/list.svg';
+import ScoreIcon from '../assets/icons/scoreboard.svg';
 
 export interface PageConfig {
   path: string;
@@ -82,6 +84,6 @@ export const routes: RouteConfig[] = [
 // Used by TopNavigator to render tabs
 export const profileSubRoutes: RouteConfig[] = [
   { path: 'overview', name: 'Overview', icon: ProfileIcon, component: ProfileOverview },
-  { path: 'submissions', name: 'Submissions', icon: SwordIcon, component: Submissions },
-  { path: 'matches', name: 'Matches', icon: LeaderboardIcon, component: Matches },
+  { path: 'submissions', name: 'Submissions', icon: ListIcon, component: Submissions },
+  { path: 'matches', name: 'Matches', icon: ScoreIcon, component: Matches },
 ];
