@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState,useEffect
+ } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
 import { authService } from "../services/OAuth2Service.ts";
@@ -11,6 +12,10 @@ export default function CompleteRegistration() {
   const location = useLocation();
   const email = location.state?.email;
   const navigate = useNavigate();
+
+  useEffect(() => {
+  sessionStorage.setItem("oauth_processed", "true");
+}, []);
 
   const validateInputs = () => {
     const newErrors: { [key: string]: string } = {};
@@ -30,13 +35,16 @@ export default function CompleteRegistration() {
     setLoading(true);
     setErrors({});
 
-    try {
+   try {
       await authService.completeRegistration(username);
+      sessionStorage.removeItem("oauth_flow");
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate("/profile");
-    } catch (err:any) {
-      setErrors({ 
-        username: err.response?.data?.message || "Username already taken or an error occurred." 
+      navigate("/profile/1/overview");
+    } catch (err: any) {
+      setErrors({
+        username:
+          err.response?.data?.message ||
+          "Username already taken or an error occurred.",
       });
     } finally {
       setLoading(false);

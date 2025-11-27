@@ -28,7 +28,6 @@ public class ProblemController {
     @PostMapping
     public ResponseEntity<Void> addProblem(@RequestPart("problem") ProblemRequestDto problemRequestDto,
                                            @RequestPart("testcases") List<MultipartFile> files) {
-
         problemService.addProblem(problemRequestDto , files );
         return ResponseEntity.ok().build();
     }

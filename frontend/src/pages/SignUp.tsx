@@ -18,6 +18,11 @@ export default function SignUp() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const navigate = useNavigate();
 
+  const handleGoogleSignUP = () => {
+    sessionStorage.setItem('oauth_flow', 'signup');
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  };
+
   const validateInputs = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -68,24 +73,8 @@ export default function SignUp() {
     };
 
     try {
-<<<<<<< HEAD
-      const mockApiResponse = {
-        success: true, // set to false to test UI
-        field: "email",
-        message: "Email already exists",
-      };
-
-      if (!mockApiResponse.success) {
-        setErrors({ [mockApiResponse.field]: mockApiResponse.message });
-        return;
-      }
-
-      navigate('/profile/1/overview');
-    } catch {
-      alert("Something went wrong. Try again later.");
-=======
       await registerUser(requestData);
-      navigate("/log-in");
+      navigate("/profile/1/overview");
     } catch (err) {
 
       if (err instanceof Error) {
@@ -99,13 +88,7 @@ export default function SignUp() {
           alert(err.message || "Something went wrong. Try again later.");
         }
       }
->>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication)
     }
-  };
-
-  const handleGoogleSignUP = () => {
-    sessionStorage.setItem('oauth_flow', 'signup');
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
   return (
@@ -175,14 +158,9 @@ export default function SignUp() {
         </div>
 
         <button
-<<<<<<< HEAD
-          onClick={ handleGoogleSignUP }
-=======
-          onClick={() =>
-            (window.location.href =
-              "http://localhost:8080/oauth2/authorization/google")
-          }
->>>>>>> 545c25c ([CLASHCODE-5] integrated the frontend to user authentication)
+          onClick=
+            {handleGoogleSignUP}
+  
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
         >
           <img

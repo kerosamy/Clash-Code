@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
                         .requestMatchers("/oauth2/**", "/users/GoogleSignUp/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                         /*To permit all requests, change .authenticated() to .permitAll()*/
                 )
 
