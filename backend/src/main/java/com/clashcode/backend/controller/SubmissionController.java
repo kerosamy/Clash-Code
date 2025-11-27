@@ -1,6 +1,5 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.service.SubmissionService;

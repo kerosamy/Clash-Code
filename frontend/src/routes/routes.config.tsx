@@ -18,6 +18,12 @@ import ProfileOverview from '../pages/profile/ProfileOverview';
 import Submissions from '../pages/profile/Submissions';
 import Matches from '../pages/profile/Matches';
 
+// Friends sub-pages
+import MyFriends from '../pages/friends/MyFriends';
+import Requested from '../pages/friends/Requested';
+import Pending from '../pages/friends/Pending';
+import AddFriend from '../pages/friends/AddFriend';
+
 // Icons
 import ProfileIcon from '../assets/icons/profile.svg';
 import FriendsIcon from '../assets/icons/friends.svg';
@@ -29,6 +35,8 @@ import SettingsIcon from '../assets/icons/settings.svg';
 import LogoutIcon from '../assets/icons/logout.svg';
 import ListIcon from '../assets/icons/list.svg';
 import ScoreIcon from '../assets/icons/scoreboard.svg';
+import friends from '../assets/icons/friends.svg';
+import addUser from '../assets/icons/add-user.svg'; 
 
 export interface PageConfig {
   path: string;
@@ -72,7 +80,19 @@ export const routes: RouteConfig[] = [
       { path: 'matches', component: Matches }
     ]
   },
-  { path: 'friends', name: 'Friends', icon: FriendsIcon, component: Friends },
+  { path: 'friends', 
+    name: 'Friends', 
+    icon: FriendsIcon, 
+    component: Friends,
+    children: [
+      { index: true, component: () => <Navigate to="my-friends" replace /> },
+      { path: 'my-friends', component: MyFriends }, 
+      { path: 'requested', component: Requested },
+      { path: 'pending', component: Pending },
+      { path: 'add-friend', component: AddFriend }
+    ]
+   },
+
   { path: 'practice', name: 'Practice', icon: PracticeIcon, component: Practice },
   { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
@@ -86,4 +106,11 @@ export const profileSubRoutes: RouteConfig[] = [
   { path: 'overview', name: 'Overview', icon: ProfileIcon, component: ProfileOverview },
   { path: 'submissions', name: 'Submissions', icon: ListIcon, component: Submissions },
   { path: 'matches', name: 'Matches', icon: ScoreIcon, component: Matches },
+];
+
+export const friendsSubRoutes: RouteConfig[] = [
+  { path: 'my-friends', name: 'My Friends', icon: friends, component: MyFriends },
+  { path: 'requested', name: 'Requested', icon: friends, component: Requested },
+  { path: 'pending', name: 'Pending', icon: friends, component: Pending },
+  { path: 'add-friend', name: 'Add Friend', icon: addUser, component: AddFriend },
 ];
