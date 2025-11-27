@@ -124,11 +124,20 @@ class ProblemControllerTest {
         List<ProblemListDto> problemList = List.of(problem1);
         Page<ProblemListDto> page = new PageImpl<>(problemList, PageRequest.of(0, 10), problemList.size());
 
-        when(problemService.getFilteredProblems(anyList(), anyInt(), anyInt(), anyInt())).thenReturn(page);
+
+        when(problemService.getFilteredProblems(
+                anyList(),
+                any(Integer.class),
+                any(Integer.class),
+                anyInt(),
+                anyInt()
+        )).thenReturn(page);
+
 
         ProblemFilterDto filterDto = new ProblemFilterDto();
-        filterDto.setTags(List.of());  // empty list for test
-        filterDto.setRate(200);
+        filterDto.setTags(List.of());
+        filterDto.setMinRate(100);
+        filterDto.setMaxRate(200);
 
         mockMvc.perform(post("/problem/browse/filter")
                         .param("page", "0")

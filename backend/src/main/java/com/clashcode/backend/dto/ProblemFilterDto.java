@@ -10,5 +10,6 @@ import java.util.List;
 @Data
 public class ProblemFilterDto {
     private List<ProblemTags> tags;
-    private Integer rate;
+    private Integer minRate;
+    private Integer maxRate;
 }

@@ -58,22 +58,36 @@ public class ProblemService {
                 .map(problemMapper::toListDto);
     }
 
-    public Page<ProblemListDto> getFilteredProblems(List<ProblemTags> tags, Integer rate, int page, int size) {
+    public Page<ProblemListDto> getFilteredProblems(
+            List<ProblemTags> tags,
+            Integer minRate,
+            Integer maxRate,
+            int page,
+            int size) {
+
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        if (tags != null && tags.isEmpty()) {
-            tags = null;
-        }
+        if (tags != null && tags.isEmpty()) tags = null;
 
         Page<Problem> problemPage;
-        long tagsSize = tags != null ? tags.size() : 0;
 
-        if (tags != null && rate != null) {
-            problemPage = problemRepository.findByTagsAndRate(tags, tagsSize, rate, pageRequest);
-        } else if (tags != null) {
-            problemPage = problemRepository.findByTags(tags, tagsSize, pageRequest);
-        } else if (rate != null) {
-            problemPage = problemRepository.findByRate(rate, pageRequest);
+        boolean hasTags = tags != null;
+        boolean hasMin = minRate != null;
+        boolean hasMax = maxRate != null;
+
+        if (hasTags && hasMin && hasMax) {
+            problemPage = problemRepository.findByTagsAndRateRange(tags, tags.size(), minRate, maxRate, pageRequest);
+        } else if (hasTags && (hasMin || hasMax)) {
+            problemPage = problemRepository.findByTagsAndRateRange(
+                    tags, tags.size(),
+                    minRate != null ? minRate : 0,
+                    maxRate != null ? maxRate : Integer.MAX_VALUE,
+                    pageRequest
+            );
+        } else if (hasTags) {
+            problemPage = problemRepository.findByTags(tags, tags.size(), pageRequest);
+        } else if (hasMin && hasMax) {
+            problemPage = problemRepository.findByRateBetween(minRate, maxRate, pageRequest);
         } else {
             problemPage = problemRepository.findAll(pageRequest);
         }

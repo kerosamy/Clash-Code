@@ -136,28 +136,34 @@ class ProblemServiceTest {
 
 
     @Test
-    void testGetFilteredProblems_WithTagsAndRate() {
+    void testGetFilteredProblems_WithTagsAndRateRange() {
         Problem problem = new Problem();
         problem.setId(1L);
 
         List<Problem> problems = List.of(problem);
         Page<Problem> page = new PageImpl<>(problems, PageRequest.of(0, 10), problems.size());
 
-        when(problemRepository.findByTagsAndRate(anyList(), anyLong(), anyInt(), any(PageRequest.class))).thenReturn(page);
+        // Updated repository call to match new method
+        when(problemRepository.findByTagsAndRateRange(anyList(), anyLong(), anyInt(), anyInt(), any(PageRequest.class)))
+                .thenReturn(page);
 
         ProblemListDto dto = new ProblemListDto();
         dto.setId(1L);
         when(problemMapper.toListDto(problem)).thenReturn(dto);
 
         Page<ProblemListDto> result = problemService.getFilteredProblems(
-                List.of(ProblemTags.MATH, ProblemTags.IMPLEMENTATION), 200, 0, 10
+                List.of(ProblemTags.MATH, ProblemTags.IMPLEMENTATION),
+                100, // minRate
+                200, // maxRate
+                0,
+                10
         );
 
         assertEquals(1, result.getContent().size());
         assertEquals(1L, result.getContent().get(0).getId());
 
         verify(problemRepository, times(1))
-                .findByTagsAndRate(anyList(), eq(2L), eq(200), any(PageRequest.class));
+                .findByTagsAndRateRange(anyList(), eq(2L), eq(100), eq(200), any(PageRequest.class));
         verify(problemMapper, times(1)).toListDto(problem);
     }
 
@@ -167,19 +173,26 @@ class ProblemServiceTest {
         problem.setId(2L);
 
         Page<Problem> page = new PageImpl<>(List.of(problem));
-        when(problemRepository.findByRate(200, PageRequest.of(0, 10))).thenReturn(page);
+        // Updated repository call for rate range
+        when(problemRepository.findByRateBetween(eq(200), eq(200), any(PageRequest.class))).thenReturn(page);
 
         ProblemListDto dto = new ProblemListDto();
         dto.setId(2L);
         when(problemMapper.toListDto(problem)).thenReturn(dto);
 
-        Page<ProblemListDto> result = problemService.getFilteredProblems(Collections.emptyList(), 200, 0, 10);
+        Page<ProblemListDto> result = problemService.getFilteredProblems(
+                Collections.emptyList(),
+                200,
+                200,
+                0,
+                10
+        );
 
         assertEquals(1, result.getContent().size());
         assertEquals(2L, result.getContent().getFirst().getId());
 
-        verify(problemRepository).findByRate(200, PageRequest.of(0, 10));
-        verify(problemRepository, never()).findByTagsAndRate(anyList(), anyLong(), anyInt(), any());
+        verify(problemRepository).findByRateBetween(200, 200, PageRequest.of(0, 10));
+        verify(problemRepository, never()).findByTagsAndRateRange(anyList(), anyLong(), anyInt(), anyInt(), any());
     }
 
     @Test
@@ -196,7 +209,13 @@ class ProblemServiceTest {
         dto.setId(3L);
         when(problemMapper.toListDto(problem)).thenReturn(dto);
 
-        Page<ProblemListDto> result = problemService.getFilteredProblems(tags, null, 0, 10);
+        Page<ProblemListDto> result = problemService.getFilteredProblems(
+                tags,
+                null,
+                null,
+                0,
+                10
+        );
 
         assertEquals(1, result.getContent().size());
         assertEquals(3L, result.getContent().getFirst().getId());
@@ -205,23 +224,29 @@ class ProblemServiceTest {
     }
 
     @Test
-    void testGetFilteredProblems_OnlyRate() {
+    void testGetFilteredProblems_OnlyRateRange() {
         Problem problem = new Problem();
         problem.setId(4L);
 
         Page<Problem> page = new PageImpl<>(List.of(problem));
-        when(problemRepository.findByRate(300, PageRequest.of(0, 10))).thenReturn(page);
+        when(problemRepository.findByRateBetween(eq(300), eq(300), any(PageRequest.class))).thenReturn(page);
 
         ProblemListDto dto = new ProblemListDto();
         dto.setId(4L);
         when(problemMapper.toListDto(problem)).thenReturn(dto);
 
-        Page<ProblemListDto> result = problemService.getFilteredProblems(null, 300, 0, 10);
+        Page<ProblemListDto> result = problemService.getFilteredProblems(
+                null,
+                300,
+                300,
+                0,
+                10
+        );
 
         assertEquals(1, result.getContent().size());
         assertEquals(4L, result.getContent().getFirst().getId());
 
-        verify(problemRepository).findByRate(300, PageRequest.of(0, 10));
+        verify(problemRepository).findByRateBetween(300, 300, PageRequest.of(0, 10));
     }
 
     @Test
@@ -236,13 +261,20 @@ class ProblemServiceTest {
         dto.setId(5L);
         when(problemMapper.toListDto(problem)).thenReturn(dto);
 
-        Page<ProblemListDto> result = problemService.getFilteredProblems(null, null, 0, 10);
+        Page<ProblemListDto> result = problemService.getFilteredProblems(
+                null,
+                null,
+                null,
+                0,
+                10
+        );
 
         assertEquals(1, result.getContent().size());
         assertEquals(5L, result.getContent().getFirst().getId());
 
         verify(problemRepository).findAll(PageRequest.of(0, 10));
     }
+
 
 
 

@@ -48,7 +48,7 @@ public class ProblemController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(
-                problemService.getFilteredProblems(filterDto.getTags(), filterDto.getRate(), page, size)
+                problemService.getFilteredProblems(filterDto.getTags(), filterDto.getMinRate(), filterDto.getMaxRate(), page, size)
         );
     }
 }
