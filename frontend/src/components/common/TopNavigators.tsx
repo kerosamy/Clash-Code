@@ -16,8 +16,9 @@ export default function TopNavigator({ navigators }: TopNavigatorProps) {
       <div className="flex items-center justify-evenly px-8 h-16">
         {navigators.map(({ name, path, icon }) => (
           <NavLink
-            key={path}
+            key={path || 'index'}
             to={path}
+            end={path === ''}
             className={({ isActive }) =>
               ` flex items-center justify-center gap-3
                 px-6 py-3
@@ -30,7 +31,7 @@ export default function TopNavigator({ navigators }: TopNavigatorProps) {
               }`
             }
           >
-            <img src={icon} className="w-icon h-icon flex-shrink-0" />
+            <img src={icon} className="w-icon h-icon flex-shrink-0" alt={name} />
             <span className="font-medium text-xl">{name}</span>
           </NavLink>
         ))}

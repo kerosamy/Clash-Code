@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import Profile from '../pages/Profile';
 import Friends from '../pages/Friends';
 import Practice from '../pages/Practice';
+import Problem from '../pages/Problem';  // Import the Problem wrapper component
 import PlayGame from '../pages/PlayGame';
 import LeaderBoard from '../pages/LeaderBoard';
 import AddProblem from '../pages/AddProblem';
@@ -12,6 +13,8 @@ import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
 import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
+import ProblemDetails from '../pages/problem/ProblemDetails';
+import Submit from '../pages/problem/Submit';
 
 // Profile sub-pages
 import ProfileOverview from '../pages/profile/ProfileOverview';
@@ -37,6 +40,8 @@ import ListIcon from '../assets/icons/list.svg';
 import ScoreIcon from '../assets/icons/scoreboard.svg';
 import friends from '../assets/icons/friends.svg';
 import addUser from '../assets/icons/add-user.svg'; 
+import ProblemDetailsIcon from '../assets/icons/problem-statement.svg';
+import SubmitsIcon from '../assets/icons/subimt.svg';
 
 export interface PageConfig {
   path: string;
@@ -44,13 +49,11 @@ export interface PageConfig {
 }
 
 export const pages: PageConfig[] = [
-{ path: '/sign-up', component: SignUp },
-{ path: '/not-found', component: NotFound },
-{ path: '/log-in', component: LogIn },
-{ path: '/auth/callback', component: OAuthCallback },
-{ path: '/complete-registration', component: CompleteRegistration },
-{ path: '/auth/callback', component: OAuthCallback }, 
-{ path: '/complete-registration', component: CompleteRegistration },
+  { path: '/sign-up', component: SignUp },
+  { path: '/not-found', component: NotFound },
+  { path: '/log-in', component: LogIn },
+  { path: '/auth/callback', component: OAuthCallback },
+  { path: '/complete-registration', component: CompleteRegistration },
 ];
 
 export interface ChildRouteConfig {
@@ -94,6 +97,16 @@ export const routes: RouteConfig[] = [
    },
 
   { path: 'practice', name: 'Practice', icon: PracticeIcon, component: Practice },
+  {
+    path: '/practice/problem/:id',
+    name: 'Problem',
+    icon: ProblemDetailsIcon,
+    component: Problem,
+    children: [
+      { index: true, component: ProblemDetails },
+      { path: 'submit', component: Submit }
+    ]
+  },
   { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
   { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
@@ -113,4 +126,8 @@ export const friendsSubRoutes: RouteConfig[] = [
   { path: 'requested', name: 'Requested', icon: friends, component: Requested },
   { path: 'pending', name: 'Pending', icon: friends, component: Pending },
   { path: 'add-friend', name: 'Add Friend', icon: addUser, component: AddFriend },
+];
+export const ProblemSubRoutes: RouteConfig[] = [
+  { path: '', name: 'Problem Statment', icon: ProblemDetailsIcon, component: ProblemDetails },
+  { path: 'submit', name: 'Submit Solution', icon: SubmitsIcon, component: Submit },
 ];
