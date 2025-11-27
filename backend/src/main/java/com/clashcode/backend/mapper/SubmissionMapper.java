@@ -1,9 +1,15 @@
 package com.clashcode.backend.mapper;
 
+import com.clashcode.backend.dto.ExecutionResultDto;
+import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.LanguageVersion;
+import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.model.Submission;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class SubmissionMapper {
@@ -13,4 +19,62 @@ public class SubmissionMapper {
                 .languageVersion(LanguageVersion.valueOf(requestDto.getCodeLanguage()))
                 .build();
     }
+    public Submission toEntity(List<ExecutionResultDto> resultDtoList, Submission submission) {
+        int maxTime = 0;
+        int maxMemory = 0;
+        int passedTestCases = 0;
+        SubmissionStatus finalStatus = SubmissionStatus.ACCEPTED;
+
+        for (ExecutionResultDto result : resultDtoList) {
+            maxTime = Math.max(maxTime, result.getTimeTaken());
+            maxMemory = Math.max(maxMemory, result.getMemoryTaken());
+
+            String judgeStatus = result.getStatus().toUpperCase();
+            switch (judgeStatus) {
+                case "ACCEPTED":
+                    passedTestCases++;
+                    break;
+                case "WRONG ANSWER":
+                    finalStatus = SubmissionStatus.WRONG_ANSWER;
+                    break;
+                case "TIME LIMIT EXCEEDED":
+                    finalStatus = SubmissionStatus.TIME_LIMIT_EXCEEDED;
+                    break;
+                case "MEMORY LIMIT EXCEEDED":
+                    finalStatus = SubmissionStatus.MEMORY_LIMIT_EXCEEDED;
+                    break;
+                case "COMPILATION ERROR":
+                    finalStatus = SubmissionStatus.COMPILATION_ERROR;
+                    break;
+                default:
+                    if (finalStatus == SubmissionStatus.ACCEPTED) {
+                        finalStatus = SubmissionStatus.WRONG_ANSWER;
+                    }
+                    break;
+            }
+        }
+
+        submission.setTimeTaken(maxTime);
+        submission.setMemoryTaken(maxMemory);
+        submission.setStatus(finalStatus);
+        submission.setPassedTestCases(passedTestCases);
+        return submission;
+    }
+
+    public List<SubmissionListDto> toListDto(List<Submission> submissions) {
+        List<SubmissionListDto> submissionListDtos = new ArrayList<>();
+
+        for (Submission submission : submissions) {
+            submissionListDtos.add(
+                    SubmissionListDto.builder()
+                            .memoryTaken(submission.getMemoryTaken() != null ? submission.getMemoryTaken() : 0)
+                            .submissionStatus(submission.getStatus() != null ? submission.getStatus().toString() : "UNKNOWN")
+                            .submittedAt(submission.getSubmittedAt() != null ? submission.getSubmittedAt().toString() : "")
+                            .timeTaken(submission.getTimeTaken() != null ? submission.getTimeTaken() : 0)
+                            .build()
+            );
+        }
+        return submissionListDtos;
+    }
+
 }

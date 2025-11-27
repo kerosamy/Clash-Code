@@ -1,8 +1,10 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
+import com.clashcode.backend.model.Solution;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.TestCaseRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,11 @@ class TestCaseServiceTest {
     void testAddTestCases() {
         Problem problem = new Problem();
         problem.setId(1L);
+
+        Solution solution = new Solution();
+        solution.setSolutionCode("some solution code");
+        solution.setLanguageVersion(LanguageVersion.PYTHON_3_8); // <--- Add this
+        problem.setSolution(solution);
 
         MultipartFile file1 = mock(MultipartFile.class);
         MultipartFile file2 = mock(MultipartFile.class);

@@ -75,7 +75,20 @@ public class TestCaseService {
         return visibleTestCases;
     }
 
-
-
+    public List<String> getInputTestCasesForProblem(Problem problem) {
+        List<String> inputTestCases = new ArrayList<>();
+        for (String path : testCaseRepository.findInputPathsByProblem(problem)) {
+            inputTestCases.add(fileStorageService.getTestCaseContent(path));
+        }
+        return inputTestCases;
+    }
+    public List<String> getOutputTestCasesForProblem(Problem problem) {
+        List<String> OutputTestCases = new ArrayList<>();
+        for (String path : testCaseRepository.findOutputPathsByProblem(problem)) {
+            OutputTestCases.add(fileStorageService.getTestCaseContent(path));
+            System.out.println("Test" + fileStorageService.getTestCaseContent(path));
+        }
+        return OutputTestCases;
+    }
 
 }

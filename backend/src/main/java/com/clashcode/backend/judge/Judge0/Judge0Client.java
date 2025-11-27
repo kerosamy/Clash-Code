@@ -63,10 +63,11 @@ public class Judge0Client implements CodeExecutor {
                                String expectedResult){
         System.out.println((mapper.mapToJudge0Id(LanguageVersion.valueOf(language))));
         Judge0RequestDto requestDto = Judge0RequestDto.builder()
-                                    .sourceCode(sourceCode)
-                                    .stdin(testCase)
-                                    .languageId(mapper.mapToJudge0Id(LanguageVersion.valueOf(language)))
-                                    .build();
+                .sourceCode(sourceCode)
+                .stdin(testCase)
+                .languageId(mapper.mapToJudge0Id(LanguageVersion.valueOf(language)))
+                .expectedOutput(expectedResult)
+                .build();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonBody = objectMapper.writeValueAsString(requestDto);
