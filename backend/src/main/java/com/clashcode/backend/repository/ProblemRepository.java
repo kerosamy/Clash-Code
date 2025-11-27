@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
+    Page<Problem> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
     @Query("SELECT p FROM Problem p WHERE p.rate BETWEEN :minRate AND :maxRate")
     Page<Problem> findByRateBetween(@Param("minRate") Integer minRate,
                                     @Param("maxRate") Integer maxRate,

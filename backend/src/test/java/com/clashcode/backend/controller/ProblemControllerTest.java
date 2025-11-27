@@ -148,4 +148,24 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(jsonPath("$.content[0].title").value("Multiply Two Integers"));
     }
+
+    @Test
+    void testSearchByName() throws Exception {
+        ProblemListDto problem1 = new ProblemListDto();
+        problem1.setId(1L);
+        problem1.setTitle("Multiply Two Integers");
+
+        List<ProblemListDto> problemList = List.of(problem1);
+        Page<ProblemListDto> page = new PageImpl<>(problemList, PageRequest.of(0, 10), problemList.size());
+
+        when(problemService.searchProblemsByName("Multiply", 0, 10)).thenReturn(page);
+
+        mockMvc.perform(get("/problem/search")
+                        .param("keyword", "Multiply")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Multiply Two Integers"));
+    }
 }

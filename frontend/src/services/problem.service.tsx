@@ -30,3 +30,15 @@ export async function fetchFilteredProblems(
 
   return response.data; // returned Page<ProblemListDto>
 }
+
+export async function searchProblemsByTitle(
+  keyword: string,
+  page = 0,
+  size = 20
+) {
+  const response = await axios.get(`${API_BASE}/search`, {
+    params: { keyword, page, size },
+  });
+
+  return response.data; // returned Page<ProblemListDto>
+}
