@@ -7,6 +7,8 @@ import TagsMultiSelectDropdown from "../components/common/TagsMultiSelectDropDow
 import { TagsFrontendValues, mapFrontendTagsToEnum } from "../utils/mapTags";
 import DifficultySelector from "../components/common/DifficultySelector";
 import { DifficultyLevel } from "../enums/DifficultyLevel";
+import SearchBar from "../components/common/SearchBar";
+import React from "react";
 
 
 
@@ -14,6 +16,7 @@ import { DifficultyLevel } from "../enums/DifficultyLevel";
 export default function Practice() {
 
   const [problems, setProblems] = useState<ProblemRowProps[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [minDifficulty, setMinDifficulty] = useState<number>(DifficultyLevel.MIN);
   const [maxDifficulty, setMaxDifficulty] = useState<number>(DifficultyLevel.HARD_MAX);
@@ -64,8 +67,14 @@ export default function Practice() {
 
   return (
 
-      <div className="flex flex-col h-[90vh] space-y-6">
-          <div className="flex items-center justify-between flex-wrap">
+      <div className="flex flex-col h-[90vh] space-y-4">
+          <div className="flex items-center justify-between flex-wrap space-y-4">
+
+            <SearchBar 
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by problem name"
+            />
 
             <TagsMultiSelectDropdown
               label="Choose Problem Tags"
