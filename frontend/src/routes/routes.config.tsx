@@ -54,6 +54,7 @@ export const pages: PageConfig[] = [
   { path: '/log-in', component: LogIn },
   { path: '/auth/callback', component: OAuthCallback },
   { path: '/complete-registration', component: CompleteRegistration },
+  { path: '/profile/:username/*', component: Profile, },
 ];
 
 export interface ChildRouteConfig {
