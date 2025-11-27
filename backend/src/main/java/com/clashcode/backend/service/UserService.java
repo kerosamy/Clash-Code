@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.enums.Ranks;
+import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -102,7 +103,7 @@ public class UserService {
 
     public ProfileDto getProfile(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
 
         String rank = getRank(user.getCurrentRate());
         int friendCount = getFriendCount(id);
