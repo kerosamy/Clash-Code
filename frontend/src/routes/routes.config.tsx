@@ -59,7 +59,7 @@ export interface RouteConfig {
 
 export const routes: RouteConfig[] = [
   {
-    path: 'profile',
+    path: 'profile/:id',
     name: 'Profile',
     icon: ProfileIcon,
     component: Profile,

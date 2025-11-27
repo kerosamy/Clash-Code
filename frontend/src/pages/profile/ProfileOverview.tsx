@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+
 import Categories from "../../components/profile/Categories";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import StatsOverview from "../../components/profile/StatsOverview";
@@ -46,35 +50,6 @@ interface CategoryItem {
   color: string;
 }
 
-// Dummy backend response
-const backendResponse: BackendUserResponse = {
-  username: 'Kero_Samy_20',
-  rank: 'Diamond',
-  currentRate: 1604,
-  maxRate: 1654,
-  friendCount: 20,
-  avatarUrl: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=400&fit=crop',
-  stats: {
-    solvedProblems: 750,
-    attemptedProblems: 850,
-    matchesPlayed: 56,
-    matchesWon: 37,
-  },
-  categories: [
-    { name: 'Greedy', value: 20, color: '#ef4444' },        // red-500
-    { name: 'Two Pointers', value: 20, color: '#f97316' },  // orange-500
-    { name: 'DP', value: 20, color: '#22d3ee' },            // cyan-400
-    { name: 'Graph', value: 20, color: '#3b82f6' },         // blue-500
-    { name: 'Tree', value: 20, color: '#8b5cf6' },          // violet-500
-    { name: 'Math', value: 20, color: '#10b981' },          // green-500
-    { name: 'String', value: 20, color: '#ec4899' },        // pink-500
-    { name: 'Binary Search', value: 20, color: '#6366f1' }, // indigo-500
-    { name: 'Sorting', value: 20, color: '#f59e0b' },       // amber-500
-    { name: 'Bit Manipulation', value: 20, color: '#14b8a6' }, // teal-500
-  ],
-};
-
-
 // Helper function to split the data
 const splitUserData = (response: BackendUserResponse) => {
   const profileBasic: UserProfileBasic = {
@@ -87,15 +62,45 @@ const splitUserData = (response: BackendUserResponse) => {
   };
 
   const stats: UserStats = response.stats;
-  
   const categories: CategoryItem[] = response.categories;
 
   return { profileBasic, stats, categories };
 };
 
 export default function ProfileOverview() {
-  // Split the backend data
-  const { profileBasic, stats, categories } = splitUserData(backendResponse);
+  const { id } = useParams<{ id: string }>();
+  const [profileBasic, setProfileBasic] = useState<UserProfileBasic | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (!id) return;
+        const { data } = await axios.get<BackendUserResponse>(`http://localhost:8080/users/profile/${id}`);
+
+        const { profileBasic, stats, categories } = splitUserData(data);
+        setProfileBasic(profileBasic);
+        setStats(stats);
+        setCategories(categories);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-8 text-center text-3xl text-gray-500">Loading profile...</div>;
+  }
+
+  if (!profileBasic || !stats) {
+    return <div className="p-8 text-center text-3xl text-orange">Failed to load profile data.</div>;
+  }
 
   return (
     <div className="space-y-8 p-scroll-x">
