@@ -62,14 +62,18 @@ public class UserService {
         return Ranks.values()[index].name();
     }
 
-    public ProfileDto getProfile(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
-
+    public ProfileDto getProfile(User user) {
         String rank = getRank(user.getCurrentRate());
         int friendCount = getFriendCount(user);
         StatsDto stats = getStats(user);
         CategoryDto[] categories = getCategories(user);
         return userMapper.toUserProfile(user, rank, friendCount, stats, categories);
+    }
+
+    public ProfileDto getUserProfile(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username " + username));
+
+        return getProfile(user);
     }
 }

@@ -37,7 +37,7 @@ class UserServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        ProfileDto profile = userService.getProfile(1L);
+        ProfileDto profile = userService.getProfile(user);
 
         assertEquals("mina", profile.getUsername());
         assertEquals("DIAMOND", profile.getRank());
