@@ -42,3 +42,13 @@ export async function searchProblemsByTitle(
 
   return response.data; // returned Page<ProblemListDto>
 }
+
+export async function fetchProblemById(id: number) {
+  try {
+    const response = await axios.get(`${API_BASE}/${id}`);
+    return response.data; // returned ProblemDto
+  } catch (error) {
+    console.error("Error fetching problem:", error);
+    throw error;
+  }
+}

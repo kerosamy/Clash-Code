@@ -9,6 +9,7 @@ import DifficultySelector from "../components/common/DifficultySelector";
 import { DifficultyLevel } from "../enums/DifficultyLevel";
 import SearchBar from "../components/common/SearchBar";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -22,6 +23,7 @@ export default function Practice() {
   const [maxDifficulty, setMaxDifficulty] = useState<number>(DifficultyLevel.HARD_MAX);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1); // total pages from backend
+  const navigate = useNavigate();
 
   // load problems filtered or unfiltered
   async function loadProblems(pageToLoad = 0) {
@@ -64,9 +66,10 @@ export default function Practice() {
     loadProblems();
   }, [selectedTags, minDifficulty, maxDifficulty, searchQuery]);  // re-run when filters/search triggered
   
-  const handleProblemClick = (problem: ProblemRowProps) => {
-    console.log("Problem clicked:", problem);
-  };
+const handleProblemClick = (problem: ProblemRowProps) => {
+  console.log("Problem clicked:", problem);
+   navigate(`/practice/problem/${problem.id}`);
+};
 
   const handlePrevPage = () => {
     if (page > 0) loadProblems(page - 1);
