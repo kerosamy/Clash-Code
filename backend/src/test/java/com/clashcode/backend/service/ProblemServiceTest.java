@@ -7,7 +7,6 @@ import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;

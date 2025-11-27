@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.TestCaseRepository;
@@ -15,10 +16,13 @@ public class TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
     private final FileStorageService fileStorageService;
+    private final Judge0Client judge0Client;
     public TestCaseService(TestCaseRepository testCaseRepository ,
-                           FileStorageService fileStorageService) {
+                           FileStorageService fileStorageService,
+                           Judge0Client judge0Client) {
         this.testCaseRepository = testCaseRepository;
         this.fileStorageService = fileStorageService;
+        this.judge0Client = judge0Client;
     }
 
     public List<TestCase> addTestCases(List<MultipartFile> files , Problem problem , List<Boolean> visible) {
@@ -36,29 +40,26 @@ public class TestCaseService {
             TestCase testCase = testCases.get(i);
             MultipartFile file = files.get(i);
 
-            String inputPath = saveTestCaseIntoFileSys(
+            String inputPath = fileStorageService.storeTestCase(
                     file,
                     problem.getId(),
-                    testCase.getId(),
-                    true);
+                    testCase.getId());
 
             testCase.setInputPath(inputPath);
+            String input = fileStorageService.getTestCaseContent(inputPath);
 
-            // output to be set here
+            String expectedOutput = judge0Client.executeAndReturnOutput(input,
+                    problem.getSolution().getSolutionCode(),
+                    problem.getSolution().getLanguageVersion().toString());
+
+            String outputPath = fileStorageService.storeTestCaseOutput(
+                    expectedOutput,
+                    problem.getId(),
+                    testCase.getId()
+            );
+            testCase.setOutputPath(outputPath);
         }
         return testCaseRepository.saveAll(testCases);
-    }
-
-    public String saveTestCaseIntoFileSys(MultipartFile file,
-                                                 Long problemId,
-                                                 Long testCaseId,
-                                                 Boolean isInput){
-            return fileStorageService.storeTestCase(
-                    file,
-                    problemId,
-                    testCaseId,
-                    isInput
-            );
     }
 
     public List<TestCaseResponseDto> getVisibleTestCasesForProblem(Problem problem) {

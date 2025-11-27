@@ -39,7 +39,7 @@ public class ProblemService {
                             List<MultipartFile> files){
 
         Problem problem = problemMapper.toProblem(problemRequestDto);
-        Problem savedProblem = problemRepository.save(problem);
+        problemRepository.save(problem);
 
         List<TestCase> testCases = testCaseService.addTestCases(files,problem,problemRequestDto.getVisibleFlags());
 

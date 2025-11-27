@@ -1,12 +1,12 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.TestCaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -24,7 +24,8 @@ class TestCaseServiceTest {
     void setUp() {
         testCaseRepository = mock(TestCaseRepository.class);
         fileStorageService = mock(FileStorageService.class);
-        testCaseService = new TestCaseService(testCaseRepository, fileStorageService);
+        Judge0Client judge0Client = mock(Judge0Client.class);
+        testCaseService = new TestCaseService(testCaseRepository, fileStorageService, judge0Client);
     }
 
     @Test
@@ -44,8 +45,8 @@ class TestCaseServiceTest {
         when(testCaseRepository.saveAll(any())).thenReturn(List.of(tc1, tc2));
 
         // Mock file storage
-        when(fileStorageService.storeTestCase(file1, 1L, 101L, true)).thenReturn("path/input1.txt");
-        when(fileStorageService.storeTestCase(file2, 1L, 102L, true)).thenReturn("path/input2.txt");
+        when(fileStorageService.storeTestCase(file1, 1L, 101L)).thenReturn("path/input1.txt");
+        when(fileStorageService.storeTestCase(file2, 1L, 102L)).thenReturn("path/input2.txt");
 
         List<TestCase> result = testCaseService.addTestCases(files, problem, visibleFlags);
 
@@ -53,8 +54,8 @@ class TestCaseServiceTest {
         verify(testCaseRepository, times(2)).saveAll(any());
 
         // Verify file storage calls
-        verify(fileStorageService).storeTestCase(file1, 1L, 101L, true);
-        verify(fileStorageService).storeTestCase(file2, 1L, 102L, true);
+        verify(fileStorageService).storeTestCase(file1, 1L, 101L);
+        verify(fileStorageService).storeTestCase(file2, 1L, 102L);
 
         // Assertions
         assertEquals(2, result.size());
