@@ -1,5 +1,6 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -49,10 +50,13 @@ public class JwtService {
             UserDetails userDetails,
             long expiration
     ) {
+        // Cast to your custom User class to access getEmail()
+        User user = (User) userDetails;
+
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(user.getEmail()) // Use Email as the subject
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -60,8 +64,13 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        final String emailFromToken = extractUsername(token);
+
+        // Cast to your custom User class to validate against the email
+        User user = (User) userDetails;
+
+        // Compare token email vs database email
+        return (emailFromToken.equals(user.getEmail())) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

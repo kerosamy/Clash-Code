@@ -43,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
 
+        // 1. If header is missing or doesn't start with "Bearer ", continue chain immediately
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -50,6 +51,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             final String jwt = authHeader.substring(7);
+
+            // 2. CRITICAL FIX: Check if the token is the literal string "null" or empty.
+            // This happens when frontend LocalStorage is empty: `Bearer ${token}` becomes "Bearer null"
+            if (jwt == null || jwt.trim().isEmpty() || "null".equalsIgnoreCase(jwt.trim())) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             final String userEmail = jwtService.extractUsername(jwt);
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -71,6 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception exception) {
+            // This delegates invalid/expired token exceptions to your Global Exception Handler
+            // so they return proper 401/403 codes instead of 500s.
             handlerExceptionResolver.resolveException(request, response, null, exception);
         }
     }
