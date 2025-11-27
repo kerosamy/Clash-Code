@@ -95,5 +95,11 @@ public class ProblemService {
         return problemPage.map(problemMapper::toListDto);
     }
 
+    public Page<ProblemListDto> searchProblemsByName(String keyword, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return problemRepository.findByTitleContainingIgnoreCase(keyword, pageRequest)
+                .map(problemMapper::toListDto);
+    }
+
 
 }

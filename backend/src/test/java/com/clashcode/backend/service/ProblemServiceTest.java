@@ -275,6 +275,38 @@ class ProblemServiceTest {
         verify(problemRepository).findAll(PageRequest.of(0, 10));
     }
 
+    @Test
+    void testSearchProblemsByName() {
+        Problem problem = new Problem();
+        problem.setId(1L);
+        problem.setTitle("Multiply Two Integers");
+
+        Page<Problem> page = new PageImpl<>(List.of(problem));
+        when(problemRepository.findByTitleContainingIgnoreCase(eq("Multiply"), any(PageRequest.class)))
+                .thenReturn(page);
+
+        ProblemListDto dto = new ProblemListDto();
+        dto.setId(1L);
+        when(problemMapper.toListDto(problem)).thenReturn(dto);
+
+        Page<ProblemListDto> result = problemService.searchProblemsByName("Multiply", 0, 10);
+
+        assertEquals(1, result.getContent().size());
+        assertEquals(1L, result.getContent().getFirst().getId());
+        verify(problemRepository, times(1))
+                .findByTitleContainingIgnoreCase(eq("Multiply"), any(PageRequest.class));
+        verify(problemMapper, times(1)).toListDto(problem);
+    }
+
+    @Test
+    void testSearchProblemsByName_EmptyResult() {
+        Page<Problem> emptyPage = new PageImpl<>(Collections.emptyList());
+        when(problemRepository.findByTitleContainingIgnoreCase(eq("Nonexistent"), any(PageRequest.class)))
+                .thenReturn(emptyPage);
+
+        Page<ProblemListDto> result = problemService.searchProblemsByName("Nonexistent", 0, 10);
+        assertTrue(result.isEmpty());
+    }
 
 
 

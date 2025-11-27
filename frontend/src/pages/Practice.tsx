@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Board from "../components/common/Board";
 import ProblemRow, { type ProblemRowProps } from "../components/common/ProblemRow";
-import { fetchProblems, fetchFilteredProblems } from "../services/problem.service";
+import { fetchProblems, fetchFilteredProblems, searchProblemsByTitle } from "../services/problem.service";
 import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
 import TagsMultiSelectDropdown from "../components/common/TagsMultiSelectDropDown";
 import { TagsFrontendValues, mapFrontendTagsToEnum } from "../utils/mapTags";
@@ -26,6 +26,17 @@ export default function Practice() {
   // load problems filtered or unfiltered
   async function loadProblems(pageToLoad = 0) {
     try {
+
+      if (searchQuery.trim() !== "") {
+        // search by title
+        const backendPage = await searchProblemsByTitle(searchQuery, pageToLoad, 20);
+        const mapped = backendPage.content.map(mapProblemDtoToProblemRow);
+        setProblems(mapped);
+        setPage(pageToLoad);
+        setTotalPages(backendPage.totalPages);
+        return;
+      }
+      
       const backendTags = mapFrontendTagsToEnum(selectedTags);
       const minRate = minDifficulty;
       const maxRate = maxDifficulty;
@@ -51,7 +62,7 @@ export default function Practice() {
 
   useEffect(() => {
     loadProblems();
-  }, [selectedTags, minDifficulty, maxDifficulty]);  // re-run when filters triggered
+  }, [selectedTags, minDifficulty, maxDifficulty, searchQuery]);  // re-run when filters/search triggered
   
   const handleProblemClick = (problem: ProblemRowProps) => {
     console.log("Problem clicked:", problem);

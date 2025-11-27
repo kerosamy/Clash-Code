@@ -51,4 +51,15 @@ public class ProblemController {
                 problemService.getFilteredProblems(filterDto.getTags(), filterDto.getMinRate(), filterDto.getMaxRate(), page, size)
         );
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProblemListDto>> searchByName(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                problemService.searchProblemsByName(keyword, page, size)
+        );
+    }
 }
