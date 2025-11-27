@@ -35,7 +35,8 @@ export const pages: PageConfig[] = [
 { path: '/log-in', component: LogIn },
 { path: '/auth/callback', component: OAuthCallback },
 { path: '/complete-registration', component: CompleteRegistration },
-
+{ path: '/auth/callback', component: OAuthCallback }, 
+{ path: '/complete-registration', component: CompleteRegistration },
 ];
 
 

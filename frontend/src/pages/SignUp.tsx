@@ -71,6 +71,11 @@ export default function SignUp() {
     }
   };
 
+  const handleGoogleSignUP = () => {
+    sessionStorage.setItem('oauth_flow', 'signup');
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
       <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white">
@@ -138,7 +143,7 @@ export default function SignUp() {
         </div>
 
         <button
-          onClick={() => (window.location.href = "http://localhost:8080/oauth2/authorization/google")}
+          onClick={ handleGoogleSignUP }
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
         >
           <img src="/src/assets/google-icon-1.png" alt="Google Icon" className="w-7 h-7" />
