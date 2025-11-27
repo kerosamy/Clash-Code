@@ -57,5 +57,4 @@ export const routes: RouteConfig[] = [
     { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
     { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
     { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
-
 ];
