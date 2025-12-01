@@ -1,7 +1,6 @@
 package com.clashcode.backend.judge.Judge0;
 
 import com.clashcode.backend.dto.ExecutionResultDto;
-import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.judge.CodeExecutor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,13 +21,19 @@ public class Judge0Client implements CodeExecutor {
     public List<ExecutionResultDto> executeBatch(String sourceCode,
                                                  String language,
                                                  List<String> testCases,
-                                                 List<String> expectedResults){
+                                                 List<String> expectedResults,
+                                                 Integer timeLimit,
+                                                 Integer memoryLimit){
+
         List<ExecutionResultDto> results = new ArrayList<>();
         for (int i = 0; i < testCases.size(); i++) {
+
             Judge0TokenDto judge0TokenDto = submitCode(sourceCode,
                                             testCases.get(i),
                                             language,
-                                            expectedResults.get(i));
+                                            expectedResults.get(i),
+                                            timeLimit,
+                                            memoryLimit);
 
             Judge0ResponseDto dto = waitForResult(judge0TokenDto);
             results.add(mapper.toExecutionResultDto(dto));
@@ -36,13 +41,20 @@ public class Judge0Client implements CodeExecutor {
         return results;
     };
     @Override
-    public String executeAndReturnOutput(String stdin, String sourceCode, String language) {
+    public String executeAndReturnOutput(String stdin,
+                                         String sourceCode,
+                                         String language,
+                                         Integer timeLimit,
+                                         Integer memoryLimit) {
+
         Judge0TokenDto token = submitCode(
                 sourceCode,
                 stdin,
                 language,
-                null
-        );
+                null,
+                timeLimit,
+                memoryLimit);
+
         Judge0ResponseDto result = waitForResult(token);
         if (result.getStdout() != null) {
             return result.getStdout();
@@ -58,16 +70,18 @@ public class Judge0Client implements CodeExecutor {
 
 
     public Judge0TokenDto submitCode (String sourceCode,
-                               String testCase,
-                               String language,
-                               String expectedResult){
-        System.out.println((mapper.mapToJudge0Id(LanguageVersion.valueOf(language))));
-        Judge0RequestDto requestDto = Judge0RequestDto.builder()
-                .sourceCode(sourceCode)
-                .stdin(testCase)
-                .languageId(mapper.mapToJudge0Id(LanguageVersion.valueOf(language)))
-                .expectedOutput(expectedResult)
-                .build();
+                                      String testCase,
+                                      String language,
+                                      String expectedResult,
+                                      Integer timeLimit,
+                                      Integer memoryLimit){
+
+        Judge0RequestDto requestDto = mapper.toRequestDto(sourceCode,
+                                                            testCase,
+                                                            language,
+                                                            expectedResult,
+                                                            timeLimit,
+                                                            memoryLimit);
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonBody = objectMapper.writeValueAsString(requestDto);
@@ -87,8 +101,9 @@ public class Judge0Client implements CodeExecutor {
             throw new RuntimeException("Failed to serialize request", e);
         }
     }
+
     public Judge0ResponseDto waitForResult(Judge0TokenDto token) {
-        String url = JUDGE0_URL + "/submissions/" + token.getToken() + "?base64_encoded=false";
+        String url = JUDGE0_URL + "/submissions/" + token.getToken() + "?base64_encoded=true";
         int maxRetries = 50;       // Maximum number of polls
         long delayMillis = 300;    // Delay between polls
         int attempt = 0;
@@ -102,6 +117,16 @@ public class Judge0Client implements CodeExecutor {
             if (body != null && body.getStatus() != null) {
                 int statusId = body.getStatus().getId();
                 if (statusId != 1 && statusId != 2) {
+
+                    if (body.getStdout() != null)
+                        body.setStdout(mapper.decode(body.getStdout()));
+
+                    if (body.getStderr() != null)
+                        body.setStderr(mapper.decode(body.getStderr()));
+
+                    if (body.getCompileOutput() != null)
+                        body.setCompileOutput(mapper.decode(body.getCompileOutput()));
+
                     return body;
                 }
             }
@@ -115,7 +140,6 @@ public class Judge0Client implements CodeExecutor {
         }
         throw new RuntimeException("Timeout waiting for Judge0 result after " + (maxRetries * delayMillis) + " ms");
     }
-
 
 
 }

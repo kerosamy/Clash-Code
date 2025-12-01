@@ -21,9 +21,12 @@ public class Judge0RequestDto {
     @JsonProperty("expected_output")
     private String expectedOutput;
 
-    @JsonProperty("time_limit")
-    private Integer timeLimit;
+    @JsonProperty("cpu_time_limit")
+    private Double timeLimit;
 
     @JsonProperty("memory_limit")
-    private Integer memoryLimit;
+    private Double memoryLimit;
+
+    @JsonProperty("wall_time_limit")
+    private Double wallTimeLimit;
 }

@@ -3,6 +3,9 @@ package com.clashcode.backend.judge.Judge0;
 import com.clashcode.backend.dto.ExecutionResultDto;
 import com.clashcode.backend.enums.LanguageVersion;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 public class Judge0Mapper {
 
     public int mapToJudge0Id(LanguageVersion lv) {
@@ -84,15 +87,48 @@ public class Judge0Mapper {
     }
 
     public ExecutionResultDto toExecutionResultDto (Judge0ResponseDto judge0ResponseDto){
-        ExecutionResultDto result = ExecutionResultDto.builder()
-                                    .timeTaken((int)(judge0ResponseDto.getTime()*100))
-                                    .memoryTaken((int)(judge0ResponseDto.getMemory()*100))
-                                    .status(judge0ResponseDto.getStatus().getDescription())
-                                    .result(judge0ResponseDto.getStdout())
-                                    .build();
+        return ExecutionResultDto.builder()
+                .timeTaken((int)(judge0ResponseDto.getTime()*1000))
+                .memoryTaken((int)(judge0ResponseDto.getMemory()/1024))
+                .status(judge0ResponseDto.getStatus().getDescription())
+                .result(judge0ResponseDto.getStdout())
+                .build();
 
-        return result;
     }
+    public Judge0RequestDto toRequestDto (String sourceCode,
+                                          String testCase,
+                                          String language,
+                                          String expectedResult,
+                                          Integer timeLimit,
+                                          Integer memoryLimit){
+
+        return  Judge0RequestDto.builder()
+                .sourceCode(sourceCode)
+                .stdin(testCase)
+                .languageId(mapToJudge0Id(LanguageVersion.valueOf(language)))
+                .expectedOutput(expectedResult)
+                .memoryLimit(memoryLimit*1024.0) // form MB to KB
+                .timeLimit(timeLimit/1000.0) // from ms to sec
+                .wallTimeLimit(timeLimit/500.0)// 2* timeLimit
+                .build();
+    }
+
+    public String decode(String base64) {
+        try {
+            base64 = base64
+                    .replace("\"", "")
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .replace(" ", "")
+                    .trim();
+            byte[] decodedBytes = Base64.getDecoder().decode(base64);
+            return new String(decodedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            System.out.println("Decode failed for: " + base64 + " because " + e.getMessage());
+            return base64;
+        }
+    }
+
 }
 
 
