@@ -8,6 +8,10 @@ import java.util.Base64;
 
 public class Judge0Mapper {
 
+    final double KB_PER_MB = 1024.0;
+    final double SEC_PER_MS = 1_000.0;
+    final double WALL_TIME_FACTOR = 2.0; // Wall time = 2 × CPU time
+
     public int mapToJudge0Id(LanguageVersion lv) {
         return switch (lv) {
             // Python
@@ -99,17 +103,22 @@ public class Judge0Mapper {
                                           String testCase,
                                           String language,
                                           String expectedResult,
-                                          Integer timeLimit,
-                                          Integer memoryLimit){
+                                          Integer timeLimitMs,
+                                          Integer memoryLimitMb){
 
-        return  Judge0RequestDto.builder()
+
+        double memoryLimitKb = memoryLimitMb * KB_PER_MB;
+        double timeLimitSec = timeLimitMs / SEC_PER_MS;
+        double wallTimeLimitSec = timeLimitSec * WALL_TIME_FACTOR;
+
+        return Judge0RequestDto.builder()
                 .sourceCode(sourceCode)
                 .stdin(testCase)
                 .languageId(mapToJudge0Id(LanguageVersion.valueOf(language)))
                 .expectedOutput(expectedResult)
-                .memoryLimit(memoryLimit*1024.0) // form MB to KB
-                .timeLimit(timeLimit/1000.0) // from ms to sec
-                .wallTimeLimit(timeLimit/500.0)// 2* timeLimit
+                .memoryLimit(memoryLimitKb)
+                .timeLimit(timeLimitSec)
+                .wallTimeLimit(wallTimeLimitSec)
                 .build();
     }
 
