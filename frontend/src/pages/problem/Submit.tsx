@@ -1,26 +1,50 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams , useNavigate} from "react-router-dom";
 import { LanguageVersion } from "../../enums/LanguageVersion";
 import SingleSelectDropdown from "../../components/common/SingleSelectDropDown";
+import Editor from "@monaco-editor/react";
+import { monacoLanguageMap } from "../../utils/languageMap";
+import { submitCode } from "../../services/Submissions";
+
 
 export default function Submit() {
     const { id } = useParams<{ id: string }>();
     const [selectedLang, setSelectedLang] = useState<LanguageVersion>(LanguageVersion.PYTHON_3_8);
     const [code, setCode] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [submitMessage, setSubmitMessage] = useState<string>("");
+    const navigate = useNavigate();
 
+    const problemTitle = "Find The Max Value";
 
-    const problemTitle = "Find The Max Value"; 
+    const handleSubmit = async () => {
+        if (!code.trim()) return setSubmitMessage("Please enter your code before submitting.");
+        if (!id) return setSubmitMessage("Problem ID is missing.");
+
+        setIsSubmitting(true);
+        setSubmitMessage("");
+
+        try {
+            submitCode(parseInt(id), code, selectedLang);
+            setSubmitMessage("Code submitted successfully!");
+             setTimeout(() => {
+            navigate(`/profile/1/submissions`);   // ⬅ REDIRECT HERE
+        }, 500);
+        } catch (error) {
+            setSubmitMessage("Failed to submit code. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="flex flex-col h-[calc(90vh-4rem)] p-6">
-            {/* Header */}
             <div className="mb-4">
                 <h2 className="text-2xl font-bold text-orange font-anta">
                     Problem #{id}: <span className="text-white">{problemTitle}</span>
                 </h2>
             </div>
 
-            {/* Language Selector */}
             <div className="mb-4 flex items-center gap-4">
                 <span className="text-orange font-anta text-lg">Lang:</span>
                 <SingleSelectDropdown
@@ -32,29 +56,41 @@ export default function Submit() {
                 />
             </div>
 
-            {/* Code Editor - Flexible height */}
-            <div className="flex-1 flex flex-col mb-4 min-h-0">
-                <h3 className="text-center text-orange font-anta text-xl font-semibold mb-3">
-                    Source Code:
-                </h3>
-
-                <textarea
-                    className="flex-1 w-full bg-gray-800 text-gray-200 p-4 rounded-lg resize-none font-mono 
-                            border border-gray-700 focus:outline-none focus:border-orange-400 custom-scroll"
-                    placeholder="Your source code for the problem. Make sure it's a valid solution."
+            {/* MONACO EDITOR */}
+            <div className="flex-1 min-h-0 mb-4 border border-gray-700 rounded-lg">
+                <Editor
+                    height="100%"
+                    language={monacoLanguageMap[selectedLang]}
+                    theme="vs-dark"
                     value={code}
-                    onChange={(event) => setCode(event.target.value)}
+                    onChange={(value) => setCode(value || "")}
+                    options={{
+                        fontSize: 16,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        smoothScrolling: true,
+                        lineNumbers: "on",
+                        automaticLayout: true,
+                    }}
                 />
             </div>
 
-            {/* Submit Button */}
             <div className="text-center pt-4">
-                <button 
+                <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !code.trim()}
                     className="bg-orange hover:bg-orange/90 text-white px-20 py-3 rounded-button 
-                            text-lg font-anta transition-colors duration-200"
+                               text-lg font-anta transition-colors duration-200 
+                               disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Submit
+                    {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
+
+                {submitMessage && (
+                    <p className={`mt-4 text-lg font-anta ${submitMessage.includes("success") ? "text-green-400" : "text-red-400"}`}>
+                        {submitMessage}
+                    </p>
+                )}
             </div>
         </div>
     );
