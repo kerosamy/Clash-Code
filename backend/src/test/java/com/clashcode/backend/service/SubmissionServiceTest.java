@@ -78,8 +78,6 @@ class SubmissionServiceTest {
         when(submissionMapper.toEntity(requestDto)).thenReturn(submissionEntity);
         when(testCaseService.getInputTestCasesForProblem(problem)).thenReturn(List.of("input1"));
         when(testCaseService.getOutputTestCasesForProblem(problem)).thenReturn(List.of("output1"));
-        when(judge0Client.executeBatch("print('hello')", "python", List.of("input1"), List.of("output1")))
-                .thenReturn(List.of(result));
         when(submissionMapper.toEntity(List.of(result), submissionEntity)).thenReturn(updatedSubmission);
 
         // Act

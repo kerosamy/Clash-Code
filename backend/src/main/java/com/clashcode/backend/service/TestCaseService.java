@@ -50,7 +50,9 @@ public class TestCaseService {
 
             String expectedOutput = judge0Client.executeAndReturnOutput(input,
                     problem.getSolution().getSolutionCode(),
-                    problem.getSolution().getLanguageVersion().toString());
+                    problem.getSolution().getLanguageVersion().toString(),
+                    problem.getTimeLimit(),
+                    problem.getMemoryLimit());
 
             String outputPath = fileStorageService.storeTestCaseOutput(
                     expectedOutput,

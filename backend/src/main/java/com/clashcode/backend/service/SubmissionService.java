@@ -61,7 +61,9 @@ public class SubmissionService {
                 requestDto.getCode(),
                 requestDto.getCodeLanguage(),
                 inputs,
-                outputs
+                outputs,
+                problem.getTimeLimit(),
+                problem.getMemoryLimit()
         );
         submissionRepository.save(submissionMapper.toEntity(executionResults, submission));
     }
