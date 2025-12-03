@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Board from '../../components/common/Board';
 import UserRow from '../../components/common/UserRow';
 import SearchBar from "../../components/common/SearchBar";
+import api from "../../services/api";
 
 interface UserSearchResponse {
   username: string;
@@ -19,29 +20,21 @@ export default function AddFriend() {
       return;
     }
 
-    const timer = setTimeout(() => {
-        setLoading(true);
-
-       const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `http://localhost:8080/users/search?username=${encodeURIComponent(searchTerm)}`
-        );
-        if (!response.ok) throw new Error('Failed to fetch users');
-
-        const data: UserSearchResponse[] = await response.json();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers(); 
-  }, 300);
+    const timer = setTimeout(async () => {
+    setLoading(true);
+    try {
+      // Axios automatically sends the token from the interceptor
+      const { data } = await api.get<UserSearchResponse[]>(
+        `/users/search?username=${encodeURIComponent(searchTerm)}`
+      );
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, 300); // debounce 300ms
 
   return () => clearTimeout(timer);
 }, [searchTerm]);

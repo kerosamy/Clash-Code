@@ -38,15 +38,11 @@ export interface LoginResponse {
 
 // --- API Functions ---
 
-export const registerUser = async (userData: RegisterRequest): Promise<UserResponse> => {
-  try {
-    const response = await axios.post<UserResponse>(`${API_URL}/signup`, userData);
-    return response.data;
-  } catch (err) {
-    handleApiError(err);
-    throw err; // Unreachable, but satisfies TS
-  }
+export const registerUser = async (data: RegisterRequest) => {
+  const response = await axios.post(`${API_URL}/signup`, data);
+  return response.data;  // Contains { token, expiresIn }
 };
+
 
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   try {

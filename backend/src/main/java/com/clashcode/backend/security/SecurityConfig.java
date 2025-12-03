@@ -49,8 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
-                        .requestMatchers("/oauth2/**", "/users/GoogleSignUp/**").permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                         /*To permit all requests, change .authenticated() to .permitAll()*/
                 )
 

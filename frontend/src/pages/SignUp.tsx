@@ -55,41 +55,45 @@ export default function SignUp() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSignUp = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    // Clear previous errors before new attempt
-    setErrors({});
+  // Clear previous errors
+  setErrors({});
 
-    if (!validateInputs()) return;
+  if (!validateInputs()) return;
 
-    // Prepare data to match RegisterRequest interface
-    const requestData = {
-      username: username,
-      email: emailOrHandle, // Mapping 'emailOrHandle' to 'email'
-      password: password,
-      recoveryQuestion: recoveryQuestion,
-      recoveryAnswer: recoveryAnswer,
-    };
-
-    try {
-      await registerUser(requestData);
-      navigate("/profile/1/overview");
-    } catch (err) {
-
-      if (err instanceof Error) {
-        const errorMessage = err.message.toLowerCase();
-
-        if (errorMessage.includes("email")) {
-          setErrors({ email: err.message });
-        } else if (errorMessage.includes("username")) {
-          setErrors({ username: err.message });
-        } else {
-          alert(err.message || "Something went wrong. Try again later.");
-        }
-      }
-    }
+  const requestData = {
+    username: username,
+    email: emailOrHandle,
+    password: password,
+    recoveryQuestion: recoveryQuestion,
+    recoveryAnswer: recoveryAnswer,
   };
+
+  try {
+    // Call backend and receive token
+    const response = await registerUser(requestData);
+
+    // Store token (and expiry if needed)
+    localStorage.setItem("token", response.token);
+    localStorage.setItem("tokenExpiry", response.expiresIn.toString());
+
+    // Redirect
+    navigate("/profile/1/overview");
+  } catch (err: any) {
+    const errorMessage = err.message?.toLowerCase() || "";
+
+    if (errorMessage.includes("email")) {
+      setErrors({ email: err.message });
+    } else if (errorMessage.includes("username")) {
+      setErrors({ username: err.message });
+    } else {
+      alert(err.message || "Something went wrong. Try again later.");
+    }
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
