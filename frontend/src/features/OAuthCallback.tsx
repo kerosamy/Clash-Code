@@ -1,44 +1,59 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/OAuth2Service";
-
-export interface UserResponseDto {
-  id: number;
-  username?: string; 
-  email: string;
-}
+import axios from "axios";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAuthStatus = async () => {
+    const processOAuth = async () => {
       try {
-        const user: UserResponseDto = await authService.getGoogleUser();
+        // Step 1: Get token from backend OAuthCallback
+        const response = await authService.getGoogleToken();
+        console.log("OAuth token response:", response);
+
+        const { token } = response;
+        if (!token) throw new Error("Token not returned");
+
+        // Store JWT in localStorage
+        localStorage.setItem("token", token);
+
         const flow = sessionStorage.getItem("oauth_flow");
-        console.log("Flow:", flow);
 
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 800));
 
-        if (user.username) {
-          sessionStorage.removeItem("oauth_flow");
+        // Step 2: Check if the user exists using /me endpoint
+        let userExists = false;
+        try {
+          const res = await axios.get("http://localhost:8080/auth/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.data?.email) userExists = true;
+        } catch (e) {
+          userExists = false;
+        }
+
+        sessionStorage.removeItem("oauth_flow");
+
+        // ---- REDIRECT LOGIC ----
+        if (userExists) {
+          // User already exists → go to profile
           navigate("/profile/1/overview");
         } else {
-          if (flow === "signup") {
-            navigate("/complete-registration", { state: { email: user.email } });
-          } else {
-            setError("User not found. Please sign up first.");
-            setTimeout(() => navigate("/sign-up"), 3000);
-          }
+          // User does not exist → go to complete registration
+          navigate("/complete-registration");
         }
+
       } catch (err) {
+        console.error(err);
         setError("Authentication failed. Please try again.");
-        setTimeout(() => navigate("/sign-up"), 3000);
+        setTimeout(() => navigate("/sign-up"), 2500);
       }
     };
 
-    checkAuthStatus();
+    processOAuth();
   }, [navigate]);
 
   if (error) {

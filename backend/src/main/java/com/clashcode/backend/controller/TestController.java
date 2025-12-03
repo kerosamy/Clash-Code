@@ -58,7 +58,12 @@ public class TestController {
             this.message = message;
         }
 
-        public String getStatus() { return status; }
-        public String getMessage() { return message; }
+        public String getStatus() {
+            return status;
+        }
+
+        public String getMessage() {
+            return message;
+        }
     }
 }
