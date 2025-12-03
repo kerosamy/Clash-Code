@@ -17,25 +17,19 @@ public class UserController {
 
     private final UserService userService;
 
-    // Correct constructor
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-
-    // Get full user profile
     @GetMapping("/profile/{id}")
     public ResponseEntity<ProfileDto> getProfile(@AuthenticationPrincipal User user) {
         ProfileDto profile = userService.getProfile(user.getId());
         return ResponseEntity.ok(profile);
     }
 
-    // Search users by username
     @GetMapping("/search")
     public ResponseEntity<List<UserSearchResponse>> searchUsers(@RequestParam String username) {
         List<UserSearchResponse> results = userService.searchByUsername(username);
         return ResponseEntity.ok(results);
     }
-
-
 }

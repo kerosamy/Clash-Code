@@ -23,8 +23,8 @@ public class SubmissionController {
 
     @PostMapping("/submit")
     public ResponseEntity<Void> submitCode(
-            @RequestBody SubmissionRequestDto submissionRequestDto) {
-
+            @RequestBody SubmissionRequestDto submissionRequestDto)
+    {
         submissionService.submitCode(submissionRequestDto);
         return ResponseEntity.ok().build();
     }

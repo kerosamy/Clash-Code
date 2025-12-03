@@ -1,4 +1,4 @@
-package com.clashcode.backend.responses;
+package com.clashcode.backend.dto;
 
 import lombok.Getter;
 import lombok.Setter;

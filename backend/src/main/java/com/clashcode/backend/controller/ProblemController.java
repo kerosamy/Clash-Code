@@ -18,6 +18,9 @@ public class ProblemController {
 
     private final ProblemService problemService;
 
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_SIZE = 10;
+
     public ProblemController(ProblemService problemService) {
         this.problemService = problemService;
     }
@@ -31,17 +34,17 @@ public class ProblemController {
     @PostMapping
     public ResponseEntity<Void> addProblem(
             @RequestPart("problem") ProblemRequestDto problemRequestDto,
-            @RequestPart("testcases") List<MultipartFile> files) {
-
+            @RequestPart("testcases") List<MultipartFile> files
+    ) {
         problemService.addProblem(problemRequestDto, files);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/browse")
     public ResponseEntity<Page<ProblemListDto>> browse(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
+    ) {
         Page<ProblemListDto> problems = problemService.getAllProblems(page, size);
         return ResponseEntity.ok(problems);
     }
@@ -49,21 +52,20 @@ public class ProblemController {
     @PostMapping("/browse/filter")
     public ResponseEntity<Page<ProblemListDto>> browseFiltered(
             @RequestBody ProblemFilterDto filterDto,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
+    ) {
         Page<ProblemListDto> filteredProblems = problemService.getFilteredProblems(
-                filterDto.getTags(), filterDto.getMinRate(), filterDto.getMaxRate(), page, size
-        );
+                filterDto.getTags(), filterDto.getMinRate(), filterDto.getMaxRate(), page, size);
         return ResponseEntity.ok(filteredProblems);
     }
 
     @GetMapping("/search")
     public ResponseEntity<Page<ProblemListDto>> searchByName(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
+    ) {
         Page<ProblemListDto> results = problemService.searchProblemsByName(keyword, page, size);
         return ResponseEntity.ok(results);
     }

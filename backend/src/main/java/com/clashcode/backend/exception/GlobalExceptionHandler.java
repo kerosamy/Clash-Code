@@ -11,7 +11,6 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1️⃣ Handle custom UnauthorizedException
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
         Map<String, Object> body = Map.of(
@@ -21,7 +20,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED); // 401
     }
 
-    // 3️⃣ Handle validation errors
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgs(IllegalArgumentException ex) {
         Map<String, Object> body = Map.of(
@@ -30,6 +28,4 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST); // 400
     }
-
-
 }
