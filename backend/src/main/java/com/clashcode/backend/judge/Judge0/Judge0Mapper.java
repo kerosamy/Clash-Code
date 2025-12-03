@@ -99,14 +99,14 @@ public class Judge0Mapper {
                 .build();
 
     }
-    public Judge0RequestDto toRequestDto (String sourceCode,
-                                          String testCase,
-                                          String language,
-                                          String expectedResult,
-                                          Integer timeLimitMs,
-                                          Integer memoryLimitMb){
-
-
+    public Judge0RequestDto toRequestDto (
+            String sourceCode,
+            String testCase,
+            String language,
+            String expectedResult,
+            Integer timeLimitMs,
+            Integer memoryLimitMb
+    ){
         double memoryLimitKb = memoryLimitMb * KB_PER_MB;
         double timeLimitSec = timeLimitMs / SEC_PER_MS;
         double wallTimeLimitSec = timeLimitSec * WALL_TIME_FACTOR;
@@ -137,7 +137,4 @@ public class Judge0Mapper {
             return base64;
         }
     }
-
 }
-
-

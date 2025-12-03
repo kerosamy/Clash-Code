@@ -1,6 +1,5 @@
 package com.clashcode.backend.judge.Judge0;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -27,5 +26,4 @@ public class Judge0ResponseDto {
 
     @JsonProperty("status")
     private Judge0StatusDto status;
-
 }

@@ -1,10 +1,8 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.LoginUserDto;
-import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.enums.RecoveryQuestion;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import com.clashcode.backend.mapper.UserMapper;
@@ -15,8 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -36,9 +32,6 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ---------------------------
-    //  EMAIL / PASSWORD SIGNUP
-    // ---------------------------
     public User signup(RegisterUserDto input) {
 
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
@@ -49,25 +42,11 @@ public class AuthService {
             throw new RuntimeException("Username already taken");
         }
 
-        User user = User.builder()
-                .username(input.getUsername())
-                .email(input.getEmail())
-                .password(passwordEncoder.encode(input.getPassword()))
-                .recoveryQuestion(input.getRecoveryQuestion() != null
-                        ? RecoveryQuestion.valueOf(input.getRecoveryQuestion())
-                        : null)
-                .recoveryAnswer(input.getRecoveryAnswer())
-                .isAdmin(false)
-                .maxRate(0)
-                .currentRate(0)
-                .build();
-
+        String password = passwordEncoder.encode(input.getPassword());
+        User user = userMapper.toUser(input, password);
         return userRepository.save(user);
     }
 
-    // ---------------------------
-    //  EMAIL / PASSWORD LOGIN
-    // ---------------------------
     public User authenticate(LoginUserDto input) {
 
         authenticationManager.authenticate(
@@ -81,26 +60,18 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // ---------------------------
-    //  GOOGLE OAUTH CALLBACK
-    // ---------------------------
     public User handleGoogleOAuth(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oauth = authenticationToken.getPrincipal();
         String email = oauth.getAttribute("email");
 
-        Optional<User> userOpt = userRepository.findByEmail(email);
-
-        if (userOpt.isPresent()) {
-            return userOpt.get();
-        }
-        User temp = new User();
-        temp.setEmail(email);
-        return temp;
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setEmail(email);
+                    return newUser;
+                });
     }
 
-    // ---------------------------
-    // GOOGLE OAUTH COMPLETE SIGNUP
-    // ---------------------------
     public User completeGoogleSignUp(SignUpCompletionDto dto, OAuth2AuthenticationToken token) {
         String email = token.getPrincipal().getAttribute("email");
 

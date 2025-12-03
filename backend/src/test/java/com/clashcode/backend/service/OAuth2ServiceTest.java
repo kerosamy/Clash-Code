@@ -2,16 +2,14 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
-import com.clashcode.backend.dto.UserSearchResponse;
+import com.clashcode.backend.dto.UserSearchResponseDto;
 import com.clashcode.backend.exception.UserNotFoundException;
-import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -166,7 +164,7 @@ public class OAuth2ServiceTest {
                 .thenReturn(List.of(user1, user2));
 
         // Act
-        List<UserSearchResponse> results = OAuth2Service.searchByUsername("ali");
+        List<UserSearchResponseDto> results = OAuth2Service.searchByUsername("ali");
 
         // Assert
         assertEquals(2, results.size());
@@ -182,7 +180,7 @@ public class OAuth2ServiceTest {
         when(userRepository.findByUsernameContainingIgnoreCase("mo"))
                 .thenReturn(List.of());
 
-        List<UserSearchResponse> results = OAuth2Service.searchByUsername("mo");
+        List<UserSearchResponseDto> results = OAuth2Service.searchByUsername("mo");
 
         assertTrue(results.isEmpty());
     }

@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-
 @Service
 public class FileStorageService {
     @Value("${clashcode.filesystem.base-path}")

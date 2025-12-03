@@ -5,7 +5,7 @@ import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
-import com.clashcode.backend.dto.LoginResponse;
+import com.clashcode.backend.dto.AuthResponseDto;
 import com.clashcode.backend.service.AuthService;
 import com.clashcode.backend.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -26,27 +26,27 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<LoginResponse> register(@RequestBody RegisterUserDto registerUserDto) {
+    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterUserDto registerUserDto) {
         User registeredUser = authService.signup(registerUserDto);
         return buildAuthResponse(registeredUser);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto) {
+    public ResponseEntity<AuthResponseDto> authenticate(@RequestBody LoginUserDto loginUserDto) {
         User authenticatedUser = authService.authenticate(loginUserDto);
         return buildAuthResponse(authenticatedUser);
     }
 
     // GOOGLE LOGIN
     @GetMapping("/OAuthCallback")
-    public ResponseEntity<LoginResponse> handleGoogleOAuth(OAuth2AuthenticationToken token) {
+    public ResponseEntity<AuthResponseDto> handleGoogleOAuth(OAuth2AuthenticationToken token) {
         User user = authService.handleGoogleOAuth(token); // <-- now returns User
         return buildAuthResponse(user);
     }
 
     // GOOGLE SIGNUP COMPLETION
     @PostMapping("/GoogleSignUp/completeRegistration")
-    public ResponseEntity<LoginResponse> completeSignUp(
+    public ResponseEntity<AuthResponseDto> completeSignUp(
             @RequestBody SignUpCompletionDto dto,
             OAuth2AuthenticationToken token
     ) {
@@ -62,9 +62,9 @@ public class AuthController {
         return ResponseEntity.ok(user); // returns minimal user info (id, email, username)
     }
 
-    private ResponseEntity<LoginResponse> buildAuthResponse(User user) {
+    private ResponseEntity<AuthResponseDto> buildAuthResponse(User user) {
         String jwtToken = jwtService.generateToken(user);
-        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
-        return ResponseEntity.ok(loginResponse);
+        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken, jwtService.getExpirationTime());
+        return ResponseEntity.ok(authResponseDto);
     }
 }

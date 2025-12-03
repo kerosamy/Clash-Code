@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @Component
 public class Judge0Client implements CodeExecutor {
     private final String JUDGE0_URL = "http://localhost:2358";
@@ -18,16 +19,16 @@ public class Judge0Client implements CodeExecutor {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public List<ExecutionResultDto> executeBatch(String sourceCode,
-                                                 String language,
-                                                 List<String> testCases,
-                                                 List<String> expectedResults,
-                                                 Integer timeLimit,
-                                                 Integer memoryLimit){
-
+    public List<ExecutionResultDto> executeBatch(
+            String sourceCode,
+            String language,
+            List<String> testCases,
+            List<String> expectedResults,
+            Integer timeLimit,
+            Integer memoryLimit
+    ){
         List<ExecutionResultDto> results = new ArrayList<>();
         for (int i = 0; i < testCases.size(); i++) {
-
             Judge0TokenDto judge0TokenDto = submitCode(sourceCode,
                                             testCases.get(i),
                                             language,
@@ -41,12 +42,13 @@ public class Judge0Client implements CodeExecutor {
         return results;
     };
     @Override
-    public String executeAndReturnOutput(String stdin,
-                                         String sourceCode,
-                                         String language,
-                                         Integer timeLimit,
-                                         Integer memoryLimit) {
-
+    public String executeAndReturnOutput(
+            String stdin,
+            String sourceCode,
+            String language,
+            Integer timeLimit,
+            Integer memoryLimit
+    ) {
         Judge0TokenDto token = submitCode(
                 sourceCode,
                 stdin,
@@ -69,19 +71,22 @@ public class Judge0Client implements CodeExecutor {
     }
 
 
-    public Judge0TokenDto submitCode (String sourceCode,
-                                      String testCase,
-                                      String language,
-                                      String expectedResult,
-                                      Integer timeLimit,
-                                      Integer memoryLimit){
-
-        Judge0RequestDto requestDto = mapper.toRequestDto(sourceCode,
-                                                            testCase,
-                                                            language,
-                                                            expectedResult,
-                                                            timeLimit,
-                                                            memoryLimit);
+    public Judge0TokenDto submitCode (
+            String sourceCode,
+            String testCase,
+            String language,
+            String expectedResult,
+            Integer timeLimit,
+            Integer memoryLimit
+    ){
+        Judge0RequestDto requestDto = mapper.toRequestDto(
+                sourceCode,
+                testCase,
+                language,
+                expectedResult,
+                timeLimit,
+                memoryLimit
+        );
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonBody = objectMapper.writeValueAsString(requestDto);
@@ -140,6 +145,4 @@ public class Judge0Client implements CodeExecutor {
         }
         throw new RuntimeException("Timeout waiting for Judge0 result after " + (maxRetries * delayMillis) + " ms");
     }
-
-
 }

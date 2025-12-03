@@ -56,11 +56,9 @@ public class User implements UserDetails{
 
     private String recoveryAnswer;
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
-
 
 }

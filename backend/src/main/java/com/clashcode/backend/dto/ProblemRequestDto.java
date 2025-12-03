@@ -1,4 +1,5 @@
 package com.clashcode.backend.dto;
+
 import com.clashcode.backend.enums.ProblemTags;
 import lombok.*;
 import java.util.ArrayList;
@@ -10,25 +11,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProblemRequestDto {
-
     private String title;
-
     private String inputFormat;
-
     private String outputFormat;
-
     private String statement;
-
     private String notes;
-
     private String mainSolution;
-
     private String solutionLanguage;
-
     private int timeLimit;
-
     private int memoryLimit;
-
     private int rate;
 
     @Builder.Default
@@ -36,5 +27,4 @@ public class ProblemRequestDto {
 
     @Builder.Default
     private List<Boolean> visibleFlags = new ArrayList<>();
-
 }
