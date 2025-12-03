@@ -4,10 +4,10 @@ import com.clashcode.backend.dto.ProblemFilterDto;
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,8 +15,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,10 +28,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(ProblemController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ProblemControllerTest {
 
     @Autowired
@@ -39,12 +41,18 @@ class ProblemControllerTest {
     @MockitoBean
     private ProblemService problemService;
 
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     // ---------------- Add Problem Test ----------------
     @Test
-    @WithMockUser
+    @DisplayName("POST /problem - Add Problem Success")
     void testAddProblem() throws Exception {
         ProblemRequestDto request = new ProblemRequestDto();
         request.setTitle("Add Two Integers");
@@ -74,7 +82,7 @@ class ProblemControllerTest {
 
     // ---------------- Get Problem Test ----------------
     @Test
-    @WithMockUser
+    @DisplayName("GET /problem/{id} - Success")
     void testGetProblem() throws Exception {
         ProblemResponseDto response = new ProblemResponseDto();
         response.setId(1L);
@@ -90,7 +98,7 @@ class ProblemControllerTest {
 
     // ---------------- Browse Problems Test ----------------
     @Test
-    @WithMockUser
+    @DisplayName("GET /problem/browse - Success")
     void testBrowseProblems() throws Exception {
         ProblemListDto problem1 = new ProblemListDto();
         problem1.setId(1L);
@@ -115,7 +123,9 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.content[1].title").value("Subtract Two Integers"));
     }
 
+    // ---------------- Filter Problems Test ----------------
     @Test
+    @DisplayName("POST /problem/browse/filter - Success")
     void testBrowseFiltered() throws Exception {
         ProblemListDto problem1 = new ProblemListDto();
         problem1.setId(1L);
@@ -124,7 +134,6 @@ class ProblemControllerTest {
         List<ProblemListDto> problemList = List.of(problem1);
         Page<ProblemListDto> page = new PageImpl<>(problemList, PageRequest.of(0, 10), problemList.size());
 
-
         when(problemService.getFilteredProblems(
                 anyList(),
                 any(Integer.class),
@@ -132,7 +141,6 @@ class ProblemControllerTest {
                 anyInt(),
                 anyInt()
         )).thenReturn(page);
-
 
         ProblemFilterDto filterDto = new ProblemFilterDto();
         filterDto.setTags(List.of());
@@ -149,7 +157,9 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.content[0].title").value("Multiply Two Integers"));
     }
 
+    // ---------------- Search Problems Test ----------------
     @Test
+    @DisplayName("GET /problem/search - Success")
     void testSearchByName() throws Exception {
         ProblemListDto problem1 = new ProblemListDto();
         problem1.setId(1L);
