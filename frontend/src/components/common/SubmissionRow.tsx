@@ -1,6 +1,8 @@
 import { SubmissionStatus } from "../../enums/SubmissionStatus";
 import { getSubmissionStatusColor } from "../../utils/getSubmissionStatusColor";
 import { getSubmissionStatusDisplay } from "../../utils/getSubmissionStatusDisplay";
+import { Link } from "react-router-dom";
+
 
 
 export interface SubmissionRowProps {
@@ -11,6 +13,8 @@ export interface SubmissionRowProps {
     numberOfPassedTestCases: number;   
     numberOfTotalTestCases: number;  
     numberOfCurrentTestCase: number; 
+    problemTitle: string;
+    problemId: number;
     onClick?: () => void;
     className?: string;
 }
@@ -23,6 +27,8 @@ export default function SubmissionRow({
     numberOfPassedTestCases,
     numberOfTotalTestCases,
     numberOfCurrentTestCase,
+    problemTitle,
+    problemId,
     onClick,
     className = "",
 }: SubmissionRowProps) {
@@ -61,6 +67,16 @@ export default function SubmissionRow({
                 {submissionStatus === SubmissionStatus.RUNNING_ON_TEST
                     ? `Running on Test ${numberOfCurrentTestCase} / ${numberOfTotalTestCases}`
                     : getSubmissionStatusDisplay(submissionStatus)}
+            </div>
+
+            <div className="text-text font-semibold text-center">
+                <Link
+                    to={`/practice/problem/${problemId}`}
+                    onClick={(e) => e.stopPropagation()} 
+                    className="text-blue-400 hover:text-blue-500 underline"
+                >
+                    {problemTitle}
+                </Link>
             </div>
 
             

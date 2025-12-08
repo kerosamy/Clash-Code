@@ -12,9 +12,11 @@ export interface SubmissionRequest {
 export interface SubmissionResponse {
   submissionStatus: string;
   submissionId: number;
+  problemId: number;
   timeTaken: number;
   memoryTaken: number;
   submittedAt: string;
+  problemTitle: string;
   numberOfPassedTestCases: number;   
   numberOfTotalTestCases: number;
   numberOfCurrentTestCase: number;    

@@ -41,7 +41,7 @@ export default function ProblemDetails() {
   }
 
   return (
-    <div className="w-full text-white font-anta my-8">
+    <div className="w-full text-white font-anta my-8 p-scroll-x">
       <div className="max-w-6xl mx-auto w-full">
         {/* Title + Limits */}
         <div className="mb-8 text-center">

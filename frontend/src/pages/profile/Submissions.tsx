@@ -11,6 +11,8 @@ export interface Submission {
     timeTaken: number;
     memoryTaken: number;
     submittedAt: string;
+    problemTitle: string;
+    problemId: number;
     numberOfPassedTestCases: number;
     numberOfTotalTestCases: number;
     numberOfCurrentTestCase: number;
@@ -83,6 +85,8 @@ useEffect(() => {
                 numberOfPassedTestCases: item.numberOfPassedTestCases,
                 numberOfTotalTestCases: item.numberOfTotalTestCases,
                 numberOfCurrentTestCase: item.numberOfCurrentTestCase,
+                problemTitle: item.problemTitle,
+                problemId: item.problemId,
             }));
             console.log("Fetched submissions:", formattedSubmissions);
             
@@ -122,8 +126,7 @@ useEffect(() => {
         );
     }
 
-    const columns = ["Status", "Time", "Memory", "Passed", "Submitted At"];
-
+    const columns = ["Status", "Problem", "Time", "Memory", "Passed", "Submitted At"];
 
     return (
         <div className="p-6">
@@ -140,7 +143,8 @@ useEffect(() => {
                 data={submissions}
                 columns={columns}
                 onRowClick={handleSubmissionClick}
-                gridCols="grid-cols-[200px_150px_150px_150px_1fr]"
+                gridCols="grid-cols-[200px_200px_150px_150px_150px_1fr]"
+
                 renderRow={(submission, onClick) => (
                     <SubmissionRow
                         key={`${submission.submittedAt}-${submission.timeTaken}`}
@@ -151,8 +155,10 @@ useEffect(() => {
                         numberOfPassedTestCases={submission.numberOfPassedTestCases}
                         numberOfTotalTestCases={submission.numberOfTotalTestCases}
                         numberOfCurrentTestCase={submission.numberOfCurrentTestCase}
+                        problemTitle={submission.problemTitle}
+                        problemId={submission.problemId}
                         onClick={onClick}
-                        className="grid-cols-[200px_150px_150px_150px_1fr]"
+                        className="grid-cols-[200px_200px_150px_150px_150px_1fr]"
                     />
                 )}
             />
