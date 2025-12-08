@@ -5,11 +5,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LoginResponse {
+public class AuthResponseDto {
     private String token;
     private long expiresIn;
 
-    public LoginResponse(String token, long expiresIn) {
+    public AuthResponseDto(String token, long expiresIn) {
         this.token = token;
         this.expiresIn = expiresIn;
     }

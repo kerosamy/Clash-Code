@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.enums.Ranks;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -14,54 +15,44 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper = new UserMapper();
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public ProfileDto getProfile(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
-
-        return ProfileDto.builder()
-                .username(user.getUsername())
-                .rank(getRank(user.getCurrentRate()))
-                .currentRate(user.getCurrentRate())
-                .maxRate(user.getMaxRate())
-                .friendCount(getFriendCount(id))
-                .avatarUrl(user.getImgUrl())
-                .stats(getStats(user))
-                .categories(getCategories(user))
-                .build();
-    }
-
-    public List<UserSearchResponse> searchByUsername(String username) {
+    public List<UserSearchResponseDto> searchByUsername(String username) {
         return userRepository.findByUsernameContainingIgnoreCase(username)
                 .stream()
-                .map(user -> new UserSearchResponse(
+                .map(user -> new UserSearchResponseDto(
                         user.getUsername(),
                         getRank(user.getCurrentRate())
                 )).toList();
     }
 
-    // ----------- PRIVATE HELPERS --------------
-
     private StatsDto getStats(User user) {
-        return StatsDto.builder()
-                .solvedProblems(750)
-                .attemptedProblems(525)
-                .matchesPlayed(330)
-                .matchesWon(230)
-                .build();
+        //TODO
+        int solvedProblems = 750;
+        int attemptedProblems = 525;
+        int matchesPlayed = 330;
+        int matchesWon = 230;
+
+        return new StatsDto(solvedProblems, attemptedProblems, matchesPlayed, matchesWon);
     }
 
     private CategoryDto[] getCategories(User user) {
+        //TODO
         return new CategoryDto[]{
                 new CategoryDto(ProblemTags.DP.name(), 20),
                 new CategoryDto(ProblemTags.TWO_POINTERS.name(), 40),
                 new CategoryDto(ProblemTags.BRUTE_FORCE.name(), 30),
                 new CategoryDto(ProblemTags.BFS.name(), 15),
         };
+    }
+
+    private int getFriendCount(User user) {
+        //TODO
+        return 20;
     }
 
     private String getRank(int rate) {
@@ -71,7 +62,14 @@ public class UserService {
         return Ranks.values()[index].name();
     }
 
-    private int getFriendCount(long id) {
-        return 20; // Placeholder
+    public ProfileDto getProfile(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
+
+        String rank = getRank(user.getCurrentRate());
+        int friendCount = getFriendCount(user);
+        StatsDto stats = getStats(user);
+        CategoryDto[] categories = getCategories(user);
+        return userMapper.toUserProfile(user, rank, friendCount, stats, categories);
     }
 }

@@ -4,9 +4,8 @@ import com.clashcode.backend.dto.CategoryDto;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.dto.StatsDto;
-import com.clashcode.backend.dto.UserSearchResponse;
+import com.clashcode.backend.dto.UserSearchResponseDto;
 import com.clashcode.backend.exception.UserNotFoundException;
-import com.clashcode.backend.dto.OAuth2Dto;
 import com.clashcode.backend.service.OAuth2Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -138,8 +137,8 @@ public class OAuth2ControllerTest {
     @Test
     @WithMockUser
     void testSearchUsers_Found() throws Exception {
-        UserSearchResponse user1 = new UserSearchResponse("alice", "DIAMOND");
-        UserSearchResponse user2 = new UserSearchResponse("alicia", "MASTER");
+        UserSearchResponseDto user1 = new UserSearchResponseDto("alice", "DIAMOND");
+        UserSearchResponseDto user2 = new UserSearchResponseDto("alicia", "MASTER");
 
         when(OAuth2Service.searchByUsername("ali")).thenReturn(List.of(user1, user2));
 

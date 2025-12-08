@@ -1,7 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.ProfileDto;
-import com.clashcode.backend.dto.UserSearchResponse;
+import com.clashcode.backend.dto.UserSearchResponseDto;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.UserService;
 
@@ -28,8 +28,8 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<UserSearchResponse>> searchUsers(@RequestParam String username) {
-        List<UserSearchResponse> results = userService.searchByUsername(username);
+    public ResponseEntity<List<UserSearchResponseDto>> searchUsers(@RequestParam String username) {
+        List<UserSearchResponseDto> results = userService.searchByUsername(username);
         return ResponseEntity.ok(results);
     }
 }

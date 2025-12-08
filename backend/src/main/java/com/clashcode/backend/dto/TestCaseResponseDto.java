@@ -7,8 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestCaseResponseDto {
-
     private String input;
-
     private String output;
 }

@@ -37,7 +37,7 @@ public class Submission {
     private Integer memoryTaken;
 
     @Column
-    private Integer TimeTaken;
+    private Integer timeTaken;
 
     @Column
     Integer passedTestCases;

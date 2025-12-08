@@ -25,12 +25,15 @@ public class ProblemMapper {
                 .timeLimit(problemRequestDto.getTimeLimit())
                 .rate(problemRequestDto.getRate())
                 .tags(problemRequestDto.getTags())
-                .solution(Solution.builder()
+                .solution(
+                        Solution.builder()
                         .solutionCode(problemRequestDto.getMainSolution())
                         .languageVersion(LanguageVersion.valueOf(problemRequestDto.getSolutionLanguage()))
-                        .build())
+                        .build()
+                )
                 .build();
     }
+
     public ProblemResponseDto toResponseDto (Problem problem , List<TestCaseResponseDto> visibleTestCases) {
         return ProblemResponseDto
                 .builder()
@@ -59,6 +62,4 @@ public class ProblemMapper {
                 .attempted("unsolved")   // placeholder
                 .build();
     }
-
-
 }

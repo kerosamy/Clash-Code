@@ -29,30 +29,32 @@ public class TestCaseService {
         List<TestCase> testCases = new ArrayList<>();
         for (int i = 0; i < files.size() ; i++) {
             TestCase testCase = TestCase.builder()
-                    .problem(problem)
-                    .visible(visible.get(i))
-                    .build();
+                                        .problem(problem)
+                                        .visible(visible.get(i))
+                                        .build();
             testCases.add(testCase);
         }
         testCases = testCaseRepository.saveAll(testCases);
         for (int i = 0; i < testCases.size(); i++) {
-
             TestCase testCase = testCases.get(i);
             MultipartFile file = files.get(i);
 
             String inputPath = fileStorageService.storeTestCase(
                     file,
                     problem.getId(),
-                    testCase.getId());
+                    testCase.getId()
+            );
 
             testCase.setInputPath(inputPath);
             String input = fileStorageService.getTestCaseContent(inputPath);
 
-            String expectedOutput = judge0Client.executeAndReturnOutput(input,
+            String expectedOutput = judge0Client.executeAndReturnOutput(
+                    input,
                     problem.getSolution().getSolutionCode(),
                     problem.getSolution().getLanguageVersion().toString(),
                     problem.getTimeLimit(),
-                    problem.getMemoryLimit());
+                    problem.getMemoryLimit()
+            );
 
             String outputPath = fileStorageService.storeTestCaseOutput(
                     expectedOutput,
@@ -84,6 +86,7 @@ public class TestCaseService {
         }
         return inputTestCases;
     }
+
     public List<String> getOutputTestCasesForProblem(Problem problem) {
         List<String> OutputTestCases = new ArrayList<>();
         for (String path : testCaseRepository.findOutputPathsByProblem(problem)) {
@@ -92,5 +95,4 @@ public class TestCaseService {
         }
         return OutputTestCases;
     }
-
 }

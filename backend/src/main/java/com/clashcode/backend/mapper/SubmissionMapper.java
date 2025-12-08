@@ -13,12 +13,14 @@ import java.util.List;
 
 @Component
 public class SubmissionMapper {
+
     public Submission toEntity (SubmissionRequestDto requestDto) {
         return Submission.builder()
                 .code(requestDto.getCode())
                 .languageVersion(LanguageVersion.valueOf(requestDto.getCodeLanguage()))
                 .build();
     }
+
     public Submission toEntity(List<ExecutionResultDto> resultDtoList, Submission submission) {
         int maxTime = 0;
         int maxMemory = 0;
@@ -76,5 +78,4 @@ public class SubmissionMapper {
         }
         return submissionListDtos;
     }
-
 }

@@ -1,4 +1,5 @@
 package com.clashcode.backend.judge.Judge0;
+
 import lombok.*;
 
 @Getter

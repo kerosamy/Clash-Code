@@ -11,7 +11,6 @@ import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.ProblemRepository;
 import com.clashcode.backend.repository.SubmissionRepository;
-import com.clashcode.backend.repository.TestCaseRepository;
 import com.clashcode.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +54,7 @@ public class SubmissionService {
         submission.setSubmittedAt(LocalDateTime.now());
         submission.setStatus(SubmissionStatus.WAITING);
         submissionRepository.save(submission);
-        List<String> inputs = testCaseService.getInputTestCasesForProblem(problem) ;
+        List<String> inputs = testCaseService.getInputTestCasesForProblem(problem);
         List<String> outputs = testCaseService.getOutputTestCasesForProblem(problem);
         List<ExecutionResultDto> executionResults = judge0Client.executeBatch(
                 requestDto.getCode(),

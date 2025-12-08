@@ -20,26 +20,26 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
                                     Pageable pageable);
 
     @Query("""
-        SELECT p
-        FROM Problem p
-        JOIN p.tags t
-        WHERE t IN :tags
-        GROUP BY p
-        HAVING COUNT(DISTINCT t) = :tagsSize
-    """)
+                SELECT p
+                FROM Problem p
+                JOIN p.tags t
+                WHERE t IN :tags
+                GROUP BY p
+                HAVING COUNT(DISTINCT t) = :tagsSize
+           """)
     Page<Problem> findByTags(@Param("tags") List<ProblemTags> tags,
                              @Param("tagsSize") long tagsSize,
                              Pageable pageable);
 
     @Query("""
-    SELECT p
-    FROM Problem p
-    JOIN p.tags t
-    WHERE t IN :tags
-      AND p.rate BETWEEN :minRate AND :maxRate
-    GROUP BY p
-    HAVING COUNT(DISTINCT t) = :tagsSize
-""")
+                SELECT p
+                FROM Problem p
+                JOIN p.tags t
+                WHERE t IN :tags
+                  AND p.rate BETWEEN :minRate AND :maxRate
+                GROUP BY p
+                HAVING COUNT(DISTINCT t) = :tagsSize
+           """)
     Page<Problem> findByTagsAndRateRange(
             @Param("tags") List<ProblemTags> tags,
             @Param("tagsSize") long tagsSize,

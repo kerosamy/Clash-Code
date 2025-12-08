@@ -1,4 +1,5 @@
 package com.clashcode.backend.service;
+
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
@@ -63,8 +64,8 @@ public class ProblemService {
             Integer minRate,
             Integer maxRate,
             int page,
-            int size) {
-
+            int size
+    ) {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         if (tags != null && tags.isEmpty()) tags = null;
@@ -77,18 +78,22 @@ public class ProblemService {
 
         if (hasTags && hasMin && hasMax) {
             problemPage = problemRepository.findByTagsAndRateRange(tags, tags.size(), minRate, maxRate, pageRequest);
-        } else if (hasTags && (hasMin || hasMax)) {
+        }
+        else if (hasTags && (hasMin || hasMax)) {
             problemPage = problemRepository.findByTagsAndRateRange(
                     tags, tags.size(),
                     minRate != null ? minRate : 0,
                     maxRate != null ? maxRate : Integer.MAX_VALUE,
                     pageRequest
             );
-        } else if (hasTags) {
+        }
+        else if (hasTags) {
             problemPage = problemRepository.findByTags(tags, tags.size(), pageRequest);
-        } else if (hasMin && hasMax) {
+        }
+        else if (hasMin && hasMax) {
             problemPage = problemRepository.findByRateBetween(minRate, maxRate, pageRequest);
-        } else {
+        }
+        else {
             problemPage = problemRepository.findAll(pageRequest);
         }
 
@@ -100,6 +105,4 @@ public class ProblemService {
         return problemRepository.findByTitleContainingIgnoreCase(keyword, pageRequest)
                 .map(problemMapper::toListDto);
     }
-
-
 }

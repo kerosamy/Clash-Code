@@ -1,4 +1,5 @@
 package com.clashcode.backend.model;
+
 import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.enums.ProblemTags;
 import jakarta.validation.constraints.Max;

@@ -16,5 +16,4 @@ public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
 
     @Query("SELECT t.outputPath FROM TestCase t WHERE t.problem = :problem")
     List<String> findOutputPathsByProblem(@Param("problem") Problem problem);
-
 }
