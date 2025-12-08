@@ -23,7 +23,6 @@ export default function AddFriend() {
     const timer = setTimeout(async () => {
     setLoading(true);
     try {
-      // Axios automatically sends the token from the interceptor
       const { data } = await api.get<UserSearchResponse[]>(
         `/users/search?username=${encodeURIComponent(searchTerm)}`
       );
@@ -34,7 +33,7 @@ export default function AddFriend() {
     } finally {
       setLoading(false);
     }
-  }, 300); // debounce 300ms
+  }, 300); 
 
   return () => clearTimeout(timer);
 }, [searchTerm]);

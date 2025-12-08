@@ -39,7 +39,7 @@ public class TestController {
     public ResponseEntity<TestResponse> secureData(@AuthenticationPrincipal User user) {
         String message;
         if (user != null) {
-            message = "Authenticated as: " + user.getEmail();
+            message = "Authenticated as: " + user.getUsername();
         } else {
             message = "Authenticated as: Guest";
         }

@@ -5,7 +5,6 @@ const API_BASE = "http://localhost:8080";
 
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // if needed
 });
 
 // Add JWT token to every request automatically

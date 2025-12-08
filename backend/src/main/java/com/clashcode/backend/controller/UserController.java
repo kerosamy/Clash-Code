@@ -21,7 +21,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/profile/{id}")
+    @GetMapping("/profile")
     public ResponseEntity<ProfileDto> getProfile(@AuthenticationPrincipal User user) {
         ProfileDto profile = userService.getProfile(user.getId());
         return ResponseEntity.ok(profile);
