@@ -75,7 +75,6 @@ class SubmissionServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(problemRepository.findById(2L)).thenReturn(Optional.of(problem));
-        when(submissionMapper.toEntity(requestDto)).thenReturn(submissionEntity);
         when(testCaseService.getInputTestCasesForProblem(problem)).thenReturn(List.of("input1"));
         when(testCaseService.getOutputTestCasesForProblem(problem)).thenReturn(List.of("output1"));
         when(submissionMapper.toEntity(List.of(result), submissionEntity)).thenReturn(updatedSubmission);

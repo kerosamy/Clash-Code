@@ -11,9 +11,13 @@ export interface SubmissionRequest {
 
 export interface SubmissionResponse {
   submissionStatus: string;
+  submissionId: number;
   timeTaken: number;
   memoryTaken: number;
   submittedAt: string;
+  numberOfPassedTestCases: number;   
+  numberOfTotalTestCases: number;
+  numberOfCurrentTestCase: number;    
 }
 
 export async function submitCode(
@@ -38,10 +42,20 @@ export async function submitCode(
 
 export async function getUserSubmissions(userId: number): Promise<SubmissionResponse[]> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/${userId}`);
+    const response = await axios.get(`${API_BASE_URL}/user/${userId}`);
     return response.data.reverse(); 
   } catch (error) {
     console.error('Failed to fetch user submissions:', error);
+    throw error;
+  }
+}
+
+export async function getSubmissionStatus(submissionId: number): Promise<SubmissionResponse> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/status/${submissionId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch submission status:', error);
     throw error;
   }
 }

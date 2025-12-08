@@ -36,5 +36,13 @@ public class SubmissionController {
         }
         List<SubmissionListDto> submissions = submissionService.getSubmissionsByUser(user.getId());
         return ResponseEntity.ok(submissions);
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<SubmissionListDto>>  getSubmissionsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(submissionService.getSubmissionsByUser(userId));
+    }
+
+    @GetMapping("/status/{submissionId}")
+    public ResponseEntity<SubmissionListDto> getSubmissionStatusById(@PathVariable Long submissionId) {
+        return ResponseEntity.ok(submissionService.getSubmissionStatusById(submissionId));
     }
 }

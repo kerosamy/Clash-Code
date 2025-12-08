@@ -2,14 +2,18 @@
 import { useState, useEffect } from "react";
 import Board from "../../components/common/Board";
 import SubmissionRow from "../../components/common/SubmissionRow";
-import { getUserSubmissions } from "../../services/Submissions";
+import { getUserSubmissions  , getSubmissionStatus} from "../../services/Submissions";
 import { SubmissionStatus } from "../../enums/SubmissionStatus";
 
 export interface Submission {
+    submissionId: number;
     submissionStatus: SubmissionStatus;
     timeTaken: number;
     memoryTaken: number;
     submittedAt: string;
+    numberOfPassedTestCases: number;
+    numberOfTotalTestCases: number;
+    numberOfCurrentTestCase: number;
 }
 
 export default function Submissions() {
@@ -17,9 +21,51 @@ export default function Submissions() {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>("");
 
-    useEffect(() => {
-        fetchSubmissions();
-    }, []);
+useEffect(() => {
+    fetchSubmissions();
+}, []);
+
+useEffect(() => {
+   
+    const pending = submissions.filter(
+        (s) =>
+            s.submissionStatus === SubmissionStatus.WAITING ||
+            s.submissionStatus === SubmissionStatus.RUNNING_ON_TEST
+    );
+    console.log("Pending submissions for polling:", pending);
+    if (pending.length === 0) return;
+
+    const interval = setInterval(async () => {
+        console.log("Polling pending submissions...");
+
+        const updatedSubmissions = await Promise.all(
+            submissions.map(async (s) => {
+                if (
+                    s.submissionStatus !== SubmissionStatus.WAITING &&
+                    s.submissionStatus !== SubmissionStatus.RUNNING_ON_TEST
+                ) {
+                    return s; // No need to poll
+                }
+
+                try {
+                    const updated = await getSubmissionStatus(s.submissionId);
+                    return {
+                        ...s,
+                        ...updated,
+                    };
+                } catch (err) {
+                    console.error("Polling error:", err);
+                    return s;
+                }
+            })
+        );
+
+        setSubmissions(updatedSubmissions);
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(interval);
+}, [submissions]);
+
 
     const fetchSubmissions = async () => {
         setLoading(true);
@@ -28,13 +74,17 @@ export default function Submissions() {
         try {
             const data = await getUserSubmissions(1); // User ID = 1 for now
             
-            // Convert API response to proper format
             const formattedSubmissions: Submission[] = data.map((item: any) => ({
+                submissionId: item.submissionId,
                 submissionStatus: item.submissionStatus,
                 timeTaken: item.timeTaken,
                 memoryTaken: item.memoryTaken,
-                submittedAt: item.submittedAt
+                submittedAt: item.submittedAt,
+                numberOfPassedTestCases: item.numberOfPassedTestCases,
+                numberOfTotalTestCases: item.numberOfTotalTestCases,
+                numberOfCurrentTestCase: item.numberOfCurrentTestCase,
             }));
+            console.log("Fetched submissions:", formattedSubmissions);
             
             setSubmissions(formattedSubmissions);
         } catch (err) {
@@ -72,24 +122,25 @@ export default function Submissions() {
         );
     }
 
-    const columns = ["Status", "Time", "Memory", "Submitted At"];
+    const columns = ["Status", "Time", "Memory", "Passed", "Submitted At"];
+
 
     return (
         <div className="p-6">
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold font-anta text-orange">
+            <div className="mb-6 ">
+                <h1 className="text-3xl font-bold font-anta text-orange text-center p-4">
                     My Submissions
                 </h1>
                 <p className="text-text mt-2">
                     Total Submissions: {submissions.length}
                 </p>
             </div>
-            
+                        
             <Board<Submission>
                 data={submissions}
                 columns={columns}
                 onRowClick={handleSubmissionClick}
-                gridCols="grid-cols-[200px_150px_150px_1fr]"
+                gridCols="grid-cols-[200px_150px_150px_150px_1fr]"
                 renderRow={(submission, onClick) => (
                     <SubmissionRow
                         key={`${submission.submittedAt}-${submission.timeTaken}`}
@@ -97,8 +148,11 @@ export default function Submissions() {
                         timeTaken={submission.timeTaken}
                         memoryTaken={submission.memoryTaken}
                         submittedAt={submission.submittedAt}
+                        numberOfPassedTestCases={submission.numberOfPassedTestCases}
+                        numberOfTotalTestCases={submission.numberOfTotalTestCases}
+                        numberOfCurrentTestCase={submission.numberOfCurrentTestCase}
                         onClick={onClick}
-                        className="grid-cols-[200px_150px_150px_1fr]"
+                        className="grid-cols-[200px_150px_150px_150px_1fr]"
                     />
                 )}
             />

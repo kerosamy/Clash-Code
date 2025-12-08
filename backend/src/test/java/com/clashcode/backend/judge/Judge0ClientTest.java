@@ -52,16 +52,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 2000;
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of(expectedOutput),
+                input,
+                expectedOutput,
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Wrong Answer Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());
@@ -84,16 +84,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 2000;
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of(""),
+                input,
+                "",
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Compilation Error Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());
@@ -118,16 +118,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 2000;
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of(""),
+                input,
+                "",
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Runtime Error Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());
@@ -149,16 +149,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 1000; // 1 second CPU
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of(""),
+                input,
+                "",
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Time Limit Exceeded Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());
@@ -187,16 +187,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 1000; // 1 second CPU
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of("1000000000"),
+                input,
+                "1000000000",
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Time Limit Exceeded Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());
@@ -222,16 +222,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 1000; // 1 second CPU
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of("2\n1 2\n"),
+                input,
+                "2\n1 2\n",
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Time Limit Exceeded Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());
@@ -259,16 +259,16 @@ public class Judge0ClientTest {
         Integer timeLimit = 10000; // 1 second CPU
         Integer memoryLimit = 128;
 
-        List<ExecutionResultDto> results = client.executeBatch(
+        ExecutionResultDto results = client.executeAndCompare(
                 code,
                 language,
-                List.of(input),
-                List.of("1000000000"),
+                input,
+                "1000000000",
                 timeLimit,
                 memoryLimit
         );
 
-        ExecutionResultDto r = results.get(0);
+        ExecutionResultDto r = results;
         System.out.println("Time Limit Exceeded Test:");
         System.out.println("Output = " + r.getResult());
         System.out.println("Status = " + r.getStatus());

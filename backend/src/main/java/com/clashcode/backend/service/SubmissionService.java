@@ -15,6 +15,7 @@ import com.clashcode.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -48,27 +49,40 @@ public class SubmissionService {
         Problem problem = problemRepository.findById(requestDto.getProblemId())
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
 
-        Submission submission = submissionMapper.toEntity(requestDto);
-        submission.setUser(user);
-        submission.setProblem(problem);
-        submission.setSubmittedAt(LocalDateTime.now());
-        submission.setStatus(SubmissionStatus.WAITING);
-        submissionRepository.save(submission);
-        List<String> inputs = testCaseService.getInputTestCasesForProblem(problem);
+        List<String> inputs = testCaseService.getInputTestCasesForProblem(problem) ;
         List<String> outputs = testCaseService.getOutputTestCasesForProblem(problem);
-        List<ExecutionResultDto> executionResults = judge0Client.executeBatch(
-                requestDto.getCode(),
-                requestDto.getCodeLanguage(),
-                inputs,
-                outputs,
-                problem.getTimeLimit(),
-                problem.getMemoryLimit()
-        );
+
+        Submission submission = submissionMapper.toEntity(requestDto, user, problem, inputs.size());
+
+        submissionRepository.save(submission);
+
+        List<ExecutionResultDto> executionResults = new ArrayList<>();
+        for(int tcIndex = 0; tcIndex < inputs.size(); tcIndex++) {
+            submission.setStatus(SubmissionStatus.RUNNING_ON_TEST);
+            submission.setNumberOfCurrentTestCase(tcIndex+1);
+            submissionRepository.save(submission);
+            ExecutionResultDto executionResult = judge0Client.executeAndCompare(
+                    requestDto.getCode(),
+                    requestDto.getCodeLanguage(),
+                    inputs.get(tcIndex),
+                    outputs.get(tcIndex),
+                    problem.getTimeLimit(),
+                    problem.getMemoryLimit()
+            );
+            executionResults.add(executionResult);
+
+        }
         submissionRepository.save(submissionMapper.toEntity(executionResults, submission));
     }
 
     public List<SubmissionListDto> getSubmissionsByUser(Long userId) {
         List<Submission> submissions = submissionRepository.findByUserId(userId);
         return submissionMapper.toListDto(submissions);
+    }
+
+    public SubmissionListDto getSubmissionStatusById (Long submissionId){
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new RuntimeException("Submission not found"));
+        return submissionMapper.toListDto(submission);
     }
 }

@@ -19,27 +19,25 @@ public class Judge0Client implements CodeExecutor {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public List<ExecutionResultDto> executeBatch(
-            String sourceCode,
-            String language,
-            List<String> testCases,
-            List<String> expectedResults,
-            Integer timeLimit,
-            Integer memoryLimit
-    ){
-        List<ExecutionResultDto> results = new ArrayList<>();
-        for (int i = 0; i < testCases.size(); i++) {
-            Judge0TokenDto judge0TokenDto = submitCode(sourceCode,
-                                            testCases.get(i),
+    public ExecutionResultDto executeAndCompare(
+        String sourceCode,
+        String language,
+        String testCase,
+        String expectedResult,
+        Integer timeLimit,
+        Integer memoryLimit
+    ) {
+        Judge0TokenDto judge0TokenDto = submitCode(
+                                            sourceCode,
+                                            testCase,
                                             language,
-                                            expectedResults.get(i),
+                                            expectedResult,
                                             timeLimit,
-                                            memoryLimit);
+                                            memoryLimit
+                                        );
 
-            Judge0ResponseDto dto = waitForResult(judge0TokenDto);
-            results.add(mapper.toExecutionResultDto(dto));
-        }
-        return results;
+        Judge0ResponseDto dto = waitForResult(judge0TokenDto);
+        return  mapper.toExecutionResultDto(dto);
     };
     @Override
     public String executeAndReturnOutput(

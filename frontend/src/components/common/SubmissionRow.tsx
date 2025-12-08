@@ -8,6 +8,9 @@ export interface SubmissionRowProps {
     timeTaken: number;
     memoryTaken: number;
     submittedAt: string;
+    numberOfPassedTestCases: number;   
+    numberOfTotalTestCases: number;  
+    numberOfCurrentTestCase: number; 
     onClick?: () => void;
     className?: string;
 }
@@ -17,6 +20,9 @@ export default function SubmissionRow({
     timeTaken,
     memoryTaken,
     submittedAt,
+    numberOfPassedTestCases,
+    numberOfTotalTestCases,
+    numberOfCurrentTestCase,
     onClick,
     className = "",
 }: SubmissionRowProps) {
@@ -29,9 +35,8 @@ export default function SubmissionRow({
     };
 
     // Format memory (assuming it's in KB)
-    const formatMemory = (kb: number) => {
-        if (kb < 1024) return `${kb}KB`;
-        return `${(kb / 1024).toFixed(2)}MB`;
+    const formatMemory = (MB: number) => {
+        return `${MB}MB`;
     };
 
     // Format date
@@ -53,8 +58,11 @@ export default function SubmissionRow({
                        transition-colors duration-200 cursor-pointer border-b border-gray-700`}
         >
             <div className={`font-semibold font-anta ${statusColor} text-center`}>
-                {getSubmissionStatusDisplay(submissionStatus)}
+                {submissionStatus === SubmissionStatus.RUNNING_ON_TEST
+                    ? `Running on Test ${numberOfCurrentTestCase} / ${numberOfTotalTestCases}`
+                    : getSubmissionStatusDisplay(submissionStatus)}
             </div>
+
             
             <div className="text-text text-center">
                 {formatTime(timeTaken)}
@@ -62,6 +70,9 @@ export default function SubmissionRow({
             
             <div className="text-text text-center">
                 {formatMemory(memoryTaken)}
+            </div>
+            <div className="text-text text-center">
+                {numberOfPassedTestCases} / {numberOfTotalTestCases}
             </div>
             
             <div className="text-text text-container-list text-center">
