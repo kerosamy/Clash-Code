@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 
 import Categories from "../../components/profile/Categories";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import StatsOverview from "../../components/profile/StatsOverview";
-
+import api from "../../services/api";
+  const token = localStorage.getItem("token");
 // Backend Response Interface
 interface BackendUserResponse {
   username: string;
@@ -74,25 +74,35 @@ export default function ProfileOverview() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        if (!id) return;
-        const { data } = await axios.get<BackendUserResponse>(`http://localhost:8080/users/profile/${id}`);
+ useEffect(() => {
+  const fetchProfile = async () => {
+    try {
 
-        const { profileBasic, stats, categories } = splitUserData(data);
-        setProfileBasic(profileBasic);
-        setStats(stats);
-        setCategories(categories);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
-      } finally {
+      // FIX: Stop if there is no token
+      if (!token) {
+        console.error("No token found. Please login first.");
         setLoading(false);
+        return;
       }
-    };
 
-    fetchProfile();
-  }, [id]);
+      const { data } = await api.get<BackendUserResponse>(
+        `/users/profile`
+      );
+
+      const { profileBasic, stats, categories } = splitUserData(data);
+      setProfileBasic(profileBasic);
+      setStats(stats);
+      setCategories(categories);
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProfile();
+}, [id]);
+
 
   if (loading) {
     return <div className="p-8 text-center text-3xl text-gray-500">Loading profile...</div>;

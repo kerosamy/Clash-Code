@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 
 export default function Settings() {
   const [output, setOutput] = useState<string>("");

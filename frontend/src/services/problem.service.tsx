@@ -1,14 +1,12 @@
-import axios from "axios";
 import type { ProblemTags } from "../enums/ProblemTags";
-
-const API_BASE = "http://localhost:8080/problem";
+import api from "../services/api";
 
 export async function fetchProblems(page = 0, size = 20) {
-  const response = await axios.get(`${API_BASE}/browse`, {
+  const response = await api.get("/problem/browse", {
     params: { page, size },
   });
 
-  return response.data; // returned Page<ProblemListDto>
+  return response.data; // Page<ProblemListDto>
 }
 
 export async function fetchFilteredProblems(
@@ -24,9 +22,8 @@ export async function fetchFilteredProblems(
     maxRate,
   };
 
-  const response = await axios.post(`${API_BASE}/browse/filter`, payload, {
-    params: { page, size },
-  });
+  const response = await api.post(`problem/browse/filter`, payload, {
+    params: { page, size },});
 
   return response.data; // returned Page<ProblemListDto>
 }
@@ -36,7 +33,7 @@ export async function searchProblemsByTitle(
   page = 0,
   size = 20
 ) {
-  const response = await axios.get(`${API_BASE}/search`, {
+  const response = await api.get(`problem/search`, {
     params: { keyword, page, size },
   });
 
@@ -45,7 +42,8 @@ export async function searchProblemsByTitle(
 
 export async function fetchProblemById(id: number) {
   try {
-    const response = await axios.get(`${API_BASE}/${id}`);
+    const response = await api.get(`problem/${id}`
+    );
     return response.data; // returned ProblemDto
   } catch (error) {
     console.error("Error fetching problem:", error);
