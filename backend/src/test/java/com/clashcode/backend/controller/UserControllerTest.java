@@ -3,7 +3,7 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.CategoryDto;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.StatsDto;
-import com.clashcode.backend.dto.UserSearchResponse;
+import com.clashcode.backend.dto.UserSearchResponseDto;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.JwtService;
@@ -66,6 +66,20 @@ class UserControllerTest {
     void getProfile_success() throws Exception {
         setupSecurityContext(1L, "mina");
 
+        StatsDto stats = new StatsDto();
+        stats.setSolvedProblems(750);
+        stats.setAttemptedProblems(525);
+        stats.setMatchesPlayed(330);
+        stats.setMatchesWon(230);
+
+        CategoryDto category1 = new CategoryDto();
+        category1.setName("DP");
+        category1.setValue(20);
+
+        CategoryDto category2 = new CategoryDto();
+        category2.setName("TWO_POINTERS");
+        category2.setValue(40);
+
         ProfileDto mockProfile = ProfileDto.builder()
                 .username("mina")
                 .rank("DIAMOND")
@@ -73,16 +87,8 @@ class UserControllerTest {
                 .maxRate(1300)
                 .friendCount(10)
                 .avatarUrl("https://example.com/avatar.png")
-                .stats(StatsDto.builder()
-                        .solvedProblems(750)
-                        .attemptedProblems(525)
-                        .matchesPlayed(330)
-                        .matchesWon(230)
-                        .build())
-                .categories(new CategoryDto[]{
-                        CategoryDto.builder().name("DP").value(20).build(),
-                        CategoryDto.builder().name("TWO_POINTERS").value(40).build()
-                })
+                .stats(stats)
+                .categories(new CategoryDto[]{category1, category2})
                 .build();
 
         when(userService.getProfile(eq(1L))).thenReturn(mockProfile);
@@ -115,9 +121,9 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /users/search - Found")
     void searchUsers_found() throws Exception {
-        List<UserSearchResponse> mockResults = List.of(
-                new UserSearchResponse("caro", "MASTER"),
-                new UserSearchResponse("caroline", "CHAMPION")
+        List<UserSearchResponseDto> mockResults = List.of(
+                new UserSearchResponseDto("caro", "MASTER"),
+                new UserSearchResponseDto("caroline", "CHAMPION")
         );
 
         when(userService.searchByUsername("car")).thenReturn(mockResults);

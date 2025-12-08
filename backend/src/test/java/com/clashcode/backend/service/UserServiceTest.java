@@ -1,9 +1,7 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.CategoryDto;
 import com.clashcode.backend.dto.ProfileDto;
-import com.clashcode.backend.dto.UserSearchResponse;
-import com.clashcode.backend.enums.Ranks;
+import com.clashcode.backend.dto.UserSearchResponseDto;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
@@ -73,7 +71,7 @@ class UserServiceTest {
                 .thenReturn(List.of(user1, user2));
 
         // Act
-        List<UserSearchResponse> results = userService.searchByUsername("car");
+        List<UserSearchResponseDto> results = userService.searchByUsername("car");
 
         // Assert
         assertEquals(2, results.size());
@@ -89,7 +87,7 @@ class UserServiceTest {
         when(userRepository.findByUsernameContainingIgnoreCase("mo"))
                 .thenReturn(List.of());
 
-        List<UserSearchResponse> results = userService.searchByUsername("mo");
+        List<UserSearchResponseDto> results = userService.searchByUsername("mo");
 
         assertTrue(results.isEmpty());
     }
