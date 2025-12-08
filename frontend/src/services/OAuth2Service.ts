@@ -5,10 +5,9 @@ const API_BASE = "http://localhost:8080/auth";
 export const authService = {
   getGoogleToken: async () => {
     const res = await axios.get(`${API_BASE}/OAuthCallback`, { withCredentials: true });
-    return res.data; // { token, expiresAt }
+    return res.data; 
   },
 
-  // Check if user exists using token
   getAuthenticatedUser: async () => {
     const token = localStorage.getItem("token");
     const res = await axios.get(`${API_BASE}/me`, {
