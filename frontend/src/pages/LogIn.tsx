@@ -99,7 +99,7 @@ export default function LogIn() {
           />
 
           <div className="text-right text-sm">
-            <Link to="/forgot-password" className="text-orange hover:underline">
+            <Link to="/password-recovery" className="text-orange hover:underline">
               Forgot password?
             </Link>
           </div>

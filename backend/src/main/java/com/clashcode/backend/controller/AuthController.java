@@ -13,6 +13,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RequestMapping("/auth")
 @RestController
 public class AuthController {
@@ -36,6 +39,7 @@ public class AuthController {
         User authenticatedUser = authService.authenticate(loginUserDto);
         return buildAuthResponse(authenticatedUser);
     }
+
 
     // GOOGLE LOGIN
     @GetMapping("/OAuthCallback")

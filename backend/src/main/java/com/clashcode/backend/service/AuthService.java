@@ -49,6 +49,10 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+
+    // ---------------------------
+    //  EMAIL / PASSWORD LOGIN
+    // ---------------------------
     public User authenticate(LoginUserDto input) {
 
         authenticationManager.authenticate(
@@ -57,11 +61,15 @@ public class AuthService {
                         input.getPassword()
                 )
         );
-
         return userRepository.findByEmail(input.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+
+
+    // ---------------------------
+    //  GOOGLE OAUTH CALLBACK
+    // ---------------------------
     public User handleGoogleOAuth(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oauth = authenticationToken.getPrincipal();
         String email = oauth.getAttribute("email");

@@ -1,6 +1,4 @@
 
-// STEP 1: CHANGE THIS ARRAY
-// We separate the 'value' (sent to backend) from the 'label' (shown to user)
 const RECOVERY_OPTIONS = [
   { value: "MOTHERS_FRIEND", label: "What is your mother's friend name?" },
   { value: "FIRST_PET", label: "What was the name of your first pet?" },
