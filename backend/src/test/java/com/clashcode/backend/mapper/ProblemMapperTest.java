@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.List;
 
+import static junit.framework.TestCase.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ProblemMapperTest {
@@ -60,6 +62,20 @@ class ProblemMapperTest {
     }
 
     @Test
+    void testToProblem_withNullFields() {
+        ProblemRequestDto request = new ProblemRequestDto();
+        request.setTitle("Empty Problem");
+        request.setMainSolution(null);
+        request.setSolutionLanguage("PYTHON_3_8");
+
+        Problem problem = problemMapper.toProblem(request);
+
+        assertEquals("Empty Problem", problem.getTitle());
+        assertEquals(null, problem.getSolution().getSolutionCode());
+        assertEquals(LanguageVersion.PYTHON_3_8, problem.getSolution().getLanguageVersion());
+    }
+
+    @Test
     void testToResponseDto() {
         // Arrange
         Problem problem = Problem.builder()
@@ -92,6 +108,24 @@ class ProblemMapperTest {
     }
 
     @Test
+    void testToResponseDto_emptyTestCases() {
+        Problem problem = Problem.builder()
+                .id(2L)
+                .title("No TestCases")
+                .memoryLimit(0)
+                .timeLimit(0)
+                .rate(0)
+                .tags(Collections.emptyList())
+                .submissionsCount(0L)
+                .build();
+        ProblemResponseDto dto = problemMapper.toResponseDto(problem, Collections.emptyList());
+
+        assertEquals(2L, dto.getId());
+        assertEquals("No TestCases", dto.getTitle());
+        assertEquals(0, dto.getVisibleTestCases().size());
+    }
+
+    @Test
     void testToListDto() {
 
         Problem problem = Problem.builder()
@@ -100,8 +134,9 @@ class ProblemMapperTest {
                 .submissionsCount(42L)
                 .tags(Collections.singletonList(ProblemTags.MATH))
                 .rate(150)
+                .memoryLimit(0)
+                .timeLimit(0)
                 .build();
-
 
         ProblemListDto dto = problemMapper.toListDto(problem);
 
@@ -113,5 +148,40 @@ class ProblemMapperTest {
         assertEquals(150, dto.getRate());
         assertEquals("unsolved", dto.getAttempted()); // matches the placeholder
     }
+
+    @Test
+    void testToListDto_emptyFields() {
+        Problem problem = Problem.builder()
+                .id(10L)
+                .title("Edge Case")
+                .submissionsCount(0L)
+                .tags(null)
+                .rate(0)
+                .memoryLimit(0)
+                .timeLimit(0)
+                .build();
+
+        ProblemListDto dto = problemMapper.toListDto(problem);
+
+        assertEquals(10L, dto.getId());
+        assertEquals("Edge Case", dto.getTitle());
+        assertEquals(0L, dto.getSubmissionsCount());
+        assertNull(dto.getTags());
+        assertEquals(0, dto.getRate());
+        assertEquals("unsolved", dto.getAttempted());
+    }
+
+    @Test
+    void testToProblem_invalidLanguage() {
+        ProblemRequestDto request = new ProblemRequestDto();
+        request.setTitle("Invalid Lang");
+        request.setMainSolution("code");
+        request.setSolutionLanguage("NON_EXISTENT");
+
+        assertThrows(IllegalArgumentException.class, () -> problemMapper.toProblem(request));
+    }
+
+
+
 
 }
