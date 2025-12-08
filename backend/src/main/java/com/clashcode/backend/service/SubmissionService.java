@@ -12,10 +12,8 @@ import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.ProblemRepository;
 import com.clashcode.backend.repository.SubmissionRepository;
 import com.clashcode.backend.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

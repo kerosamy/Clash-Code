@@ -29,17 +29,14 @@ public class SubmissionController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/me")
+    @GetMapping("/my-submissions")
     public ResponseEntity<List<SubmissionListDto>> getMySubmissions(@AuthenticationPrincipal User user) {
         if (user == null) {
             throw new UnauthorizedException("User not authenticated");
         }
-        List<SubmissionListDto> submissions = submissionService.getSubmissionsByUser(user.getId());
-        return ResponseEntity.ok(submissions);
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<SubmissionListDto>>  getSubmissionsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(submissionService.getSubmissionsByUser(userId));
+        return ResponseEntity.ok(submissionService.getSubmissionsByUser(user.getId()));
     }
+
 
     @GetMapping("/status/{submissionId}")
     public ResponseEntity<SubmissionListDto> getSubmissionStatusById(@PathVariable Long submissionId) {
