@@ -1,11 +1,12 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.LoginUserDto;
-import com.clashcode.backend.dto.RegisterUserDto;
-import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
+<<<<<<< HEAD
 import com.clashcode.backend.dto.AuthResponseDto;
+=======
+>>>>>>> e3b97ec (full password recovery implementation)
 import com.clashcode.backend.service.AuthService;
 import com.clashcode.backend.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,35 @@ public class AuthController {
         return buildAuthResponse(authenticatedUser);
     }
 
+    @PostMapping("/recovery-question")
+    public ResponseEntity<String> getRecoveryQuestion(@RequestBody String email) {
+        try {
+            String question = authService.getRecoveryQuestion(email);
+            return ResponseEntity.ok(question);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/verify-recovery")
+    public ResponseEntity<?> verifyRecoveryAnswer(@RequestBody VerifyRecoveryDto request) {
+        try {
+            authService.verifyRecoveryAnswer(request.getEmail(), request.getAnswer());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody PasswordResetDto request) {
+        try {
+            authService.resetPassword(request.getEmail(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     // GOOGLE LOGIN
     @GetMapping("/OAuthCallback")

@@ -50,6 +50,33 @@ public class AuthService {
     }
 
 
+    public String getRecoveryQuestion(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found"));
+
+        if (user.getRecoveryQuestion() == null) {
+            throw new RuntimeException("User does not have a recovery question");
+        }
+        return user.getRecoveryQuestion().name();
+    }
+
+    public boolean verifyRecoveryAnswer(String email, String answer) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found."));
+
+        if (user.getRecoveryAnswer() == null || !user.getRecoveryAnswer().equalsIgnoreCase(answer.trim())) {
+            throw new RuntimeException("Incorrect recovery answer.");
+        }
+        return true;
+    }
+
+    public void resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found."));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
     // ---------------------------
     //  EMAIL / PASSWORD LOGIN
     // ---------------------------
