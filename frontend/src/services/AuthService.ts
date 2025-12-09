@@ -24,12 +24,15 @@ export interface LoginResponse {
   expiresIn: number;
 }
 
-export const registerUser = async (data: RegisterRequest) => {
-  return apiRequest<LoginResponse>({
+export const registerUser = async (data: RegisterRequest): Promise<LoginResponse> => {
+  const response = await apiRequest<LoginResponse>({
     method: "POST",
     url: `/auth/signup`,
     data,
   });
+  localStorage.setItem("token", response.token);
+  localStorage.setItem("tokenExpiry", response.expiresIn.toString());
+  return response;
 };
 
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {

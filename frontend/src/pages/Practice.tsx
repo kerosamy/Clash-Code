@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Board from "../components/common/Board";
 import ProblemRow, { type ProblemRowProps } from "../components/common/ProblemRow";
-import { fetchProblems, fetchFilteredProblems, searchProblemsByTitle } from "../services/problemService";
+import { fetchProblems, fetchFilteredProblems, searchProblemsByTitle } from "../services/ProblemService";
 import { mapProblemDtoToProblemRow } from "../utils/mapProblemDtoToProblemRow";
 import TagsMultiSelectDropdown from "../components/common/TagsMultiSelectDropDown";
 import { TagsFrontendValues, mapFrontendTagsToEnum } from "../utils/mapTags";
