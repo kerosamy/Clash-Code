@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import Categories from "../../components/profile/Categories";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import StatsOverview from "../../components/profile/StatsOverview";
-import  { fetchUserProfile, splitUserData } from "../../services/UserService";
+import  { fetchMyProfile, splitUserData } from "../../services/UserService";
 import type {
   UserProfileBasic,
   UserStats,
   CategoryItem,
 } from "../../services/UserService";
+import { rankColors } from "../../utils/colorMapper";
 
 export default function ProfileOverview() {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,7 @@ export default function ProfileOverview() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await fetchUserProfile();
+        const data = await fetchMyProfile();
         const { profileBasic, stats, categories } = splitUserData(data);
         setProfileBasic(profileBasic);
         setStats(stats);
@@ -48,10 +48,10 @@ export default function ProfileOverview() {
 
   return (
     <div className="space-y-8 p-scroll-x">
-      <ProfileHeader profile={profileBasic} isPrivate={true} color="#00FFFF" />
+      <ProfileHeader profile={profileBasic} isPrivate={true} color={rankColors[profileBasic.rank]} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <StatsOverview stats={stats} color="#00FFFF" />
-        <Categories categories={categories} color="#00FFFF" />
+        <StatsOverview stats={stats} color={rankColors[profileBasic.rank]} />
+        <Categories categories={categories} color={rankColors[profileBasic.rank]} />
       </div>
     </div>
   );

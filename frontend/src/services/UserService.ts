@@ -58,10 +58,17 @@ export const splitUserData = (response: BackendUserResponse) => {
   return { profileBasic, stats, categories };
 };
 
-export async function fetchUserProfile(): Promise<BackendUserResponse> {
+export async function fetchMyProfile(): Promise<BackendUserResponse> {
   return apiRequest<BackendUserResponse>({
     method: "GET",
     url: "/users/profile",
+  });
+}
+
+export async function fetchUserProfile(username: string): Promise<BackendUserResponse> {
+  return apiRequest<BackendUserResponse>({
+    method: "GET",
+    url: `/users/profile/${username}`
   });
 }
 

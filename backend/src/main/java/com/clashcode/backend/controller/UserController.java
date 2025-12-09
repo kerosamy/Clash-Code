@@ -22,8 +22,14 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ProfileDto> getProfile(@AuthenticationPrincipal User user) {
-        ProfileDto profile = userService.getProfile(user.getId());
+    public ResponseEntity<ProfileDto> getMyProfile(@AuthenticationPrincipal User user) {
+        ProfileDto profile = userService.getProfile(user);
+        return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<ProfileDto> getUserProfile(@PathVariable String username) {
+        ProfileDto profile= userService.getUserProfile(username);
         return ResponseEntity.ok(profile);
     }
 

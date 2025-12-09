@@ -1,5 +1,5 @@
 import Add from '../../assets/icons/Add.svg';
-import { rankColors } from '../../utils/rankColors';
+import { rankColors } from '../../utils/colorMapper';
 
 export interface UserRowProps {
     order: number;

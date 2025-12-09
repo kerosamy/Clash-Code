@@ -1,7 +1,8 @@
+import { enumColors } from "../../utils/colorMapper";
+
 interface CategoryItem {
   name: string;
   value: number;
-  color: string;
 }
 
 interface DonutChartProps {
@@ -22,7 +23,7 @@ export default function DonutChart({ categories, color }: DonutChartProps) {
     const offset = -cumulative;
     // eslint-disable-next-line react-hooks/immutability
     cumulative += dash;
-    return { color: category.color, dash, offset };
+    return { color: enumColors[category.name], dash, offset };
   });
 
   const size = (radius + strokeWidth) * 2;

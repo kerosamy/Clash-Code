@@ -1,9 +1,9 @@
 import DonutChart from "../profile/DonutChart";
+import { enumColors } from "../../utils/colorMapper";
 
 interface CategoryItem {
   name: string;
   value: number;
-  color: string;
 }
 
 interface CategoryDistributionProps {
@@ -24,8 +24,8 @@ export default function Categories({ categories, color }: CategoryDistributionPr
                         <div
                             className={`w-4 h-4 rounded-sm flex-shrink-0`}
                         />
-                        <span className="text-text text-xl" style={{ color: category.color }}>{category.name} :</span>
-                        <span className="text-xl font-semibold" style={{ color: category.color }}>{category.value}</span>
+                        <span className="text-text text-xl" style={{ color: enumColors[category.name] }}>{category.name} :</span>
+                        <span className="text-xl font-semibold" style={{ color: enumColors[category.name] }}>{category.value}</span>
                     </div>
                 ))}
             </div>

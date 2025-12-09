@@ -1,0 +1,31 @@
+export const rankColors: Record<string, string> = {
+  BRONZE: "#CD7F32",
+  SILVER: "#C0C0C0",
+  GOLD: "#FFD700",
+  DIAMOND: "#00FFFF",
+  MASTER: "#8A2BE2",
+  CHAMPION: "#4169E1",
+  LEGEND: "#80FFA1",
+};
+
+export const enumColors: Record<string, string> = {
+  IMPLEMENTATION: "#6B7280",
+  MATH: "#10B981",
+  GREEDY: "#EF4444",
+  TWO_POINTERS: "#F97316",
+  STRINGS: "#EC4899",
+  SORTING: "#F59E0B",
+  DATA_STRUCTURES: "#6366F1",
+  GRAPH_THEORY: "#3B82F6",
+  DP: "#22D3EE",
+  BRUTE_FORCE: "#8B5CF6",
+  BINARY_SEARCH: "#14B8A6",
+  TREES: "#A855F7",
+  DFS_AND_SIMILAR: "#4ADE80",
+  BFS: "#0EA5E9",
+  COMBINATORICS: "#D97706",
+  GEOMETRY: "#F87171",
+  HASHING: "#9CA3AF",
+  DSU: "#2563EB",
+  HEAPS: "#F43F5E",
+};
