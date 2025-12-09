@@ -69,7 +69,7 @@ public class SubmissionService {
 
     public List<SubmissionListDto> getSubmissionsByUser(Long userId) {
         List<Submission> submissions = submissionRepository.findByUserId(userId);
-        return submissionMapper.toListDto(submissions);
+        return submissionMapper.toListDto(submissions).reversed();
     }
 
     public SubmissionListDto getSubmissionStatusById (Long submissionId){
