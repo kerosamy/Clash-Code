@@ -4,6 +4,7 @@ import com.clashcode.backend.config.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,6 +16,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -49,6 +51,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
+
+                        .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN") // Most restrictive first
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Super_Admin inherits Admin roles
+                        .requestMatchers("/users/**").hasRole("USER") // Everyone authenticated has User roles
+
                         .anyRequest().authenticated()
                         /*To permit all requests, change .authenticated() to .permitAll()*/
                 )

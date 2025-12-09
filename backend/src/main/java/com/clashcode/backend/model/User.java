@@ -1,10 +1,12 @@
 package com.clashcode.backend.model;
 
 import com.clashcode.backend.enums.RecoveryQuestion;
+import com.clashcode.backend.enums.Roles;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
@@ -32,9 +34,10 @@ public class User implements UserDetails{
     @Column(length = 255)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private Boolean isAdmin = false;
+    private Roles role = Roles.USER;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -58,7 +61,20 @@ public class User implements UserDetails{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        if (role == Roles.SUPER_ADMIN) {
+            return List.of(
+                    new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"),
+                    new SimpleGrantedAuthority("ROLE_ADMIN"),
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+        } else if (role == Roles.ADMIN) {
+            return List.of(
+                    new SimpleGrantedAuthority("ROLE_ADMIN"),
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+        } else { 
+            return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
     }
 
 }

@@ -2,11 +2,13 @@ package com.clashcode.backend.controller;
 
 import com.clashcode.backend.model.User; // Import your User model
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/test")
+@PreAuthorize("hasRole('USER')")
 public class TestController {
 
     // 1. Public endpoint: Handles both Guests (no token) and Logged-in Users (with token)

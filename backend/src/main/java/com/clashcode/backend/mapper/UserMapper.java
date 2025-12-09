@@ -5,6 +5,7 @@ import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.StatsDto;
 import com.clashcode.backend.enums.RecoveryQuestion;
+import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.model.User;
 
 public class UserMapper {
@@ -15,7 +16,7 @@ public class UserMapper {
                 .password(password)
                 .recoveryQuestion(RecoveryQuestion.valueOf(input.getRecoveryQuestion()))
                 .recoveryAnswer(input.getRecoveryAnswer())
-                .isAdmin(false)
+                .role(Roles.USER)
                 .maxRate(0)
                 .currentRate(0)
                 .build();
