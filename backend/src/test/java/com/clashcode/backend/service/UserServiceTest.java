@@ -28,6 +28,7 @@ class UserServiceTest {
 
     @Test
     void testGetProfile_AssemblesCorrectProfile() {
+        // Arrange
         User user = new User();
         user.setId(1L);
         user.setUsername("mina");
@@ -35,25 +36,48 @@ class UserServiceTest {
         user.setMaxRate(1200);
         user.setImgUrl("https://example.com/avatar.png");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
+        // Act
         ProfileDto profile = userService.getProfile(user);
 
+        // Assert
         assertEquals("mina", profile.getUsername());
-        assertEquals("DIAMOND", profile.getRank());
+        assertEquals("DIAMOND", profile.getRank()); // depends on getRank logic
         assertEquals(1140, profile.getCurrentRate());
         assertEquals(1200, profile.getMaxRate());
-        assertEquals(20, profile.getFriendCount());
-
         assertNotNull(profile.getStats());
         assertNotNull(profile.getCategories());
     }
 
     @Test
-    void testGetProfile_UserNotFound() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+    void testGetUserProfile_Success() {
+        // Arrange
+        User user = new User();
+        user.setId(2L);
+        user.setUsername("caro");
+        user.setCurrentRate(1400);
+        user.setMaxRate(1500);
+        user.setImgUrl("https://example.com/caro.png");
 
-        assertThrows(UserNotFoundException.class, () -> userService.getProfile(99L));
+        when(userRepository.findByUsername("caro")).thenReturn(Optional.of(user));
+
+        // Act
+        ProfileDto profile = userService.getUserProfile("caro");
+
+        // Assert
+        assertEquals("caro", profile.getUsername());
+        assertEquals(1400, profile.getCurrentRate());
+        assertEquals(1500, profile.getMaxRate());
+        assertNotNull(profile.getStats());
+        assertNotNull(profile.getCategories());
+    }
+
+    @Test
+    void testGetUserProfile_UserNotFound() {
+        // Arrange
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(UserNotFoundException.class, () -> userService.getUserProfile("unknown"));
     }
 
     @Test

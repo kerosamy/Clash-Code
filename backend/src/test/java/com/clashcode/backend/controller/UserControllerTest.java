@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Collections;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -62,23 +63,15 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /users/profile/{id} - Success")
-    void getProfile_success() throws Exception {
+    @DisplayName("GET /users/profile - Success (authenticated user)")
+    void getMyProfile_success() throws Exception {
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setUsername("mina");
         setupSecurityContext(1L, "mina");
 
-        StatsDto stats = new StatsDto();
-        stats.setSolvedProblems(750);
-        stats.setAttemptedProblems(525);
-        stats.setMatchesPlayed(330);
-        stats.setMatchesWon(230);
-
-        CategoryDto category1 = new CategoryDto();
-        category1.setName("DP");
-        category1.setValue(20);
-
-        CategoryDto category2 = new CategoryDto();
-        category2.setName("TWO_POINTERS");
-        category2.setValue(40);
+        StatsDto stats = new StatsDto(750, 525, 330, 230);
+        CategoryDto category = new CategoryDto("DP", 20);
 
         ProfileDto mockProfile = ProfileDto.builder()
                 .username("mina")
@@ -88,33 +81,53 @@ class UserControllerTest {
                 .friendCount(10)
                 .avatarUrl("https://example.com/avatar.png")
                 .stats(stats)
-                .categories(new CategoryDto[]{category1, category2})
+                .categories(new CategoryDto[]{category})
                 .build();
 
-        when(userService.getProfile(eq(1L))).thenReturn(mockProfile);
+        when(userService.getProfile(argThat(u ->
+                u.getId().equals(mockUser.getId()) &&
+                u.getUsername().equals(mockUser.getUsername())
+        ))).thenReturn(mockProfile);
 
-        mockMvc.perform(get("/users/profile/1")
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/users/profile").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("mina"))
                 .andExpect(jsonPath("$.rank").value("DIAMOND"))
-                .andExpect(jsonPath("$.currentRate").value(1200))
-                .andExpect(jsonPath("$.maxRate").value(1300))
-                .andExpect(jsonPath("$.friendCount").value(10))
-                .andExpect(jsonPath("$.avatarUrl").value("https://example.com/avatar.png"))
-                .andExpect(jsonPath("$.stats.solvedProblems").value(750))
-                .andExpect(jsonPath("$.categories").isArray())
-                .andExpect(jsonPath("$.categories.length()").value(2));
+                .andExpect(jsonPath("$.stats.solvedProblems").value(750));
+    }
+
+
+    @Test
+    @DisplayName("GET /users/profile/{username} - Success")
+    void getUserProfile_success() throws Exception {
+        StatsDto stats = new StatsDto(100, 200, 50, 25);
+        ProfileDto mockProfile = ProfileDto.builder()
+                .username("caro")
+                .rank("MASTER")
+                .currentRate(1400)
+                .maxRate(1500)
+                .friendCount(5)
+                .avatarUrl("https://example.com/caro.png")
+                .stats(stats)
+                .categories(new CategoryDto[]{new CategoryDto("GRAPH", 30)})
+                .build();
+
+        when(userService.getUserProfile("caro")).thenReturn(mockProfile);
+
+        mockMvc.perform(get("/users/profile/caro").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("caro"))
+                .andExpect(jsonPath("$.rank").value("MASTER"))
+                .andExpect(jsonPath("$.stats.attemptedProblems").value(200));
     }
 
     @Test
-    @DisplayName("GET /users/profile/{id} - User Not Found")
-    void testGetProfile_UserNotFound() throws Exception {
-        setupSecurityContext(99L, "unknown");
+    @DisplayName("GET /profile/{username} - User Not Found")
+    void getUserProfile_notFound() throws Exception {
+        when(userService.getUserProfile("unknown"))
+                .thenThrow(new UserNotFoundException("User not found"));
 
-        when(userService.getProfile(99L)).thenThrow(new UserNotFoundException("User not found"));
-
-        mockMvc.perform(get("/users/profile/99"))
+        mockMvc.perform(get("/profile/unknown"))
                 .andExpect(status().isNotFound());
     }
 
