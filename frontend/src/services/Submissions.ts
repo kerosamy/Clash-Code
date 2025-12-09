@@ -1,9 +1,7 @@
-import axios from 'axios';
+import api from './api';
 
-const API_BASE_URL = 'http://localhost:8080/submissions';
 
 export interface SubmissionRequest {
-  userId: number;
   problemId: number;
   code: string;
   codeLanguage: string;
@@ -28,23 +26,22 @@ export async function submitCode(
   codeLanguage: string
 ): Promise<void> {
   const submissionRequest: SubmissionRequest = {
-    userId: 1, // Hardcoded for now
     problemId,
     code,
     codeLanguage,
   };
 
   try {
-    await axios.post(`${API_BASE_URL}/submit`, submissionRequest);
+    await api.post(`submissions/submit`, submissionRequest);
   } catch (error) {
     console.error('Failed to submit code:', error);
     throw error;
   }
 }
 
-export async function getUserSubmissions(userId: number): Promise<SubmissionResponse[]> {
+export async function getUserSubmissions(): Promise<SubmissionResponse[]> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/user/${userId}`);
+    const response = await api.get(`submissions/my-submissions`);
     return response.data.reverse(); 
   } catch (error) {
     console.error('Failed to fetch user submissions:', error);
@@ -54,7 +51,7 @@ export async function getUserSubmissions(userId: number): Promise<SubmissionResp
 
 export async function getSubmissionStatus(submissionId: number): Promise<SubmissionResponse> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/status/${submissionId}`);
+    const response = await api.get(`submissions/status/${submissionId}`);
     return response.data;
   } catch (error) {
     console.error('Failed to fetch submission status:', error);

@@ -23,9 +23,13 @@ public class SubmissionController {
 
     @PostMapping("/submit")
     public ResponseEntity<Void> submitCode(
-            @RequestBody SubmissionRequestDto submissionRequestDto)
-    {
-        submissionService.submitCode(submissionRequestDto);
+            @RequestBody SubmissionRequestDto submissionRequestDto,
+            @AuthenticationPrincipal User user
+    ) {
+        if (user == null) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+        submissionService.submitCode(submissionRequestDto, user);
         return ResponseEntity.ok().build();
     }
 

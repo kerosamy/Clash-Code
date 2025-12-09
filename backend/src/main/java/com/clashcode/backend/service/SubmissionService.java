@@ -11,7 +11,6 @@ import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.ProblemRepository;
 import com.clashcode.backend.repository.SubmissionRepository;
-import com.clashcode.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,31 +19,25 @@ import java.util.List;
 @Service
 public class SubmissionService {
     private final SubmissionRepository submissionRepository;
-    private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
     private final TestCaseService testCaseService;
     private final Judge0Client judge0Client;
     private final SubmissionMapper submissionMapper;
 
     public SubmissionService(SubmissionRepository submissionRepository,
-                             UserRepository userRepository,
                              ProblemRepository problemRepository,
                              Judge0Client judge0Client,
                              SubmissionMapper submissionMapper,
                              TestCaseService testCaseService) {
 
         this.submissionRepository = submissionRepository;
-        this.userRepository = userRepository;
         this.problemRepository = problemRepository;
         this.judge0Client = judge0Client;
         this.submissionMapper = submissionMapper;
         this.testCaseService = testCaseService;
     }
 
-    public void submitCode(SubmissionRequestDto requestDto) {
-        User user = userRepository.findById(requestDto.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
+    public void submitCode(SubmissionRequestDto requestDto, User user) {
         Problem problem = problemRepository.findById(requestDto.getProblemId())
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
 
