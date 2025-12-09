@@ -65,6 +65,8 @@ public class SubmissionService {
 
         }
         submissionRepository.save(submissionMapper.toEntity(executionResults, submission));
+        problem.setSubmissionsCount(problem.getSubmissionsCount()+1);
+        problemRepository.save(problem);
     }
 
     public List<SubmissionListDto> getSubmissionsByUser(Long userId) {

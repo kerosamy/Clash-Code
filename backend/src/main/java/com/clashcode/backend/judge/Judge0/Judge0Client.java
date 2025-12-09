@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.ExecutionResultDto;
 import com.clashcode.backend.judge.CodeExecutor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -13,7 +14,8 @@ import java.util.List;
 
 @Component
 public class Judge0Client implements CodeExecutor {
-    private final String JUDGE0_URL = "http://localhost:2358";
+    @Value("${clashcode.judge0.url}")
+    private String JUDGE0_URL ;
     private final String JUDGE0_SUBMIT_URL = "/submissions/?base64_encoded=false&wait=false";
     private final Judge0Mapper mapper = new Judge0Mapper();
     private final RestTemplate restTemplate = new RestTemplate();
