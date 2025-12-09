@@ -73,11 +73,7 @@ export default function SignUp() {
 
   try {
     // Call backend and receive token
-    const response = await registerUser(requestData);
-
-    // Store token (and expiry if needed)
-    localStorage.setItem("token", response.token);
-    localStorage.setItem("tokenExpiry", response.expiresIn.toString());
+    await registerUser(requestData);
 
     // Redirect
     navigate("/profile/1/overview");
