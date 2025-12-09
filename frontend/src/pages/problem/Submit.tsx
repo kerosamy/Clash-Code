@@ -4,7 +4,7 @@ import { LanguageVersion } from "../../enums/LanguageVersion";
 import SingleSelectDropdown from "../../components/common/SingleSelectDropDown";
 import Editor from "@monaco-editor/react";
 import { monacoLanguageMap } from "../../utils/languageMap";
-import { submitCode } from "../../services/Submissions";
+import { submitCode } from "../../services/SubmissionsService";
 
 
 export default function Submit() {

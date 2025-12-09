@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Board from "../../components/common/Board";
 import SubmissionRow from "../../components/common/SubmissionRow";
-import { getUserSubmissions  , getSubmissionStatus} from "../../services/Submissions";
+import { getUserSubmissions  , getSubmissionStatus} from "../../services/SubmissionsService";
 import { SubmissionStatus } from "../../enums/SubmissionStatus";
 
 export interface Submission {
@@ -74,7 +74,7 @@ useEffect(() => {
         setError("");
         
         try {
-            const data = await getUserSubmissions(1); // User ID = 1 for now
+            const data = await getUserSubmissions();
             
             const formattedSubmissions: Submission[] = data.map((item: any) => ({
                 submissionId: item.submissionId,
