@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/OAuth2Service";
-
+import { getGoogleToken, getAuthenticatedUser } from "../services/AuthService";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
@@ -10,42 +9,31 @@ export default function OAuthCallback() {
   useEffect(() => {
     const processOAuth = async () => {
       try {
-        // Step 1: Get token from backend OAuthCallback
-        const response = await authService.getGoogleToken();
-        console.log("OAuth token response:", response);
-
+        const response = await getGoogleToken();
         const { token } = response;
-        if (!token) throw new Error("Token not returned");
 
-        // Store JWT in localStorage
+        if (!token) throw new Error("Token not returned");
         localStorage.setItem("token", token);
 
-        const flow = sessionStorage.getItem("oauth_flow");
+        sessionStorage.getItem("oauth_flow");
 
         await new Promise((resolve) => setTimeout(resolve, 800));
 
-        // Step 2: Check if the user exists using /me endpoint
         let userExists = false;
         try {
-          const res = await axios.get("http://localhost:8080/auth/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.data?.email) userExists = true;
-        } catch (e) {
+          const user = await getAuthenticatedUser();
+          if (user?.email) userExists = true;
+        } catch {
           userExists = false;
         }
 
         sessionStorage.removeItem("oauth_flow");
 
-        // ---- REDIRECT LOGIC ----
         if (userExists) {
-          // User already exists → go to profile
           navigate("/profile/1/overview");
         } else {
-          // User does not exist → go to complete registration
           navigate("/complete-registration");
         }
-
       } catch (err) {
         console.error(err);
         setError("Authentication failed. Please try again.");

@@ -2,7 +2,7 @@ import { useState,useEffect
  } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
-import { authService } from "../services/OAuth2Service.ts";
+import { completeRegistration } from "../services/AuthService.ts";
 
 
 export default function CompleteRegistration() {
@@ -36,7 +36,7 @@ export default function CompleteRegistration() {
     setErrors({});
 
    try {
-      await authService.completeRegistration(username);
+      await completeRegistration(username);
       sessionStorage.removeItem("oauth_flow");
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate("/profile/1/overview");

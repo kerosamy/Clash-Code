@@ -4,68 +4,12 @@ import { useParams } from "react-router-dom";
 import Categories from "../../components/profile/Categories";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import StatsOverview from "../../components/profile/StatsOverview";
-import api from "../../services/api";
-  const token = localStorage.getItem("token");
-// Backend Response Interface
-interface BackendUserResponse {
-  username: string;
-  rank: string;
-  currentRate: number;
-  maxRate: number;
-  friendCount: number;
-  avatarUrl: string;
-  stats: {
-    solvedProblems: number;
-    attemptedProblems: number;
-    matchesPlayed: number;
-    matchesWon: number;
-  };
-  categories: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
-}
-
-// Split Interfaces for different components
-interface UserProfileBasic {
-  username: string;
-  rank: string;
-  currentRate: number;
-  maxRate: number;
-  friendCount: number;
-  avatarUrl: string;
-}
-
-interface UserStats {
-  solvedProblems: number;
-  attemptedProblems: number;
-  matchesPlayed: number;
-  matchesWon: number;
-}
-
-interface CategoryItem {
-  name: string;
-  value: number;
-  color: string;
-}
-
-// Helper function to split the data
-const splitUserData = (response: BackendUserResponse) => {
-  const profileBasic: UserProfileBasic = {
-    username: response.username,
-    rank: response.rank,
-    currentRate: response.currentRate,
-    maxRate: response.maxRate,
-    friendCount: response.friendCount,
-    avatarUrl: response.avatarUrl,
-  };
-
-  const stats: UserStats = response.stats;
-  const categories: CategoryItem[] = response.categories;
-
-  return { profileBasic, stats, categories };
-};
+import  { fetchUserProfile, splitUserData } from "../../services/UserService";
+import type {
+  UserProfileBasic,
+  UserStats,
+  CategoryItem,
+} from "../../services/UserService";
 
 export default function ProfileOverview() {
   const { id } = useParams<{ id: string }>();
@@ -74,35 +18,25 @@ export default function ProfileOverview() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-
-      // FIX: Stop if there is no token
-      if (!token) {
-        console.error("No token found. Please login first.");
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await fetchUserProfile();
+        const { profileBasic, stats, categories } = splitUserData(data);
+        setProfileBasic(profileBasic);
+        setStats(stats);
+        setCategories(categories);
+      } 
+      catch (error) {
+        console.error("Failed to fetch profile:", error);
+      } 
+      finally {
         setLoading(false);
-        return;
       }
+    };
 
-      const { data } = await api.get<BackendUserResponse>(
-        `/users/profile`
-      );
-
-      const { profileBasic, stats, categories } = splitUserData(data);
-      setProfileBasic(profileBasic);
-      setStats(stats);
-      setCategories(categories);
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchProfile();
-}, [id]);
-
+    fetchProfile();
+  }, [id]);
 
   if (loading) {
     return <div className="p-8 text-center text-3xl text-gray-500">Loading profile...</div>;
