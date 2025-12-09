@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import ProblemSection from "../../components/problem/ProblemSectionProps";
 import TestCases from "../../components/problem/TestCase";
 import Loading from "../../components/Loading";
-import { fetchProblemById } from "../../services/problem.service";
+import { fetchProblemById } from "../../services/ProblemService";
 
 export default function ProblemDetails() {
   const { id } = useParams<{ id: string }>();

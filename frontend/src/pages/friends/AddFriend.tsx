@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react';
-import Board from '../../components/common/Board';
-import UserRow from '../../components/common/UserRow';
+import { useState, useEffect } from "react";
+import Board from "../../components/common/Board";
+import UserRow from "../../components/common/UserRow";
 import SearchBar from "../../components/common/SearchBar";
-import api from "../../services/api";
-
-interface UserSearchResponse {
-  username: string;
-  rank: string;
-}
+import { searchUsers, addFriend } from "../../services/UserService";
+import type { UserSearchResponse } from "../../services/UserService";
 
 export default function AddFriend() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<UserSearchResponse[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -21,30 +17,33 @@ export default function AddFriend() {
     }
 
     const timer = setTimeout(async () => {
-    setLoading(true);
+      setLoading(true);
+      try {
+        const results = await searchUsers(searchTerm);
+        setUsers(results);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const handleAddFriend = async (user: UserSearchResponse) => {
     try {
-      const { data } = await api.get<UserSearchResponse[]>(
-        `/users/search?username=${encodeURIComponent(searchTerm)}`
-      );
-      setUsers(data);
+      await addFriend(user.username);
+      console.log("Friend added:", user.username);
     } catch (error) {
-      console.error("Error fetching users:", error);
-      setUsers([]);
-    } finally {
-      setLoading(false);
+      console.error("Failed to add friend:", error);
     }
-  }, 300); 
-
-  return () => clearTimeout(timer);
-}, [searchTerm]);
-
-  const handleAddFriend = (user: UserSearchResponse) => {
-    console.log('Add friend:', user.username);
   };
 
   const handleUsernameClick = (user: UserSearchResponse) => {
-    console.log('Username clicked:', user.username);
-    // TODO: handle username click (e.g., open profile)
+    console.log("Username clicked:", user.username);
+    // TODO: navigate to profile page
   };
 
   const renderUserRow = (user: UserSearchResponse) => {
@@ -64,17 +63,16 @@ export default function AddFriend() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-
-        <SearchBar 
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search users..."
-        />
+      <SearchBar
+        value={searchTerm}
+        onChange={setSearchTerm}
+        placeholder="Search users..."
+      />
 
       {searchTerm.trim() && (
         <Board
           data={users}
-          columns={['#', 'Name', 'Add']}
+          columns={["#", "Name", "Add"]}
           renderRow={(user) => renderUserRow(user)}
           gridCols="grid-cols-[60px_4fr_100px]"
         />

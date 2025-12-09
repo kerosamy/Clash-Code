@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/auth";
+const API_BASE = "http://localhost:8080/auth";
 
 // --- Types ---
 
@@ -13,7 +13,7 @@ interface BackendErrorResponse {
 // Register Types
 export interface RegisterRequest {
   username: string;
-  email: string; // Note: Backend maps this to 'email' field
+  email: string;
   password: string;
   recoveryQuestion: string;
   recoveryAnswer: string;
@@ -27,7 +27,7 @@ export interface UserResponse {
 
 // Login Types
 export interface LoginRequest {
-  email: string; // The backend DTO expects this field to be named 'email'
+  email: string;
   password: string;
 }
 
@@ -39,14 +39,51 @@ export interface LoginResponse {
 // --- API Functions ---
 
 export const registerUser = async (data: RegisterRequest) => {
-  const response = await axios.post(`${API_URL}/signup`, data);
-  return response.data;  // Contains { token, expiresIn }
+  const response = await axios.post(`${API_BASE}/signup`, data);
+  return response.data;  // Contains { token, expiresIn, username }
 };
-
 
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   try {
-    const response = await axios.post<LoginResponse>(`${API_URL}/login`, credentials);
+    const response = await axios.post<LoginResponse>(`${API_BASE}/login`, credentials);
+    return response.data;
+  } catch (err) {
+    handleApiError(err);
+    throw err;
+  }
+};
+
+export const getGoogleToken = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/OAuthCallback`, { withCredentials: true });
+    return response.data;
+  } catch (err) {
+    handleApiError(err);
+    throw err;
+  }
+};
+
+export const getAuthenticatedUser = async () => {
+    const token = localStorage.getItem("token");
+    try {
+    const response = await axios.get(`${API_BASE}/me`,
+      { headers: { Authorization: ` Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (err) {
+    handleApiError(err);
+    throw err;
+  }
+};
+
+export const completeRegistration = async (username: string) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE}/GoogleSignUp/completeRegistration`,
+      { username },
+      { withCredentials: true }
+    );
+    localStorage.setItem("token", response.data.token);
     return response.data;
   } catch (err) {
     handleApiError(err);
@@ -57,9 +94,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
 // --- Helper for Consistent Error Handling ---
 const handleApiError = (err: unknown) => {
   if (axios.isAxiosError(err) && err.response) {
-    // Cast to backend error shape
     const errorData = err.response.data as BackendErrorResponse;
-    // Extract 'error' field (e.g., "User not found")
     const errorMessage = errorData.error || "An unexpected error occurred";
     throw new Error(errorMessage);
   } else {

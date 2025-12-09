@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/OAuth2Service";
+import { getGoogleToken } from "../services/AuthService";
+import axios from "axios";
 
 
 export default function OAuthCallback() {
@@ -11,7 +12,7 @@ export default function OAuthCallback() {
     const processOAuth = async () => {
       try {
         // Step 1: Get token from backend OAuthCallback
-        const response = await authService.getGoogleToken();
+        const response = await getGoogleToken();
         console.log("OAuth token response:", response);
 
         const { token } = response;
