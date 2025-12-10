@@ -2,12 +2,11 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.CreateMatchRequestDto;
 import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.MatchSubmissionLogDto;
+import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.model.*;
-import com.clashcode.backend.repository.MatchParticipantRepository;
-import com.clashcode.backend.repository.MatchRepository;
-import com.clashcode.backend.repository.ProblemRepository;
-import com.clashcode.backend.repository.UserRepository;
+import com.clashcode.backend.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,13 +21,15 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final MatchParticipantRepository matchParticipantRepository;
     private final MatchMapper matchMapper;
+    private final SubmissionRepository submissionRepository;
 
-    public MatchService(UserRepository userRepository, ProblemRepository problemRepository, MatchRepository matchRepository, MatchParticipantRepository matchParticipantRepository, MatchMapper matchMapper) {
+    public MatchService(UserRepository userRepository, ProblemRepository problemRepository, MatchRepository matchRepository, MatchParticipantRepository matchParticipantRepository, MatchMapper matchMapper, SubmissionRepository submissionRepository) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
         this.matchRepository = matchRepository;
         this.matchParticipantRepository = matchParticipantRepository;
         this.matchMapper = matchMapper;
+        this.submissionRepository = submissionRepository;
     }
 
     public MatchResponseDto createMatch(CreateMatchRequestDto createMatchRequestDto) {
@@ -52,5 +53,37 @@ public class MatchService {
 
         savedMatch.setParticipants(participants);
         return matchMapper.toResponseDto(savedMatch);
+    }
+
+    public Match validateMatch(Long matchId, User user) {
+        if (matchId == null) return null;
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+
+        if (match.getMatchState() != MatchState.ONGOING) {
+            throw new IllegalStateException("Match is not ongoing, submissions are not allowed");
+        }
+
+        boolean isParticipant = match.getParticipants().stream()
+                .anyMatch(mp -> mp.getUser().getId().equals(user.getId()));
+
+        if (!isParticipant) {
+            throw new IllegalArgumentException("User is not a participant in this match");
+        }
+
+        return match;
+    }
+
+    public List<MatchSubmissionLogDto> getMatchSubmissionLog(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+
+        return match.getParticipants().stream()
+                .map(particicpant -> {
+                    List<Submission> submissions = submissionRepository
+                            .findByUserIdAndMatchId(particicpant.getUser().getId(), matchId);
+                    return matchMapper.toMatchSubmissionLogDto(particicpant, submissions);
+                })
+                .toList();
     }
 }
