@@ -1,6 +1,7 @@
 package com.clashcode.backend.mapper;
 
 import com.clashcode.backend.dto.ExecutionResultDto;
+import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.LanguageVersion;
@@ -95,6 +96,15 @@ public class SubmissionMapper {
                         .numberOfCurrentTestCase(submission.getNumberOfCurrentTestCase() !=null ? submission.getNumberOfCurrentTestCase() : 0)
                 .problemTitle(submission.getProblem().getTitle())
                 .problemId(submission.getProblem().getId())
+                .build();
+    }
+    public SubmissionDetailsDto toDetailsDto  (Submission submission) {
+        return SubmissionDetailsDto.builder()
+                .submissionLang(String.valueOf(submission.getLanguageVersion()))
+                .submissionCode(submission.getCode())
+                .username(submission.getUser().getUsername())
+                .problemTitle(submission.getProblem().getTitle())
+                .submissionStatus(String.valueOf(submission.getStatus()))
                 .build();
     }
 }

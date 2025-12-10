@@ -19,6 +19,15 @@ export interface SubmissionResponse {
   numberOfCurrentTestCase: number;
 }
 
+export interface SubmissionDetailsDto {
+  submissionLang: string;
+  submissionCode: string;
+  problemTitle: string;
+  username: string;
+  submissionStatus: string;
+}
+
+
 
 export async function submitCode(
   problemId: number,
@@ -55,5 +64,21 @@ export async function getSubmissionStatus(
   return apiRequest<SubmissionResponse>({
     method: "GET",
     url: `/submissions/status/${submissionId}`,
+  });
+}
+
+export async function getProblemTitle(problemId: number): Promise<string> {
+  return apiRequest<string>({
+    method: "GET",
+    url: `/submissions/problem-title/${problemId}`,
+  });
+}
+
+export async function getSubmissionDetails(
+  submissionId: number
+): Promise<SubmissionDetailsDto> {
+  return apiRequest<SubmissionDetailsDto>({
+    method: "GET",
+    url: `/submissions/details/${submissionId}`,
   });
 }

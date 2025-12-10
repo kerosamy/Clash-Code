@@ -1,6 +1,7 @@
 package com.clashcode.backend.mapper;
 
 import com.clashcode.backend.dto.ExecutionResultDto;
+import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.LanguageVersion;
@@ -132,4 +133,33 @@ class SubmissionMapperTest {
         assertThat(dtos).extracting("submissionId").containsExactly(1L, 2L);
         assertThat(dtos).extracting("problemTitle").containsExactly("Problem 1", "Problem 2");
     }
+
+    @Test
+    void toDetailsDto_ShouldMapAllFieldsCorrectly() {
+        // Arrange
+        User user = new User();
+        user.setUsername("kero");
+
+        Problem problem = new Problem();
+        problem.setTitle("Find the Maximum");
+
+        Submission submission = new Submission();
+        submission.setCode("print(max(arr))");
+        submission.setLanguageVersion(LanguageVersion.PYTHON_3_8);
+        submission.setStatus(SubmissionStatus.ACCEPTED);
+        submission.setUser(user);
+        submission.setProblem(problem);
+
+        // Act
+        SubmissionDetailsDto dto = submissionMapper.toDetailsDto(submission);
+
+        // Assert
+        assertThat(dto).isNotNull();
+        assertThat(dto.getSubmissionLang()).isEqualTo("PYTHON_3_8");
+        assertThat(dto.getSubmissionCode()).isEqualTo("print(max(arr))");
+        assertThat(dto.getUsername()).isEqualTo("kero");
+        assertThat(dto.getProblemTitle()).isEqualTo("Find the Maximum");
+        assertThat(dto.getSubmissionStatus()).isEqualTo("ACCEPTED");
+    }
+
 }

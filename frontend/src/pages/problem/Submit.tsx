@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams , useNavigate} from "react-router-dom";
 import { LanguageVersion } from "../../enums/LanguageVersion";
 import SingleSelectDropdown from "../../components/common/SingleSelectDropDown";
 import Editor from "@monaco-editor/react";
 import { monacoLanguageMap } from "../../utils/languageMap";
 import { submitCode } from "../../services/SubmissionsService";
+import{ getProblemTitle } from "../../services/SubmissionsService";
+import { getUsername } from "../../utils/jwtDecoder";
 
 
 export default function Submit() {
@@ -13,9 +15,20 @@ export default function Submit() {
     const [code, setCode] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submitMessage, setSubmitMessage] = useState<string>("");
+    const [problemTitle, setProblemTitle] = useState<string>("");
+
     const navigate = useNavigate();
 
-    const problemTitle = "Find The Max Value";
+    useEffect(() => {
+        if (id) {
+            getProblemTitle(parseInt(id)).then((title) => {
+                setProblemTitle(title);
+            }).catch(() => {
+                setProblemTitle("Unknown Problem");
+            });
+        }
+    }, [id]);
+
 
     const handleSubmit = async () => {
         if (!code.trim()) return setSubmitMessage("Please enter your code before submitting.");
@@ -27,8 +40,8 @@ export default function Submit() {
         try {
             submitCode(parseInt(id), code, selectedLang);
             setSubmitMessage("Code submitted successfully!");
-             setTimeout(() => {
-            navigate(`/profile/1/submissions`);   // ⬅ REDIRECT HERE
+            setTimeout(() => {
+            navigate(`/profile/${getUsername()}/submissions`);   // ⬅ REDIRECT HERE
         }, 500);
         } catch (error) {
             setSubmitMessage("Failed to submit code. Please try again.");

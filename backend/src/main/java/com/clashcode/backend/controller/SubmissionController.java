@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.exception.UnauthorizedException;
@@ -47,5 +48,15 @@ public class SubmissionController {
     @GetMapping("/status/{submissionId}")
     public ResponseEntity<SubmissionListDto> getSubmissionStatusById(@PathVariable Long submissionId) {
         return ResponseEntity.ok(submissionService.getSubmissionStatusById(submissionId));
+    }
+
+    @GetMapping("/details/{submissionId}")
+    public ResponseEntity<SubmissionDetailsDto> getSubmissionDetailsById(@PathVariable Long submissionId) {
+        return ResponseEntity.ok(submissionService.getSubmissionDetailsById(submissionId));
+    }
+
+    @GetMapping("/problem-title/{problemId}")
+    public ResponseEntity<String> getProblemTitleById(@PathVariable Long problemId) {
+        return ResponseEntity.ok(submissionService.getProblemTitleById(problemId));
     }
 }
