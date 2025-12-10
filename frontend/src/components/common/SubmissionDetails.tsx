@@ -28,9 +28,30 @@ export default function SubmissionDetails({ submissionId, isOpen, onClose }: Sub
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
+    let cancelled = false;
+
     if (isOpen && submissionId) {
-      fetchSubmissionDetails();
+      setLoading(true);
+      setError("");
+      getSubmissionDetails(submissionId)
+        .then((data) => {
+          if (!cancelled) {      
+            setDetails({
+              ...data,
+              submissionStatus: SubmissionStatus[data.submissionStatus as keyof typeof SubmissionStatus],
+            });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setError("Failed to load submission details. Please try again."); // ← NEW
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false); 
+        });
     }
+    return () => {
+      cancelled = true; // ← NEW: mark as cancelled when component unmounts or closes
+    };
   }, [isOpen, submissionId]);
 
   const fetchSubmissionDetails = async () => {
