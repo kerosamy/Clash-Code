@@ -46,4 +46,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             @Param("minRate") Integer minRate,
             @Param("maxRate") Integer maxRate,
             Pageable pageable);
+
+    @Query("SELECT p FROM Problem p WHERE p.rate BETWEEN :minRate AND :maxRate AND p.problemStatus = 'APPROVED'")
+    List<Problem> findProblemsInRateRange(@Param("minRate") int minRate,
+                                          @Param("maxRate") int maxRate);
 }

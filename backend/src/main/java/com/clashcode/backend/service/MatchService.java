@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class MatchService {
@@ -53,6 +54,32 @@ public class MatchService {
         this.matchScheduler = matchScheduler;
         this.notificationService = notificationService;
         this.submissionService = submissionService;
+    }
+
+    public Problem selectProblem(User userA, User userB) {
+        int avgRate = (userA.getCurrentRate() + userB.getCurrentRate()) / 2;
+        int minRate = avgRate - 300;
+        int maxRate = avgRate + 300;
+
+        minRate = Math.max(minRate, 0);
+        maxRate = Math.min(maxRate, 2000);
+
+        //TODO exclude the problems solved by both of them
+
+        List<Problem> problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
+
+        while (problems.isEmpty() && (minRate > 0 || maxRate < 2000)) {
+            minRate = Math.max(minRate - 100, 0);
+            maxRate = Math.min(maxRate + 100, 2000);
+
+            problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
+        }
+
+        if (problems.isEmpty()) {
+            throw new IllegalStateException("No problems available in the full range 0–2000");
+        }
+
+        return problems.get(new Random().nextInt(problems.size()));
     }
 
     @Transactional
