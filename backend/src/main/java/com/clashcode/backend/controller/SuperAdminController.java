@@ -23,13 +23,13 @@ public class SuperAdminController {
 
     @PutMapping("/users/{userId}/promote-to-admin")
     public ResponseEntity<?> promoteToAdmin(@PathVariable Long userId) {
-        User updated = userService.updateUserRole(userId, Roles.ADMIN);
+        userService.updateUserRole(userId, Roles.ADMIN);
         return ResponseEntity.ok("User promoted to ADMIN");
     }
 
     @PutMapping("/users/{userId}/demote-to-user")
     public ResponseEntity<?> demoteToUser(@PathVariable Long userId) {
-        User updated = userService.updateUserRole(userId, Roles.USER);
+        userService.updateUserRole(userId, Roles.USER);
         return ResponseEntity.ok("User demoted to USER");
     }
 
