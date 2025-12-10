@@ -42,6 +42,9 @@ import friends from '../assets/icons/friends.svg';
 import addUser from '../assets/icons/add-user.svg'; 
 import ProblemDetailsIcon from '../assets/icons/problem-statement.svg';
 import SubmitsIcon from '../assets/icons/subimt.svg';
+import { UserRole } from '../enums/UserRole';
+import UserManagement from '../pages/UserManagemen';
+import ReviewProblems from '../pages/ReviewProblems';
 
 export interface PageConfig {
   path: string;
@@ -69,6 +72,8 @@ export interface RouteConfig {
   icon: string;
   component: ComponentType;
   children?: ChildRouteConfig[];
+  requiredRoles?: UserRole[]; // field for rbac
+  hideFromNav?: boolean; // hide from navigation menu
 }
 
 export const routes: RouteConfig[] = [
@@ -112,6 +117,22 @@ export const routes: RouteConfig[] = [
   { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
   { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
+  // admin and super admin 
+  {
+    path: 'review-problems',
+    name: 'Review Problems',
+    icon: ListIcon,  
+    component: ReviewProblems,
+    requiredRoles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+  },
+  // super admin only
+  { 
+    path: 'user-management', 
+    name: 'User Management', 
+    icon: addUser, 
+    component: UserManagement, 
+    requiredRoles: [UserRole.SUPER_ADMIN]
+  },
   { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
   { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
 ];

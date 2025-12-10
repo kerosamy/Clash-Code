@@ -6,10 +6,20 @@ import Layout from './Layout';
 import { routes, pages } from './routes/routes.config';
 
 import "@fontsource/anta/400.css";
+import ProtectedRoute from './routes/ProtectedRoute';
 
 function mapRouteConfig() {
-  return routes.map(({ path, component: Component, children }) => {
-    const base: any = { path, element: <Component /> };
+  return routes.map(({ path, component: Component, children, requiredRoles }) => {
+    const base: any = { 
+        path, 
+        element: requiredRoles ? (
+        <ProtectedRoute allowedRoles={requiredRoles}>
+          <Component />
+        </ProtectedRoute>
+      ) : (
+        <Component />
+      ) 
+    }; 
 
     if (children && children.length > 0) {
       base.children = children.map(child => {
