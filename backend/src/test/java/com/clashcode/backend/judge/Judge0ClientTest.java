@@ -3,15 +3,18 @@ package com.clashcode.backend.judge;
 import com.clashcode.backend.dto.ExecutionResultDto;
 import com.clashcode.backend.judge.Judge0.Judge0Client;
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestPropertySource(locations = "classpath:application-test.properties")
+@SpringBootTest
 public class Judge0ClientTest {
 
-    private final Judge0Client client = new Judge0Client();
+    @Autowired
+    private Judge0Client client;
 
     @Test
     void testAccepted() {
