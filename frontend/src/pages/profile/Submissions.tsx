@@ -4,11 +4,12 @@ import Board from "../../components/common/Board";
 import SubmissionRow from "../../components/common/SubmissionRow";
 import { getUserSubmissions  , getSubmissionStatus} from "../../services/SubmissionsService";
 import { SubmissionStatus } from "../../enums/SubmissionStatus";
+import SubmissionDetails from "../../components/common/SubmissionDetails";
 
 export interface Submission {
     submissionId: number;
     submissionStatus: SubmissionStatus;
-    timeTaken: number;
+    timeTaken: number;  
     memoryTaken: number;
     submittedAt: string;
     problemTitle: string;
@@ -22,6 +23,8 @@ export default function Submissions() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>("");
+    const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
 useEffect(() => {
     fetchSubmissions();
@@ -54,6 +57,7 @@ useEffect(() => {
                     return {
                         ...s,
                         ...updated,
+                        submissionStatus: SubmissionStatus[updated.submissionStatus as keyof typeof SubmissionStatus],
                     };
                 } catch (err) {
                     console.error("Polling error:", err);
@@ -78,7 +82,7 @@ useEffect(() => {
             
             const formattedSubmissions: Submission[] = data.map((item: any) => ({
                 submissionId: item.submissionId,
-                submissionStatus: item.submissionStatus,
+                submissionStatus:  SubmissionStatus[item.submissionStatus as keyof typeof SubmissionStatus] ,
                 timeTaken: item.timeTaken,
                 memoryTaken: item.memoryTaken,
                 submittedAt: item.submittedAt,
@@ -100,9 +104,10 @@ useEffect(() => {
     };
 
     const handleSubmissionClick = (submission: Submission) => {
-        console.log("Clicked submission:", submission);
-        // TODO: Navigate to submission details or show modal
+        setSelectedSubmissionId(submission.submissionId);
+        setIsModalOpen(true);
     };
+
 
     if (loading) {
         return (
@@ -162,6 +167,16 @@ useEffect(() => {
                     />
                 )}
             />
+            {selectedSubmissionId !== null && (
+                <SubmissionDetails
+                    submissionId={selectedSubmissionId}
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedSubmissionId(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

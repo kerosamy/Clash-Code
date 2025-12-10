@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.ExecutionResultDto;
+import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.SubmissionStatus;
@@ -78,5 +79,11 @@ public class SubmissionService {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Submission not found"));
         return submissionMapper.toListDto(submission);
+    }
+
+    public SubmissionDetailsDto getSubmissionDetailsById(Long submissionId){
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new RuntimeException("Submission not found"));
+        return submissionMapper.toDetailsDto(submission);
     }
 }
