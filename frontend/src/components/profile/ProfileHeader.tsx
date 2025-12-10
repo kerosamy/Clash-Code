@@ -64,6 +64,7 @@ export default function ProfileHeader({
                         <button
                             onClick={onChangeImage}
                             className="absolute top-5 right-5 bg-background rounded-full p-3 hover:bg-gray-700 transition-colors"
+                            style={{ border: `3px solid ${color}` }}
                             aria-label="Change profile image"
                         >
                             <Camera className="w-8 h-8" style={{ color }} />
@@ -71,7 +72,8 @@ export default function ProfileHeader({
                     ) : (
                         <button
                             onClick={onAddFriend}
-                            className="absolute top-2 right-2 bg-gray-900 rounded-full p-2 hover:bg-gray-700 transition-colors"
+                            className="absolute top-5 right-5 bg-background rounded-full p-4 hover:bg-gray-700 transition-colors"
+                            style={{ border: `3px solid ${color}` }}
                             aria-label="Add friend"
                         >
                             <UserPlus className="w-6 h-6" style={{ color }} />

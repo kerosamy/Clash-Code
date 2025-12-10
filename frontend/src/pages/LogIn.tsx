@@ -51,11 +51,9 @@ export default function LogIn() {
       };
 
       const response = await loginUser(credentials);
-      console.log(response);
-      localStorage.setItem('token', response.token); 
     
-      navigate('/profile/1/overview');
-      
+      navigate(`/profile/${response.username}/overview`);
+
     } catch (err: any) {
       setApiError(err.message || 'Login failed. Please try again.');
     } finally {

@@ -22,6 +22,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   expiresIn: number;
+  username: string;
 }
 
 export const registerUser = async (data: RegisterRequest): Promise<LoginResponse> => {
@@ -32,15 +33,20 @@ export const registerUser = async (data: RegisterRequest): Promise<LoginResponse
   });
   localStorage.setItem("token", response.token);
   localStorage.setItem("tokenExpiry", response.expiresIn.toString());
+  localStorage.setItem('username', response.username); 
   return response;
 };
 
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
-  return apiRequest<LoginResponse>({
+  const response = await apiRequest<LoginResponse>({
     method: "POST",
     url: `/auth/login`,
     data: credentials,
   });
+  localStorage.setItem("token", response.token);
+  localStorage.setItem("tokenExpiry", response.expiresIn.toString());
+  localStorage.setItem('username', response.username); 
+  return response;
 };
 
 export const getGoogleToken = async () => {
@@ -67,5 +73,7 @@ export const completeRegistration = async (username: string) => {
   });
 
   localStorage.setItem("token", response.token);
+  localStorage.setItem("tokenExpiry", response.expiresIn.toString());
+  localStorage.setItem('username', response.username); 
   return response;
 };

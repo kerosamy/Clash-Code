@@ -4,11 +4,13 @@ import UserRow from "../../components/common/UserRow";
 import SearchBar from "../../components/common/SearchBar";
 import { searchUsers, addFriend } from "../../services/UserService";
 import type { UserSearchResponse } from "../../services/UserService";
+import { useNavigate } from "react-router-dom";
 
 export default function AddFriend() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<UserSearchResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -43,7 +45,7 @@ export default function AddFriend() {
 
   const handleUsernameClick = (user: UserSearchResponse) => {
     console.log("Username clicked:", user.username);
-    // TODO: navigate to profile page
+    navigate(`/profile/${user.username}/overview`);
   };
 
   const renderUserRow = (user: UserSearchResponse) => {
