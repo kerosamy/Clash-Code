@@ -3,7 +3,7 @@ CREATE TABLE users (
                        username VARCHAR(50) NOT NULL UNIQUE,
                        email VARCHAR(100) NOT NULL UNIQUE,
                        password VARCHAR(255),
-                       is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+                       role VARCHAR(50) NOT NULL DEFAULT 'USER',
                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        img_url TEXT,
                        max_rate INT NOT NULL DEFAULT 0,
