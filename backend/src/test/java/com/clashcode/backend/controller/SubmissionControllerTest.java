@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.exception.GlobalExceptionHandler;
@@ -126,4 +127,64 @@ public class SubmissionControllerTest {
 
         verify(submissionService, times(1)).getSubmissionStatusById(123L);
     }
+    // ----------------------------------------------------------------
+    // 4) GET /submissions/details/{submissionId} - SUCCESS
+    // ----------------------------------------------------------------
+    @Test
+    void getSubmissionDetailsById_ShouldReturnDetailsDto() throws Exception {
+        // Arrange
+        SubmissionDetailsDto dto = new SubmissionDetailsDto();
+        dto.setSubmissionLang("CPP_GCC_9_2");
+        dto.setSubmissionCode("#include <iostream>...");
+        dto.setProblemTitle("Two Sum");
+        dto.setUsername("kero");
+        dto.setSubmissionStatus("ACCEPTED");
+
+        when(submissionService.getSubmissionDetailsById(50L)).thenReturn(dto);
+
+        // Act & Assert
+        mockMvc.perform(get("/submissions/details/50"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.problemTitle").value("Two Sum"))
+                .andExpect(jsonPath("$.submissionLang").value("CPP_GCC_9_2"))
+                .andExpect(jsonPath("$.username").value("kero"));
+
+        verify(submissionService, times(1)).getSubmissionDetailsById(50L);
+    }
+
+
+    // ----------------------------------------------------------------
+    // 5) GET /submissions/problem-title/{problemId} - SUCCESS
+    // ----------------------------------------------------------------
+    @Test
+    void getProblemTitleById_ShouldReturnTitle() throws Exception {
+        // Arrange
+        when(submissionService.getProblemTitleById(7L)).thenReturn("Longest Increasing Subsequence");
+
+        // Act & Assert
+        mockMvc.perform(get("/submissions/problem-title/7"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Longest Increasing Subsequence"));
+
+        verify(submissionService, times(1)).getProblemTitleById(7L);
+    }
+
+
+    // ----------------------------------------------------------------
+    // 6) GET /submissions/problem-title/{problemId} - DIFFERENT ID
+    // ----------------------------------------------------------------
+    @Test
+    void getProblemTitleById_ShouldReturnCorrectTitle_ForDifferentId() throws Exception {
+        // Arrange
+        when(submissionService.getProblemTitleById(42L)).thenReturn("Binary Search");
+
+        // Act & Assert
+        mockMvc.perform(get("/submissions/problem-title/42"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Binary Search"));
+
+        verify(submissionService, times(1)).getProblemTitleById(42L);
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.ExecutionResultDto;
+import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.SubmissionStatus;
@@ -151,4 +152,69 @@ class SubmissionServiceTest {
         assertNotNull(dto);
         verify(submissionRepository).findById(100L);
     }
+    // -------------------------------------------------------------------------
+    // TEST 5: getSubmissionDetailsById() - SUCCESS
+    // -------------------------------------------------------------------------
+    @Test
+    void getSubmissionDetailsById_ShouldReturnMappedDto() {
+        // GIVEN
+        Submission submission = new Submission();
+        submission.setId(200L);
+
+        SubmissionDetailsDto detailsDto = new SubmissionDetailsDto();
+        detailsDto.setProblemTitle("Two Sum");
+        detailsDto.setSubmissionStatus("ACCEPTED");
+
+        when(submissionRepository.findById(200L)).thenReturn(Optional.of(submission));
+        when(submissionMapper.toDetailsDto(submission)).thenReturn(detailsDto);
+
+        // WHEN
+        SubmissionDetailsDto result = submissionService.getSubmissionDetailsById(200L);
+
+        // THEN
+        assertNotNull(result);
+        assertEquals("Two Sum", result.getProblemTitle());
+        verify(submissionRepository).findById(200L);
+        verify(submissionMapper).toDetailsDto(submission);
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 6: getSubmissionDetailsById() - NOT FOUND
+    // -------------------------------------------------------------------------
+    @Test
+    void getSubmissionDetailsById_ShouldThrow_WhenSubmissionNotFound() {
+        when(submissionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> submissionService.getSubmissionDetailsById(999L));
+    }
+    // -------------------------------------------------------------------------
+    // TEST 7: getProblemTitleById() - SUCCESS
+    // -------------------------------------------------------------------------
+    @Test
+    void getProblemTitleById_ShouldReturnTitle() {
+        Problem problem = new Problem();
+        problem.setId(10L);
+        problem.setTitle("Binary Search");
+
+        when(problemRepository.findById(10L)).thenReturn(Optional.of(problem));
+
+        String title = submissionService.getProblemTitleById(10L);
+
+        assertEquals("Binary Search", title);
+        verify(problemRepository).findById(10L);
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 8: getProblemTitleById() - NOT FOUND
+    // -------------------------------------------------------------------------
+    @Test
+    void getProblemTitleById_ShouldThrow_WhenProblemNotFound() {
+        when(problemRepository.findById(777L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> submissionService.getProblemTitleById(777L));
+    }
+
+
 }
