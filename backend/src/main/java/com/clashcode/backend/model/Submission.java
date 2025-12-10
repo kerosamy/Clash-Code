@@ -40,7 +40,13 @@ public class Submission {
     private Integer timeTaken;
 
     @Column
-    Integer passedTestCases;
+    private Integer numberOfTestCases;
+
+    @Column
+    private Integer numberOfPassedTestCases;
+
+    @Column
+    private Integer numberOfCurrentTestCase;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id" , nullable = false)

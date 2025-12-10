@@ -12,132 +12,143 @@ import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.ProblemRepository;
 import com.clashcode.backend.repository.SubmissionRepository;
 import com.clashcode.backend.repository.UserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.mockito.*;
+import java.util.*;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class SubmissionServiceTest {
 
-    private SubmissionRepository submissionRepository;
-    private UserRepository userRepository;
-    private ProblemRepository problemRepository;
-    private TestCaseService testCaseService;
-    private Judge0Client judge0Client;
-    private SubmissionMapper submissionMapper;
-
+    @InjectMocks
     private SubmissionService submissionService;
 
-    @BeforeEach
-    void setUp() {
-        submissionRepository = mock(SubmissionRepository.class);
-        userRepository = mock(UserRepository.class);
-        problemRepository = mock(ProblemRepository.class);
-        testCaseService = mock(TestCaseService.class);
-        judge0Client = mock(Judge0Client.class);
-        submissionMapper = mock(SubmissionMapper.class);
+    @Mock
+    private SubmissionRepository submissionRepository;
 
-        submissionService = new SubmissionService(
-                submissionRepository,
-                userRepository,
-                problemRepository,
-                judge0Client,
-                submissionMapper,
-                testCaseService
-        );
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ProblemRepository problemRepository;
+
+    @Mock
+    private TestCaseService testCaseService;
+
+    @Mock
+    private Judge0Client judge0Client;
+
+    @Mock
+    private SubmissionMapper submissionMapper;
+
+    @Captor
+    ArgumentCaptor<Submission> submissionCaptor;
+
+    @BeforeEach
+    void setup() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    // -------------------------------------------------------------------------
+    // TEST 1: submitCode() success
+    // -------------------------------------------------------------------------
     @Test
-    void submitCode_ShouldSaveSubmissionAndCallJudge() {
-        // Arrange
-        SubmissionRequestDto requestDto = SubmissionRequestDto.builder()
-                .userId(1L)
-                .problemId(2L)
-                .code("print('hello')")
-                .codeLanguage("python")
-                .build();
+    void submitCode_ShouldRunAllTestCases_AndSaveSubmission() {
+        // GIVEN
+        SubmissionRequestDto dto = new SubmissionRequestDto();
+        dto.setCode("print(1)");
+        dto.setCodeLanguage("PYTHON_3_8");
+        dto.setProblemId(1L);
 
         User user = new User();
-        user.setId(1L);
-        Problem problem = new Problem();
-        problem.setId(2L);
+        user.setId(10L);
 
-        Submission submissionEntity = new Submission();
-        Submission updatedSubmission = new Submission();
-        ExecutionResultDto result = new ExecutionResultDto();
+        Problem problem = Problem.builder()
+                .id(1L)
+                .timeLimit(1000)
+                .memoryLimit(128)
+                .build();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(problemRepository.findById(2L)).thenReturn(Optional.of(problem));
-        when(submissionMapper.toEntity(requestDto)).thenReturn(submissionEntity);
-        when(testCaseService.getInputTestCasesForProblem(problem)).thenReturn(List.of("input1"));
-        when(testCaseService.getOutputTestCasesForProblem(problem)).thenReturn(List.of("output1"));
-        when(submissionMapper.toEntity(List.of(result), submissionEntity)).thenReturn(updatedSubmission);
+        List<String> inputs = List.of("1", "2", "3");
+        List<String> outputs = List.of("1", "2", "3");
 
-        // Act
-        submissionService.submitCode(requestDto);
-
-        // Assert
-        ArgumentCaptor<Submission> captor = ArgumentCaptor.forClass(Submission.class);
-        verify(submissionRepository, times(2)).save(captor.capture());
-        List<Submission> savedSubmissions = captor.getAllValues();
-
-        assertThat(savedSubmissions.get(0).getStatus()).isEqualTo(SubmissionStatus.WAITING);
-        assertThat(savedSubmissions.get(0).getUser()).isEqualTo(user);
-        assertThat(savedSubmissions.get(0).getProblem()).isEqualTo(problem);
-        assertThat(savedSubmissions.get(1)).isEqualTo(updatedSubmission);
-    }
-
-    @Test
-    void getSubmissionsByUser_ShouldReturnListDto() {
-        // Arrange
         Submission submission = new Submission();
-        SubmissionListDto dto = new SubmissionListDto();
-        when(submissionRepository.findByUserId(1L)).thenReturn(List.of(submission));
-        when(submissionMapper.toListDto(List.of(submission))).thenReturn(List.of(dto));
+        submission.setId(50L);
+        submission.setStatus(SubmissionStatus.WAITING);
 
-        // Act
-        List<SubmissionListDto> result = submissionService.getSubmissionsByUser(1L);
+        // MOCKING
+        when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
+        when(testCaseService.getInputTestCasesForProblem(problem)).thenReturn(inputs);
+        when(testCaseService.getOutputTestCasesForProblem(problem)).thenReturn(outputs);
 
-        // Assert
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(dto);
+        when(submissionMapper.toEntity(dto, user, problem, 3)).thenReturn(submission);
+
+        when(submissionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        when(judge0Client.executeAndCompare(any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(new ExecutionResultDto());
+
+        when(submissionMapper.toEntity(anyList(), eq(submission)))
+                .thenReturn(submission);
+
+        // WHEN
+        submissionService.submitCode(dto, user);
+
+        // THEN
+        verify(submissionRepository, atLeast(3)).save(any()); // saved for each test case
+        verify(judge0Client, times(3)).executeAndCompare(any(), any(), any(), any(), anyInt(), anyInt());
     }
 
+    // -------------------------------------------------------------------------
+    // TEST 2: submitCode() when problem does not exist
+    // -------------------------------------------------------------------------
     @Test
-    void submitCode_ShouldThrowIfUserNotFound() {
-        SubmissionRequestDto requestDto = SubmissionRequestDto.builder()
-                .userId(99L)
-                .problemId(2L)
-                .build();
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+    void submitCode_ShouldThrow_WhenProblemNotFound() {
+        SubmissionRequestDto dto = new SubmissionRequestDto();
+        dto.setProblemId(999L);
+        User user = new User();
 
-        try {
-            submissionService.submitCode(requestDto);
-        } catch (IllegalArgumentException ex) {
-            assertThat(ex.getMessage()).isEqualTo("User not found");
-        }
+        when(problemRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> submissionService.submitCode(dto, user));
     }
 
+    // -------------------------------------------------------------------------
+    // TEST 3: getSubmissionsByUser()
+    // -------------------------------------------------------------------------
     @Test
-    void submitCode_ShouldThrowIfProblemNotFound() {
-        SubmissionRequestDto requestDto = SubmissionRequestDto.builder()
-                .userId(1L)
-                .problemId(99L)
-                .build();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
-        when(problemRepository.findById(99L)).thenReturn(Optional.empty());
+    void getSubmissionsByUser_ShouldReturnMappedList() {
+        List<Submission> submissions = List.of(new Submission(), new Submission());
 
-        try {
-            submissionService.submitCode(requestDto);
-        } catch (IllegalArgumentException ex) {
-            assertThat(ex.getMessage()).isEqualTo("Problem not found");
-        }
+        when(submissionRepository.findByUserId(10L)).thenReturn(submissions);
+        when(submissionMapper.toListDto(submissions))
+                .thenReturn(List.of(new SubmissionListDto()));
+
+        List<SubmissionListDto> result = submissionService.getSubmissionsByUser(10L);
+
+        assertEquals(1, result.size());
+        verify(submissionRepository).findByUserId(10L);
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 4: getSubmissionStatusById()
+    // -------------------------------------------------------------------------
+    @Test
+    void getSubmissionStatusById_ShouldReturnMappedDto() {
+        Submission submission = new Submission();
+        submission.setId(100L);
+
+        when(submissionRepository.findById(100L)).thenReturn(Optional.of(submission));
+        when(submissionMapper.toListDto(submission))
+                .thenReturn(new SubmissionListDto());
+
+        SubmissionListDto dto = submissionService.getSubmissionStatusById(100L);
+
+        assertNotNull(dto);
+        verify(submissionRepository).findById(100L);
     }
 }

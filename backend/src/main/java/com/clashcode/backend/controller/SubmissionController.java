@@ -23,18 +23,27 @@ public class SubmissionController {
 
     @PostMapping("/submit")
     public ResponseEntity<Void> submitCode(
-            @RequestBody SubmissionRequestDto submissionRequestDto)
-    {
-        submissionService.submitCode(submissionRequestDto);
+            @RequestBody SubmissionRequestDto submissionRequestDto,
+            @AuthenticationPrincipal User user
+    ) {
+        if (user == null) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+        submissionService.submitCode(submissionRequestDto, user);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/me")
+    @GetMapping("/my-submissions")
     public ResponseEntity<List<SubmissionListDto>> getMySubmissions(@AuthenticationPrincipal User user) {
         if (user == null) {
             throw new UnauthorizedException("User not authenticated");
         }
-        List<SubmissionListDto> submissions = submissionService.getSubmissionsByUser(user.getId());
-        return ResponseEntity.ok(submissions);
+        return ResponseEntity.ok(submissionService.getSubmissionsByUser(user.getId()));
+    }
+
+
+    @GetMapping("/status/{submissionId}")
+    public ResponseEntity<SubmissionListDto> getSubmissionStatusById(@PathVariable Long submissionId) {
+        return ResponseEntity.ok(submissionService.getSubmissionStatusById(submissionId));
     }
 }

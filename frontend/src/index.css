@@ -1,14 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 html, body {
-  scrollbar-width: none; /* Firefox */
+  overflow: overlay; /* Deprecated but makes scrollbar overlay */
+  scrollbar-gutter: stable; /* Prevents layout shift */
+}
+
+/* For modern browsers - overlay scrollbar */
+html, body {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox - hides scrollbar */
+  -ms-overflow-style: none; /* IE/Edge - hides scrollbar */
 }
 
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none; /* Chrome, Safari - hides scrollbar */
 }
 
 

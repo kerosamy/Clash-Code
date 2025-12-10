@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.ExecutionResultDto;
 import com.clashcode.backend.judge.CodeExecutor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -13,33 +14,32 @@ import java.util.List;
 
 @Component
 public class Judge0Client implements CodeExecutor {
-    private final String JUDGE0_URL = "http://localhost:2358";
+    @Value("${clashcode.judge0.url}")
+    private String JUDGE0_URL ;
     private final String JUDGE0_SUBMIT_URL = "/submissions/?base64_encoded=false&wait=false";
     private final Judge0Mapper mapper = new Judge0Mapper();
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public List<ExecutionResultDto> executeBatch(
-            String sourceCode,
-            String language,
-            List<String> testCases,
-            List<String> expectedResults,
-            Integer timeLimit,
-            Integer memoryLimit
-    ){
-        List<ExecutionResultDto> results = new ArrayList<>();
-        for (int i = 0; i < testCases.size(); i++) {
-            Judge0TokenDto judge0TokenDto = submitCode(sourceCode,
-                                            testCases.get(i),
+    public ExecutionResultDto executeAndCompare(
+        String sourceCode,
+        String language,
+        String testCase,
+        String expectedResult,
+        Integer timeLimit,
+        Integer memoryLimit
+    ) {
+        Judge0TokenDto judge0TokenDto = submitCode(
+                                            sourceCode,
+                                            testCase,
                                             language,
-                                            expectedResults.get(i),
+                                            expectedResult,
                                             timeLimit,
-                                            memoryLimit);
+                                            memoryLimit
+                                        );
 
-            Judge0ResponseDto dto = waitForResult(judge0TokenDto);
-            results.add(mapper.toExecutionResultDto(dto));
-        }
-        return results;
+        Judge0ResponseDto dto = waitForResult(judge0TokenDto);
+        return  mapper.toExecutionResultDto(dto);
     };
     @Override
     public String executeAndReturnOutput(
