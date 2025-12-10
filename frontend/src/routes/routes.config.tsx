@@ -27,6 +27,11 @@ import Requested from '../pages/friends/Requested';
 import Pending from '../pages/friends/Pending';
 import AddFriend from '../pages/friends/AddFriend';
 
+// Suggest Problem sub-pages
+import ProblemInfo from '../pages/suggestProblem/ProblemInfo';
+import ProblemStatment from '../pages/suggestProblem/ProblemStatment';
+import TestCases from '../pages/suggestProblem/TestCases';
+
 // Icons
 import ProfileIcon from '../assets/icons/profile.svg';
 import FriendsIcon from '../assets/icons/friends.svg';
@@ -45,6 +50,9 @@ import SubmitsIcon from '../assets/icons/subimt.svg';
 import { UserRole } from '../enums/UserRole';
 import UserManagement from '../pages/UserManagemen';
 import ReviewProblems from '../pages/ReviewProblems';
+import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.svg';
+import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
+import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 
 export interface PageConfig {
   path: string;
@@ -116,7 +124,18 @@ export const routes: RouteConfig[] = [
   },
   { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
-  { path: 'add-problem', name: 'Add Problem', icon: AddProblemIcon, component: AddProblem },
+  {
+    path: 'add-problem',
+    name: 'Add Problem',
+    icon: AddProblemIcon,
+    component: AddProblem,
+    children: [
+      { index: true, component: () => <Navigate to="info" replace /> },
+      { path: 'info' , component: ProblemInfo },
+      { path: 'statement' , component: ProblemStatment },
+      { path: 'test-cases', component: TestCases }
+    ]
+  },
   // admin and super admin 
   {
     path: 'review-problems',
@@ -153,4 +172,9 @@ export const friendsSubRoutes: RouteConfig[] = [
 export const ProblemSubRoutes: RouteConfig[] = [
   { path: '', name: 'Problem Statment', icon: ProblemDetailsIcon, component: ProblemDetails },
   { path: 'submit', name: 'Submit Solution', icon: SubmitsIcon, component: Submit },
+];
+export const SuggestProblemSubRoutes: RouteConfig[] = [
+  {path: 'info', name: 'Problem Info', icon: ProblemInfoIcon, component: ProblemInfo },
+  {path: 'statement', name: 'Problem Statment', icon: WriteProblemStatmentIcon, component: ProblemStatment },
+  {path: 'test-cases', name: 'Test Cases', icon: TestCasesIcon, component: TestCases },
 ];
