@@ -56,4 +56,7 @@ public class Submission {
     @JoinColumn(name = "problem_id" , nullable = false)
     private Problem problem;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id")
+    private Match match;
 }
