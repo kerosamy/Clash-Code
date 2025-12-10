@@ -1,10 +1,5 @@
-
-const RECOVERY_OPTIONS = [
-  { value: "MOTHERS_FRIEND", label: "What is your mother's friend name?" },
-  { value: "FIRST_PET", label: "What was the name of your first pet?" },
-  { value: "FIRST_CITY", label: "What was the first city you lived in?" },
-  { value: "FAVORITE_MOVIE", label: "What is your favorite movie?" },
-];
+import React from "react";
+import { RECOVERY_OPTIONS } from "../../utils/recoveryQuestions";
 
 interface RecoveryQuestionModalProps {
   isOpen: boolean;
@@ -41,13 +36,12 @@ export default function RecoveryQuestionModal({
         >
           <option value="">Select recovery question</option>
           
-          {/* STEP 2: UPDATE THE MAP FUNCTION */}
           {RECOVERY_OPTIONS.map((option) => (
             <option 
               key={option.value} 
-              value={option.value} // This sends "MOTHERS_FRIEND" to state/backend
+              value={option.value}
             >
-              {option.label}       {/* This shows "What is your mother..." to user */}
+              {option.label}
             </option>
           ))}
         </select>

@@ -3,16 +3,14 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
-<<<<<<< HEAD
 import com.clashcode.backend.dto.AuthResponseDto;
-=======
->>>>>>> e3b97ec (full password recovery implementation)
 import com.clashcode.backend.service.AuthService;
 import com.clashcode.backend.service.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,9 +28,13 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterUserDto registerUserDto) {
-        User registeredUser = authService.signup(registerUserDto);
-        return buildAuthResponse(registeredUser);
+    public ResponseEntity<?> register(@RequestBody RegisterUserDto registerUserDto) {
+        try {
+            User registeredUser = authService.signup(registerUserDto);
+            return buildAuthResponse(registeredUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
@@ -44,7 +46,10 @@ public class AuthController {
     @PostMapping("/recovery-question")
     public ResponseEntity<String> getRecoveryQuestion(@RequestBody String email) {
         try {
+            System.out.println("ZZZZ"+email);
             String question = authService.getRecoveryQuestion(email);
+            System.out.println("LLLLL"+email);
+
             return ResponseEntity.ok(question);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

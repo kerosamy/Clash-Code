@@ -1,5 +1,15 @@
 import { apiRequest } from "./api";
 
+export interface VerifyRecoveryRequest {
+  email: string;
+  answer: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  newPassword: string;
+}
+
 export interface RegisterRequest {
   username: string;
   email: string;
@@ -74,4 +84,30 @@ export const completeRegistration = async (username: string) => {
 
 export const logout = () => {
   localStorage.clear();
+}
+
+export const fetchRecoveryQuestion = async (email: string): Promise<string> => {
+  // Note: We explicitly set Content-Type to text/plain as the backend expects raw body
+  return apiRequest<string>({
+    method: "POST",
+    url: "/auth/recovery-question",
+    data: email, 
+    headers: { "Content-Type": "text/plain" }, 
+  });
+};
+
+export const verifyRecoveryAnswer = async (data: VerifyRecoveryRequest): Promise<void> => {
+  return apiRequest<void>({
+    method: "POST",
+    url: "/auth/verify-recovery",
+    data,
+  });
+};
+
+export const resetPassword = async (data: ResetPasswordRequest): Promise<void> => {
+  return apiRequest<void>({
+    method: "POST",
+    url: "/auth/reset-password",
+    data,
+  });
 };

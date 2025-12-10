@@ -2,58 +2,18 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
 import PasswordField from "../components/authentication/PasswordField.tsx";
-
-// ===== Backend calls =====
-
-async function handleResponse(res: Response) {
-  // If the response is NOT ok (e.g., 400 or 500), parse the error message
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(errorText || "An unexpected error occurred.");
-  }
-  
-  // If res.ok is true (Status 200), we return nothing because 
-  // the backend sends an empty body for success.
-}
-
-async function fetchRecoveryQuestion(email: string) {
-  const res = await fetch("http://localhost:8080/auth/recovery-question", {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: email,
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  // This one still returns a string (the question), so we parse it.
-  const questionString = await res.text();
-  return questionString;
-}
-
-async function verifyRecoveryAnswer(email: string, answer: string) {
-  const res = await fetch("http://localhost:8080/auth/verify-recovery", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    // Keys match VerifyRecoveryDto fields
-    body: JSON.stringify({ email, answer }),
-  });
-  
-  await handleResponse(res); // Will throw if 400, otherwise succeeds silently
-}
-
-async function resetPassword(email: string, newPassword: string) {
-  const res = await fetch("http://localhost:8080/auth/reset-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    // Keys match PasswordResetDto fields
-    body: JSON.stringify({ email, newPassword }),
-  });
-  
-  await handleResponse(res); // Will throw if 400, otherwise succeeds silently
-}
-// ==========================
+import { 
+  fetchRecoveryQuestion, 
+  verifyRecoveryAnswer, 
+  resetPassword 
+} from "../services/AuthService.ts"; 
+import {
+  validateEmail,
+  validateRecoveryAnswer,
+  validatePassword,
+  validatePasswordMatch
+} from "../utils/validation";
+import { getQuestionDisplayText } from "../utils/recoveryQuestions";
 
 export default function PasswordRecovery() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -75,44 +35,18 @@ export default function PasswordRecovery() {
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
-  // ---------------- VALIDATION ----------------
-  const validateEmail = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateAnswer = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!recoveryAnswer.trim()) {
-      newErrors.recoveryAnswer = "Please enter an answer.";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateNewPassword = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (newPassword.length < 8 || newPassword.length > 64) {
-      newErrors.newPassword = "Password must be 8–64 characters.";
-    }
-    if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match.";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   // ---------------- STEP 1: Fetch question ----------------
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     setIsGoogleUser(false);
 
-    if (!validateEmail()) return;
+    // Validation using Utils
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setErrors({ email: emailValidation.error || "Invalid email" });
+      return;
+    }
 
     try {
       const result = await fetchRecoveryQuestion(email);
@@ -122,10 +56,7 @@ export default function PasswordRecovery() {
       const msg = err.message || "";
 
       // Handle Google Account Check
-      if (
-        msg.includes("GOOGLE_USER_DETECTED") ||
-        msg.includes("User does not have a recovery question")
-      ) {
+      if (msg.includes("Google")) {
         setIsGoogleUser(true);
       } else {
         setErrors({ email: msg || "Email not found." });
@@ -138,11 +69,15 @@ export default function PasswordRecovery() {
     e.preventDefault();
     setErrors({});
 
-    if (!validateAnswer()) return;
+    // Validation using Utils
+    const answerValidation = validateRecoveryAnswer(recoveryAnswer);
+    if (!answerValidation.isValid) {
+      setErrors({ recoveryAnswer: answerValidation.error || "Invalid answer" });
+      return;
+    }
 
     try {
-      // Expecting empty 200 OK on success
-      await verifyRecoveryAnswer(email, recoveryAnswer);
+      await verifyRecoveryAnswer({ email, answer: recoveryAnswer });
       setStep(3);
     } catch (err: any) {
       setErrors({ recoveryAnswer: err.message || "Incorrect answer." });
@@ -154,11 +89,28 @@ export default function PasswordRecovery() {
     e.preventDefault();
     setErrors({});
 
-    if (!validateNewPassword()) return;
+    const newErrors: { [key: string]: string } = {};
+
+    // Validate Password format
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      newErrors.newPassword = passwordValidation.error!;
+    }
+
+    // Validate Password Match
+    const matchValidation = validatePasswordMatch(newPassword, confirmPassword);
+    if (!matchValidation.isValid) {
+      newErrors.confirmPassword = matchValidation.error!;
+    }
+
+    // If there are validation errors, stop here
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     try {
-      // Expecting empty 200 OK on success
-      await resetPassword(email, newPassword);
+      await resetPassword({ email, newPassword });
       alert("Your password has been reset successfully!");
       navigate("/log-in");
     } catch (err: any) {
@@ -246,7 +198,7 @@ export default function PasswordRecovery() {
               >
                 <p className="text-gray-300 text-sm">Recovery Question:</p>
                 <div className="bg-background p-3 rounded-button border border-gray-600 text-center font-semibold">
-                  {recoveryQuestion}
+                  {getQuestionDisplayText(recoveryQuestion)}
                 </div>
 
                 <InputField

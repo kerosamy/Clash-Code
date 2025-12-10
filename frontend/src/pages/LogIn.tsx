@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../components/authentication/InputField';
 import PasswordField from '../components/authentication/PasswordField';
-// ADJUST THIS PATH: Import the login function and type from your api file
 import { loginUser, type LoginRequest } from '../services/AuthService';
 import { getUsername } from '../utils/jwtDecoder';
+import { validateEmailOrUsername, validatePassword } from '../utils/validation';
 
 export default function LogIn() {
-  const [email, setEmail] = useState(''); // Acts as 'username' or 'email'
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // UI States
   const [errors, setErrors] = useState({ email: '', password: '' });
-  const [apiError, setApiError] = useState(''); // For backend errors (e.g. "Bad credentials")
+  const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -24,19 +23,17 @@ export default function LogIn() {
     setApiError('');
     let formValid = true;
 
-    if (!email.trim()) {
-      newErrors.email = 'Email/Username is required';
-      formValid = false;
-    } else if (email.length < 4) {
-      newErrors.email = 'Username/Email is too short';
+    // Validate email/username
+    const emailValidation = validateEmailOrUsername(email);
+    if (!emailValidation.isValid) {
+      newErrors.email = emailValidation.error!;
       formValid = false;
     }
 
-    if (!password.trim()) {
-      newErrors.password = 'Password is required';
-      formValid = false;
-    } else if (password.length < 8 || password.length > 64) {
-      newErrors.password = 'Password must be 8–64 characters long';
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      newErrors.password = passwordValidation.error!;
       formValid = false;
     }
 
@@ -56,17 +53,17 @@ export default function LogIn() {
       navigate(`/profile/${getUsername()}/overview`);
 
     } catch (err: any) {
-      setApiError(err.message || 'Login failed. Please try again.');
+      setApiError(err.error || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-      sessionStorage.setItem('oauth_flow', 'login');
-      window.location.href = "http://localhost:8080/oauth2/authorization/google";
-    };
-  // Basic check for button enable state
+    sessionStorage.setItem('oauth_flow', 'login');
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  };
+
   const isFormValid = email.length >= 4 && password.length >= 8 && password.length <= 64;
 
   return (
@@ -76,7 +73,6 @@ export default function LogIn() {
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
         </div>
 
-        {/* Global API Error Message */}
         {apiError && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500 text-red-100 text-sm rounded text-center">
             {apiError}
@@ -111,12 +107,7 @@ export default function LogIn() {
               ${(!isFormValid || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
             `}
           >
-            {isLoading ? (
-               // Simple Loading Spinner or Text
-               <span>Logging in...</span>
-            ) : (
-               "Log In"
-            )}
+            {isLoading ? <span>Logging in...</span> : "Log In"}
           </button>
         </form>
 
@@ -137,7 +128,7 @@ export default function LogIn() {
         </button>
 
         <div className="text-center text-sm mt-4">
-          <span>Don’t have an account? </span>
+          <span>Don't have an account? </span>
           <Link to="/sign-up" className="text-orange hover:underline">
             Sign up
           </Link>

@@ -55,7 +55,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Email not found"));
 
         if (user.getRecoveryQuestion() == null) {
-            throw new RuntimeException("User does not have a recovery question");
+            throw new RuntimeException("Google account user");
         }
         return user.getRecoveryQuestion().name();
     }

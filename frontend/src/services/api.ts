@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "http://localhost:8080/";
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -11,7 +11,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token && token !== "undefined" && config.headers && !config.url?.includes("/auth")){ 
-    config.headers.Authorization = `Bearer ${token}`; 
+    config.headers.Authorization = Bearer ${token}; 
   }
   return config;
 });
@@ -26,7 +26,7 @@ interface ErrorResponse {
 const handleApiError = (error: AxiosError<ErrorResponse>): never => {
   if (error.response) {
     const data = error.response.data;
-    const message = data?.message ?? `API Error: ${error.response.status}`;
+    const message = data?.message ?? API Error: ${error.response.status};
     throw new Error(message);
   }
   else if (error.request) {
