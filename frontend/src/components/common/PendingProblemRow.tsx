@@ -1,12 +1,11 @@
 import React from "react";
 
-// Grid: Added [&>*:nth-child(n)] selectors to force centering on specific columns (Index, Approve, Reject)
-// This ensures that if you use this string for your Header row, the text "Approve"/"Reject" will center automatically too.
+// Grid: Added click handling styles
 export const PENDING_GRID = 
   "grid grid-cols-[80px_2fr_1fr_100px_100px_100px] gap-4 px-6 py-2 items-center border-b border-white/5 last:border-0 " +
-  "[&>*:first-child]:justify-self-center " + // Centers the Index (#) column
-  "[&>*:nth-child(5)]:justify-self-center " + // Centers the Approve column content
-  "[&>*:nth-child(6)]:justify-self-center";   // Centers the Reject column content
+  "[&>*:first-child]:justify-self-center " + 
+  "[&>*:nth-child(5)]:justify-self-center " + 
+  "[&>*:nth-child(6)]:justify-self-center";
 
 interface PendingProblemRowProps {
   id: number;
@@ -15,6 +14,9 @@ interface PendingProblemRowProps {
   author: string | null;
   onApprove: () => void;
   onReject: () => void;
+  // New props for navigation
+  onRowClick: () => void;
+  onAuthorClick: () => void;
 }
 
 export default function PendingProblemRow({
@@ -24,12 +26,15 @@ export default function PendingProblemRow({
   author,
   onApprove,
   onReject,
+  onRowClick,
+  onAuthorClick,
 }: PendingProblemRowProps) {
   return (
     <div
-      className={`${PENDING_GRID} hover:bg-sidebar/30 transition-all duration-200 group`}
+      onClick={onRowClick}
+      className={`${PENDING_GRID} hover:bg-sidebar/30 transition-all duration-200 group cursor-pointer`}
     >
-      {/* Index (#) - Centered by Grid Class */}
+      {/* Index (#) */}
       <span className="text-text/60 group-hover:text-text font-anta text-xs truncate transition-colors">
         {index}
       </span>
@@ -39,10 +44,16 @@ export default function PendingProblemRow({
         {name}
       </span>
 
-      {/* Author */}
-      <span className="text-text/60 font-anta text-xs truncate">
+      {/* Author - Clickable */}
+      <span className="text-text/80 font-anta text-xs truncate">
         {author ? (
-          <span className="px-2 py-0.5 rounded bg-white/5 text-text/80">
+          <span 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent row click
+              onAuthorClick();
+            }}
+            className="px-2 py-0.5 rounded bg-white/5 text-text/80 hover:bg-orange/20 hover:text-orange cursor-pointer transition-colors"
+          >
             @{author}
           </span>
         ) : (
@@ -53,9 +64,12 @@ export default function PendingProblemRow({
       {/* Empty column (Spacer) */}
       <span></span>
 
-      {/* Approve Button - Centered by Grid Class */}
+      {/* Approve Button */}
       <button
-        onClick={onApprove}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent row click
+          onApprove();
+        }}
         className="
             flex items-center justify-center
             border border-emerald-500/30 bg-emerald-500/5 text-emerald-400
@@ -68,9 +82,12 @@ export default function PendingProblemRow({
         Approve
       </button>
 
-      {/* Reject Button - Centered by Grid Class */}
+      {/* Reject Button */}
       <button
-        onClick={onReject}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent row click
+          onReject();
+        }}
         className="
             flex items-center justify-center
             border border-rose-500/30 bg-rose-500/5 text-rose-400

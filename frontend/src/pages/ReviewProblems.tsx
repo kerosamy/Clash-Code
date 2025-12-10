@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Added import
 import Board from "../components/common/Board";
 import PendingProblemRow from "../components/common/PendingProblemRow";
 import {
@@ -14,6 +15,7 @@ interface PendingProblemRowProps {
 }
 
 export default function ReviewProblems() {
+  const navigate = useNavigate(); // Hook initialized
   const [problems, setProblems] = useState<PendingProblemRowProps[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -30,7 +32,6 @@ export default function ReviewProblems() {
       setProblems(mapped);
       setPage(pageToLoad);
       setTotalPages(backendPage.totalPages);
-      // Assuming backendPage returns totalElements for the count
       setTotalProblems(backendPage.totalElements || 0); 
     } catch (err) {
       console.error("Failed to fetch pending problems", err);
@@ -62,7 +63,6 @@ export default function ReviewProblems() {
   };
 
   return (
-    // Added p-8 for outer margins/padding around the whole content
     <div className="flex flex-col h-[90vh] p-8 space-y-6">
       
       {/* Header Section */}
@@ -91,7 +91,7 @@ export default function ReviewProblems() {
         </div>
       </div>
 
-      {/* Table Area - Wrapped in a container for specific background/border styling */}
+      {/* Table Area */}
       <div className="flex-1 overflow-hidden rounded-xl border border-white/5 bg-sidebar/10 shadow-xl">
         <div className="h-full overflow-y-auto custom-scroll">
           <Board<PendingProblemRowProps & { onApprove: () => void; onReject: () => void }>
@@ -101,7 +101,6 @@ export default function ReviewProblems() {
               onApprove: () => handleApprove(p.id),
               onReject: () => handleReject(p.id),
             }))}
-            // Note: The Header alignment relies on the PENDING_GRID definition in PendingProblemRow
             columns={["#", "Name", "Author", "", "Approve", "Reject"]}
             renderRow={(problem) => (
               <PendingProblemRow
@@ -112,6 +111,9 @@ export default function ReviewProblems() {
                 author={problem.author}
                 onApprove={problem.onApprove}
                 onReject={problem.onReject}
+                // Pass navigation handlers here
+                onRowClick={() => navigate(`/practice/problem/${problem.id}`)}
+                onAuthorClick={() => navigate(`/profile/${problem.author}/overview`)}
               />
             )}
           />
