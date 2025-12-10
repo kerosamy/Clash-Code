@@ -5,6 +5,7 @@ import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.model.User;
+import com.clashcode.backend.notification.event.EventPublisher;
 import com.clashcode.backend.repository.UserRepository;
 import com.clashcode.backend.mapper.UserMapper;
 
@@ -22,15 +23,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper = new UserMapper();
+    private final EventPublisher eventPublisher;
 
     public AuthService(
             UserRepository userRepository,
             AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            EventPublisher eventPublisher
     ) {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     public User signup(RegisterUserDto input) {
@@ -46,6 +50,7 @@ public class AuthService {
         String password = passwordEncoder.encode(input.getPassword());
         User user = userMapper.toUser(input, password);
 
+        eventPublisher.publishUserSignedUp(user.getUsername(), user.getEmail());
         return userRepository.save(user);
     }
 

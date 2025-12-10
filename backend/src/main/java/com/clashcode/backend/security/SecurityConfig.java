@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
-
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN") // Most restrictive first
                         .requestMatchers("/admin/**").hasRole("ADMIN") // Super_Admin inherits Admin roles
                         .requestMatchers("/users/**").hasRole("USER") // Everyone authenticated has User roles
