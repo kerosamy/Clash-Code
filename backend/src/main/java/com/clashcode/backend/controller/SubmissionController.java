@@ -54,4 +54,9 @@ public class SubmissionController {
     public ResponseEntity<SubmissionDetailsDto> getSubmissionDetailsById(@PathVariable Long submissionId) {
         return ResponseEntity.ok(submissionService.getSubmissionDetailsById(submissionId));
     }
+
+    @GetMapping("/problem-title/{problemId}")
+    public ResponseEntity<String> getProblemTitleById(@PathVariable Long problemId) {
+        return ResponseEntity.ok(submissionService.getProblemTitleById(problemId));
+    }
 }

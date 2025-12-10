@@ -86,4 +86,10 @@ public class SubmissionService {
                 .orElseThrow(() -> new RuntimeException("Submission not found"));
         return submissionMapper.toDetailsDto(submission);
     }
+
+    public String getProblemTitleById(Long problemId) {
+        return problemRepository.findById(problemId)
+                .map(Problem::getTitle)
+                .orElseThrow(() -> new RuntimeException("Problem not found"));
+    }
 }

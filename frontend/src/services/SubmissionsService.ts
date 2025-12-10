@@ -67,6 +67,13 @@ export async function getSubmissionStatus(
   });
 }
 
+export async function getProblemTitle(problemId: number): Promise<string> {
+  return apiRequest<string>({
+    method: "GET",
+    url: `/submissions/problem-title/${problemId}`,
+  });
+}
+
 export async function getSubmissionDetails(
   submissionId: number
 ): Promise<SubmissionDetailsDto> {
