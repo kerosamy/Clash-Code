@@ -38,6 +38,7 @@ public class JwtService {
 
         User user = (User) userDetails;
         extraClaims.put("role", user.getRole().name());   // add extra details to jwt claims (user role)
+        extraClaims.put("username", user.getUsername());
 
         return generateToken(extraClaims, userDetails);
     }
