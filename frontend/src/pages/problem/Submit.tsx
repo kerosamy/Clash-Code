@@ -6,6 +6,7 @@ import Editor from "@monaco-editor/react";
 import { monacoLanguageMap } from "../../utils/languageMap";
 import { submitCode } from "../../services/SubmissionsService";
 import{ getProblemTitle } from "../../services/SubmissionsService";
+import { getUsername } from "../../utils/jwtDecoder";
 
 
 export default function Submit() {
@@ -40,7 +41,7 @@ export default function Submit() {
             submitCode(parseInt(id), code, selectedLang);
             setSubmitMessage("Code submitted successfully!");
             setTimeout(() => {
-            navigate(`/profile/${localStorage.getItem("username")}/submissions`);   // ⬅ REDIRECT HERE
+            navigate(`/profile/${getUsername()}/submissions`);   // ⬅ REDIRECT HERE
         }, 500);
         } catch (error) {
             setSubmitMessage("Failed to submit code. Please try again.");
