@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.LoginUserDto;
 import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import com.clashcode.backend.mapper.UserMapper;
@@ -44,6 +45,7 @@ public class AuthService {
 
         String password = passwordEncoder.encode(input.getPassword());
         User user = userMapper.toUser(input, password);
+
         return userRepository.save(user);
     }
 
@@ -64,12 +66,15 @@ public class AuthService {
         OAuth2User oauth = authenticationToken.getPrincipal();
         String email = oauth.getAttribute("email");
 
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setEmail(email);
                     return newUser;
                 });
+
+        user.setRole(Roles.USER);
+        return user;
     }
 
     public User completeGoogleSignUp(SignUpCompletionDto dto, OAuth2AuthenticationToken token) {
@@ -84,6 +89,7 @@ public class AuthService {
         newUser.setUsername(dto.getUsername());
         newUser.setCurrentRate(0);
         newUser.setMaxRate(0);
+        newUser.setRole(Roles.USER);
 
         return userRepository.save(newUser);
     }

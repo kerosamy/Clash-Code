@@ -6,6 +6,7 @@ import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.UserService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@PreAuthorize("hasRole('USER')")
 public class UserController {
 
     private final UserService userService;

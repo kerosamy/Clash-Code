@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.enums.Ranks;
+import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
@@ -76,4 +77,11 @@ public class UserService {
 
         return getProfile(user);
     }
+
+    public User updateUserRole(Long userId, Roles newRole) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.setRole(newRole);
+        return userRepository.save(user);
+    }
+
 }
