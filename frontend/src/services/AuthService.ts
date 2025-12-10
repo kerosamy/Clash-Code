@@ -21,8 +21,6 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  expiresIn: number;
-  username: string;
 }
 
 export const registerUser = async (data: RegisterRequest): Promise<LoginResponse> => {
@@ -32,8 +30,6 @@ export const registerUser = async (data: RegisterRequest): Promise<LoginResponse
     data,
   });
   localStorage.setItem("token", response.token);
-  localStorage.setItem("tokenExpiry", response.expiresIn.toString());
-  localStorage.setItem('username', response.username); 
   return response;
 };
 
@@ -44,8 +40,6 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     data: credentials,
   });
   localStorage.setItem("token", response.token);
-  localStorage.setItem("tokenExpiry", response.expiresIn.toString());
-  localStorage.setItem('username', response.username); 
   return response;
 };
 
@@ -73,7 +67,9 @@ export const completeRegistration = async (username: string) => {
   });
 
   localStorage.setItem("token", response.token);
-  localStorage.setItem("tokenExpiry", response.expiresIn.toString());
-  localStorage.setItem('username', response.username); 
   return response;
+};
+
+export const logout = () => {
+  localStorage.removeItem("token");
 };

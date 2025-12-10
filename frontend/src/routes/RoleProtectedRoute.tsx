@@ -3,17 +3,17 @@ import { type ReactNode } from 'react';
 import { hasAnyRole } from '../utils/rolesChecker';
 import type { UserRole } from '../enums/UserRole';
 
-interface ProtectedRouteProps {
+interface RoleProtectedRouteProps {
   children: ReactNode;
   allowedRoles: UserRole[];
   redirectTo?: string;
 }
 
-const ProtectedRoute = ({ 
+const RoleProtectedRoute = ({ 
   children, 
   allowedRoles, 
   redirectTo = '/not-found' 
-}: ProtectedRouteProps) => {
+}: RoleProtectedRouteProps) => {
   if (!hasAnyRole(allowedRoles)) {
     return <Navigate to={redirectTo} replace />;
   }
@@ -21,4 +21,4 @@ const ProtectedRoute = ({
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+export default RoleProtectedRoute;

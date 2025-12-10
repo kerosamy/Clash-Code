@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
 import { routes } from '../routes/routes.config';
 import { useFilteredRoutes } from '../hooks/useFilteredRoutes';
+import { getUsername } from "../utils/jwtDecoder";
 
 export default function Sidebar() {
   const sidebarRoutes = routes.filter(route => !route.path.includes('practice/prob'));
-  const loggedInUsername = localStorage.getItem("username");
-  
+  const loggedInUsername = getUsername()
   const filteredRoutes = useFilteredRoutes(sidebarRoutes);
 
   return (

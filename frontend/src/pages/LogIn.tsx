@@ -4,6 +4,7 @@ import InputField from '../components/authentication/InputField';
 import PasswordField from '../components/authentication/PasswordField';
 // ADJUST THIS PATH: Import the login function and type from your api file
 import { loginUser, type LoginRequest } from '../services/AuthService';
+import { getUsername } from '../utils/jwtDecoder';
 
 export default function LogIn() {
   const [email, setEmail] = useState(''); // Acts as 'username' or 'email'
@@ -50,9 +51,9 @@ export default function LogIn() {
         password: password
       };
 
-      const response = await loginUser(credentials);
+      await loginUser(credentials);
     
-      navigate(`/profile/${response.username}/overview`);
+      navigate(`/profile/${getUsername()}/overview`);
 
     } catch (err: any) {
       setApiError(err.message || 'Login failed. Please try again.');
