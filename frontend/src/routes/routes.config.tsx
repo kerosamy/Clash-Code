@@ -15,6 +15,7 @@ import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
 import ProblemDetails from '../pages/problem/ProblemDetails';
 import Submit from '../pages/problem/Submit';
+import MatchState from '../pages/match/MatchState'
 
 // Profile sub-pages
 import ProfileOverview from '../pages/profile/ProfileOverview';
@@ -123,7 +124,18 @@ export const routes: RouteConfig[] = [
       { path: 'submit', component: Submit }
     ]
   },
-  { path: 'play-game', name: 'Game Play', icon: SwordIcon, component: PlayGame },
+
+  { 
+    path: 'play-game/:id', 
+    name: 'Game Play', 
+    icon: SwordIcon, 
+    component: PlayGame,
+    children: [
+      { index: true, component: ProblemDetails }, 
+      { path: 'submit', component: Submit },
+      { path: 'match-state', component: MatchState } 
+    ]
+  },
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
   {
     path: 'add-problem',
@@ -155,6 +167,8 @@ export const routes: RouteConfig[] = [
   },
   { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
   { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
+
+
 ];
 
 // Used by TopNavigator to render tabs
@@ -179,4 +193,9 @@ export const SuggestProblemSubRoutes: RouteConfig[] = [
   {path: 'info', name: 'Problem Info', icon: ProblemInfoIcon, component: ProblemInfo },
   {path: 'statement', name: 'Problem Statment', icon: WriteProblemStatmentIcon, component: ProblemStatment },
   {path: 'test-cases', name: 'Test Cases', icon: TestCasesIcon, component: TestCases },
+];
+export const matchSubRoutes: RouteConfig[] = [
+  { path: '', name: 'Problem Statment', icon: ProblemDetailsIcon, component: ProblemDetails },
+  { path: 'submit', name: 'Submit Solution', icon: SubmitsIcon, component: Submit },
+  { path: 'match-state', name: 'Match State', icon: SwordIcon, component: MatchState },
 ];
