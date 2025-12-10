@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RankMapper {
-    public static int toRank(String outcome) {
+    public int toRank(String outcome) {
         return switch (outcome.toLowerCase()) {
             case "winner" -> 2;
             case "loser" -> 1;

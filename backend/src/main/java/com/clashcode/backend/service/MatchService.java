@@ -106,16 +106,15 @@ public class MatchService {
     public void completeMatch(Match match, User winner) {
         if (match.getMatchState() == MatchState.COMPLETED) return;
 
-        MatchParticipant winnerParticipant = null;
-        MatchParticipant loserParticipant = null;
+        MatchParticipant winnerParticipant = match.getParticipants().stream()
+                .filter(mp -> mp.getUser().getId().equals(winner.getId()))
+                .findFirst()
+                .orElse(null);
 
-        for (MatchParticipant mp : match.getParticipants()) {
-            if (winner != null && mp.getUser().getId().equals(winner.getId())) {
-                winnerParticipant = mp;
-            } else {
-                loserParticipant = mp;
-            }
-        }
+        MatchParticipant loserParticipant = match.getParticipants().stream()
+                .filter(mp -> !mp.getUser().getId().equals(winner.getId()))
+                .findFirst()
+                .orElse(null);
 
         if (winnerParticipant != null && loserParticipant != null) {
             winnerParticipant.setRank(rankMapper.toRank("winner"));
@@ -126,6 +125,7 @@ public class MatchService {
         matchRepository.save(match);
         matchParticipantRepository.saveAll(match.getParticipants());
     }
+
 
     public void resignMatch(Long matchId, User resigningUser) {
         Match match = matchRepository.findById(matchId)
