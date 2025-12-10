@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Component
 public class MatchMapper {
 
-    public MatchResponseDto toDto(Match match) {
+    public MatchResponseDto toResponseDto(Match match) {
         return MatchResponseDto.builder()
                 .id(match.getId())
                 .startAt(match.getStartAt())
@@ -43,12 +43,14 @@ public class MatchMapper {
                 .gameMode(GameMode.valueOf(dto.getGameMode().name()))
                 .matchState(MatchState.ONGOING)
                 .problem(problem)
-               // .participants(new ArrayList<>())
                 .build();
     }
 
     public MatchParticipant createParticipant(User user, Match match) {
+        MatchParticipantId id = new MatchParticipantId(user.getId(), match.getId());
+
         return MatchParticipant.builder()
+                .id(id)
                 .user(user)
                 .match(match)
                 .rank(null)

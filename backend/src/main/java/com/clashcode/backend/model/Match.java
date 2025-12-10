@@ -26,7 +26,7 @@ public class Match {
     private LocalDateTime startAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    private Integer duration;
+    private Integer duration; //in minute
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

@@ -47,13 +47,10 @@ public class MatchService {
         MatchParticipant p1 = matchMapper.createParticipant(player1, savedMatch);
         MatchParticipant p2 = matchMapper.createParticipant(player2, savedMatch);
 
-        p1.setId(new MatchParticipantId(p1.getUser().getId(), savedMatch.getId()));
-        p2.setId(new MatchParticipantId(p2.getUser().getId(), savedMatch.getId()));
-
         List<MatchParticipant> participants = List.of(p1, p2);
         matchParticipantRepository.saveAll(participants);
 
         savedMatch.setParticipants(participants);
-        return matchMapper.toDto(savedMatch);
+        return matchMapper.toResponseDto(savedMatch);
     }
 }

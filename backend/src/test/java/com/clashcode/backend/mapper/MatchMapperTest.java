@@ -42,7 +42,7 @@ class MatchMapperTest {
         // Arrange
         CreateMatchRequestDto dto = new CreateMatchRequestDto();
         dto.setDuration(30);
-        dto.setGameMode(GameMode.CLASSIC);
+        dto.setGameMode(GameMode.UNRATED);
 
         // Act
         Match match = matchMapper.toMatchEntity(dto, problem);
@@ -50,7 +50,7 @@ class MatchMapperTest {
         // Assert
         assertNotNull(match);
         assertEquals(30, match.getDuration());
-        assertEquals(GameMode.CLASSIC, match.getGameMode());
+        assertEquals(GameMode.UNRATED, match.getGameMode());
         assertEquals(MatchState.ONGOING, match.getMatchState());
         assertEquals(problem, match.getProblem());
         assertNotNull(match.getStartAt());
@@ -61,16 +61,25 @@ class MatchMapperTest {
     @Test
     void CreateParticipant() {
         // Arrange
-        Match match = new Match();
+        Long userId = 10L;
+        Long matchId = 100L;
         Integer currentRate = 1200;
 
+        when(user1.getId()).thenReturn(userId);
         when(user1.getCurrentRate()).thenReturn(currentRate);
+
+        Match match = Match.builder().id(matchId).build();
 
         // Act
         MatchParticipant participant = matchMapper.createParticipant(user1, match);
 
         // Assert
         assertNotNull(participant);
+
+        assertNotNull(participant.getId(), "MatchParticipantId should not be null");
+        assertEquals(userId, participant.getId().getUserId());
+        assertEquals(matchId, participant.getId().getMatchId());
+
         assertEquals(user1, participant.getUser());
         assertEquals(match, participant.getMatch());
         assertNull(participant.getRank());
@@ -108,7 +117,7 @@ class MatchMapperTest {
         match.setParticipants(List.of(participant));
 
         // Act
-        MatchResponseDto responseDto = matchMapper.toDto(match);
+        MatchResponseDto responseDto = matchMapper.toResponseDto(match);
 
         // Assert
         assertNotNull(responseDto);
@@ -138,7 +147,7 @@ class MatchMapperTest {
                 .build();
 
         // Act
-        MatchResponseDto responseDto = matchMapper.toDto(match);
+        MatchResponseDto responseDto = matchMapper.toResponseDto(match);
 
         // Assert
         assertNotNull(responseDto);

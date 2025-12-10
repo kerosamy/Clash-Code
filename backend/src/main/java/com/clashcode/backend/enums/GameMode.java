@@ -1,6 +1,6 @@
 package com.clashcode.backend.enums;
 
 public enum GameMode {
-    CLASSIC,
+    UNRATED,
     RANKED,
 }

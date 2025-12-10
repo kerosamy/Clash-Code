@@ -49,14 +49,15 @@ class MatchServiceTest {
 
         User user1 = User.builder().id(p1Id).build();
         User user2 = User.builder().id(p2Id).build();
+
         Problem problem = new Problem();
         problem.setId(problemId);
 
         Match matchBeforeSave = new Match();
         Match matchSaved = Match.builder().id(matchId).build();
 
-        MatchParticipant part1 = MatchParticipant.builder().user(user1).build();
-        MatchParticipant part2 = MatchParticipant.builder().user(user2).build();
+        MatchParticipant p1 = MatchParticipant.builder().user(user1).build();
+        MatchParticipant p2 = MatchParticipant.builder().user(user2).build();
 
         MatchResponseDto expectedResponse = MatchResponseDto.builder().id(matchId).build();
 
@@ -67,10 +68,10 @@ class MatchServiceTest {
         when(matchMapper.toMatchEntity(reqDto, problem)).thenReturn(matchBeforeSave);
         when(matchRepository.save(matchBeforeSave)).thenReturn(matchSaved);
 
-        when(matchMapper.createParticipant(user1, matchSaved)).thenReturn(part1);
-        when(matchMapper.createParticipant(user2, matchSaved)).thenReturn(part2);
+        when(matchMapper.createParticipant(user1, matchSaved)).thenReturn(p1);
+        when(matchMapper.createParticipant(user2, matchSaved)).thenReturn(p2);
 
-        when(matchMapper.toDto(matchSaved)).thenReturn(expectedResponse);
+        when(matchMapper.toResponseDto(matchSaved)).thenReturn(expectedResponse);
 
         // Act
         MatchResponseDto result = matchService.createMatch(reqDto);
