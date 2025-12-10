@@ -34,14 +34,12 @@ public class MatchController {
 
     @PostMapping("/{matchId}/submit")
     public ResponseEntity<Void> submitCode (
-            @PathVariable Long matchId,
             @RequestBody SubmissionRequestDto submissionRequestDto,
             @AuthenticationPrincipal User user
     ) {
         if (user == null) {
             throw new UnauthorizedException("User not authenticated");
         }
-        submissionRequestDto.setMatchId(matchId);
         submissionService.submitCode(submissionRequestDto, user);
         return ResponseEntity.ok().build();
     }
@@ -50,4 +48,18 @@ public class MatchController {
     public List<MatchSubmissionLogDto> getMatchSubmissionLog(@PathVariable Long matchId) {
         return matchService.getMatchSubmissionLog(matchId);
     }
+
+    @PostMapping("/{matchId}/resign")
+    public ResponseEntity<Void> resignMatch(
+            @PathVariable Long matchId,
+            @AuthenticationPrincipal User user
+    ) {
+        if (user == null) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+
+        matchService.resignMatch(matchId, user);
+        return ResponseEntity.ok().build();
+    }
+
 }

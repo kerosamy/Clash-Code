@@ -69,6 +69,10 @@ public class SubmissionService {
         submissionRepository.save(submissionMapper.toEntity(executionResults, submission));
         problem.setSubmissionsCount(problem.getSubmissionsCount()+1);
         problemRepository.save(problem);
+
+        if(submission.getMatch() != null && submission.getStatus() == SubmissionStatus.ACCEPTED) {
+            matchService.completeMatch(submission.getMatch(), user);
+        }
     }
 
     public List<SubmissionListDto> getSubmissionsByUser(Long userId) {

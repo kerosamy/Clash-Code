@@ -5,6 +5,7 @@ import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.mapper.MatchMapper;
+import com.clashcode.backend.mapper.RankMapper;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
 import org.springframework.http.HttpStatus;
@@ -22,14 +23,27 @@ public class MatchService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final MatchMapper matchMapper;
     private final SubmissionRepository submissionRepository;
+    private final RankMapper rankMapper;
+    private final MatchScheduler matchScheduler;
 
-    public MatchService(UserRepository userRepository, ProblemRepository problemRepository, MatchRepository matchRepository, MatchParticipantRepository matchParticipantRepository, MatchMapper matchMapper, SubmissionRepository submissionRepository) {
+    public MatchService(
+            UserRepository userRepository,
+            ProblemRepository problemRepository,
+            MatchRepository matchRepository,
+            MatchParticipantRepository matchParticipantRepository,
+            MatchMapper matchMapper,
+            SubmissionRepository submissionRepository,
+            RankMapper rankMapper,
+            MatchScheduler matchScheduler
+    ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
         this.matchRepository = matchRepository;
         this.matchParticipantRepository = matchParticipantRepository;
         this.matchMapper = matchMapper;
         this.submissionRepository = submissionRepository;
+        this.rankMapper = rankMapper;
+        this.matchScheduler = matchScheduler;
     }
 
     public MatchResponseDto createMatch(CreateMatchRequestDto createMatchRequestDto) {
@@ -52,6 +66,7 @@ public class MatchService {
         matchParticipantRepository.saveAll(participants);
 
         savedMatch.setParticipants(participants);
+        matchScheduler.scheduleMatchEnd(savedMatch);
         return matchMapper.toResponseDto(savedMatch);
     }
 
@@ -68,9 +83,10 @@ public class MatchService {
                 .anyMatch(mp -> mp.getUser().getId().equals(user.getId()));
 
         if (!isParticipant) {
-            throw new IllegalArgumentException("User is not a participant in this match");
+            throw new IllegalArgumentException(
+                    "User " + user.getUsername() + " (ID: " + user.getId() + ") is not a participant in match " + matchId
+            );
         }
-
         return match;
     }
 
@@ -85,5 +101,45 @@ public class MatchService {
                     return matchMapper.toMatchSubmissionLogDto(particicpant, submissions);
                 })
                 .toList();
+    }
+
+    public void completeMatch(Match match, User winner) {
+        if (match.getMatchState() == MatchState.COMPLETED) return;
+
+        MatchParticipant winnerParticipant = null;
+        MatchParticipant loserParticipant = null;
+
+        for (MatchParticipant mp : match.getParticipants()) {
+            if (winner != null && mp.getUser().getId().equals(winner.getId())) {
+                winnerParticipant = mp;
+            } else {
+                loserParticipant = mp;
+            }
+        }
+
+        if (winnerParticipant != null && loserParticipant != null) {
+            winnerParticipant.setRank(rankMapper.toRank("winner"));
+            loserParticipant.setRank(rankMapper.toRank("loser"));
+        }
+
+        match.setMatchState(MatchState.COMPLETED);
+        matchRepository.save(match);
+        matchParticipantRepository.saveAll(match.getParticipants());
+    }
+
+    public void resignMatch(Long matchId, User resigningUser) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+
+        if (match.getMatchState() != MatchState.ONGOING) {
+            throw new IllegalStateException("Cannot resign a completed match");
+        }
+
+        MatchParticipant winnerParticipant = match.getParticipants().stream()
+                .filter(mp -> !mp.getUser().getId().equals(resigningUser.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Other participant not found"));
+
+        completeMatch(match, winnerParticipant.getUser());
     }
 }
