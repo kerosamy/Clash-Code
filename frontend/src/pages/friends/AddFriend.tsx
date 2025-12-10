@@ -45,7 +45,6 @@ export default function AddFriend() {
 
   const handleUsernameClick = (user: UserSearchResponse) => {
     console.log("Username clicked:", user.username);
-    // Navigate to profile by username
     navigate(`/profile/${user.username}/overview`);
   };
 

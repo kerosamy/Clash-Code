@@ -76,7 +76,8 @@ export default function SignUp() {
     await registerUser(requestData);
 
     // Redirect
-    navigate("/profile/1/overview");
+    navigate(`/profile/${username}/overview`);
+    
   } catch (err: any) {
     const errorMessage = err.message?.toLowerCase() || "";
 

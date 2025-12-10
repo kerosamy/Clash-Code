@@ -73,7 +73,7 @@ export interface RouteConfig {
 
 export const routes: RouteConfig[] = [
   {
-    path: 'profile/:id',
+    path: 'profile/:username',
     name: 'Profile',
     icon: ProfileIcon,
     component: Profile,
@@ -84,18 +84,19 @@ export const routes: RouteConfig[] = [
       { path: 'matches', component: Matches }
     ]
   },
-  { path: 'friends', 
-    name: 'Friends', 
-    icon: FriendsIcon, 
+  {
+    path: 'friends',
+    name: 'Friends',
+    icon: FriendsIcon,
     component: Friends,
     children: [
       { index: true, component: () => <Navigate to="my-friends" replace /> },
-      { path: 'my-friends', component: MyFriends }, 
+      { path: 'my-friends', component: MyFriends },
       { path: 'requested', component: Requested },
       { path: 'pending', component: Pending },
       { path: 'add-friend', component: AddFriend }
     ]
-   },
+  },
 
   { path: 'practice', name: 'Practice', icon: PracticeIcon, component: Practice },
   {
