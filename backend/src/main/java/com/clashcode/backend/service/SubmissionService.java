@@ -52,10 +52,13 @@ public class SubmissionService {
         List<String> outputs = testCaseService.getOutputTestCasesForProblem(problem);
 
         Submission submission = submissionMapper.toEntity(requestDto, user, problem, inputs.size());
-        Match match = matchRepository.findById(requestDto.getMatchId())
-                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
 
-        submission.setMatch(match);
+        if(requestDto.getMatchId()!=null) {
+            Match match = matchRepository.findById(requestDto.getMatchId())
+                    .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+            submission.setMatch(match);
+        }
+
         submissionRepository.save(submission);
 
         List<ExecutionResultDto> executionResults = new ArrayList<>();

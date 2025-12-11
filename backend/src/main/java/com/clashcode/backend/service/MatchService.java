@@ -248,4 +248,5 @@ public class MatchService {
 
         completeMatch(match, winnerParticipant.getUser());
     }
+
 }

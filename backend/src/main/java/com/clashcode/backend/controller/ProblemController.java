@@ -34,15 +34,18 @@ public class ProblemController {
         ProblemResponseDto problem = problemService.getProblemById(id);
         return ResponseEntity.ok(problem);
     }
-    @PostMapping
+
+    @PostMapping("/suggest")
     public ResponseEntity<Void> addProblem(
             @RequestPart("problem") ProblemRequestDto problemRequestDto,
             @RequestPart("testcases") List<MultipartFile> files,
             @AuthenticationPrincipal User user
     ) {
+        if(user == null) {
+            return ResponseEntity.badRequest().build();
+        }
         String username = user.getUsername();
         problemService.addProblem(problemRequestDto, files, username);
-
         return ResponseEntity.ok().build();
     }
 
@@ -51,7 +54,7 @@ public class ProblemController {
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
     ) {
-        Page<ProblemListDto> problems = problemService.getAllProblems(page, size);
+        Page<ProblemListDto> problems = problemService.getApprovedProblems(page, size);
         return ResponseEntity.ok(problems);
     }
 

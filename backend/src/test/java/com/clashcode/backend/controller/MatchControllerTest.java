@@ -1,11 +1,10 @@
 package com.clashcode.backend.controller;
 
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import com.clashcode.backend.dto.CreateMatchRequestDto;
+import com.clashcode.backend.dto.MatchParticipantDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
+import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.JwtService;
@@ -18,14 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
 
@@ -80,4 +76,34 @@ class MatchControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("User not authenticated"));
     }
+    @Test
+    @DisplayName("GET /matches/{matchId}/submission-log - Success")
+    void getMatchSubmissionLog_success() throws Exception {
+        MatchSubmissionLogDto logDto = MatchSubmissionLogDto.builder()
+                .playerId(1L)
+                .submissions(List.of()) // empty submissions for simplicity
+                .build();
+
+        when(matchService.getMatchSubmissionLog(123L)).thenReturn(List.of(logDto));
+
+        mockMvc.perform(get("/matches/123/submission-log"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].playerId").value(1));
+    }
+
+    @Test
+    @DisplayName("POST /matches/invite/{recipientUsername} - Success")
+    void invitePlayer_success() throws Exception {
+        User sender = new User();
+        sender.setId(1L);
+        sender.setUsername("senderUser");
+
+        // just do nothing when service is called
+
+        mockMvc.perform(post("/matches/invite/recipientUser")
+                        .principal(() -> "senderUser")) // AuthenticationPrincipal simulation
+                .andExpect(status().isOk());
+    }
+
 }

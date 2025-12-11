@@ -4,7 +4,9 @@ import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
+import org.springframework.stereotype.Component;
 
+@Component
 public class FriendStatusMapper {
 
     private FriendStatusMapper() {}

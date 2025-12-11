@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.SubmissionDetailsDto;
 import com.clashcode.backend.dto.SubmissionListDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.exception.GlobalExceptionHandler;
+import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.SubmissionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -59,6 +61,7 @@ public class SubmissionControllerTest {
     // 1) POST /submissions/submit - SUCCESS
     // ----------------------------------------------------------------
     @Test
+    @WithMockUser(username = "kero", roles = {"USER"})
     void submitCode_ShouldCallService_AndReturn200() throws Exception {
         // Arrange
         SubmissionRequestDto dto = new SubmissionRequestDto();
@@ -66,25 +69,20 @@ public class SubmissionControllerTest {
         dto.setCodeLanguage("PYTHON_3_8");
         dto.setProblemId(1L);
 
-        User mockUser = new User();
-        mockUser.setId(5L);
-        mockUser.setUsername("kero");
-
-        // Setup authentication
-        setupAuthentication(mockUser);
-
-        doNothing().when(submissionService).submitCode(any(SubmissionRequestDto.class), any(User.class));
+        // Mock user submission return
+        Submission dummySubmission = new Submission(); // you can fill fields if needed
+        when(submissionService.submitCode(any(SubmissionRequestDto.class), any(User.class)))
+                .thenReturn(dummySubmission);
 
         // Act & Assert
         mockMvc.perform(post("/submissions/submit")
-                        .principal(SecurityContextHolder.getContext().getAuthentication())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk());
 
+        // Verify service was called once
         verify(submissionService, times(1)).submitCode(any(SubmissionRequestDto.class), any(User.class));
     }
-
 
     // ----------------------------------------------------------------
     // 2) GET /submissions/status/{submissionId} - SUCCESS

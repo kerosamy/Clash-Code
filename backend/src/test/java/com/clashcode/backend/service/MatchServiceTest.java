@@ -1,17 +1,16 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.MatchSubmissionLogDto;
+import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.GameMode;
+import com.clashcode.backend.enums.NotificationType;
+import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.RankMapper;
-import com.clashcode.backend.model.Match;
-import com.clashcode.backend.model.MatchParticipant;
-import com.clashcode.backend.model.Problem;
-import com.clashcode.backend.model.User;
-import com.clashcode.backend.repository.MatchParticipantRepository;
-import com.clashcode.backend.repository.MatchRepository;
-import com.clashcode.backend.repository.SubmissionRepository;
+import com.clashcode.backend.model.*;
+import com.clashcode.backend.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -32,6 +31,12 @@ class MatchServiceTest {
     @Mock private MatchScheduler matchScheduler;
     @Mock private SubmissionRepository submissionRepository;
     @Mock private RankMapper rankMapper;
+    @Mock private NotificationService notificationService;
+    @Mock private UserRepository userRepository;
+    @Mock private ProblemRepository problemRepository;
+    @Mock private NotificationRepository notificationRepository;
+    @Mock private SubmissionService submissionService;
+
 
     @InjectMocks
     private MatchService matchService;
@@ -177,4 +182,112 @@ class MatchServiceTest {
         verify(matchRepository).save(match);
         verify(matchParticipantRepository).saveAll(match.getParticipants());
     }
+
+    @Test
+    void sendMatchInvite_success() {
+        User sender = User.builder().id(1L).username("A").build();
+        User recipient = User.builder().id(2L).username("B").build();
+
+        when(userRepository.findByUsername("B")).thenReturn(java.util.Optional.of(recipient));
+
+        matchService.sendMatchInvite(sender, "B");
+
+        verify(notificationService).send(sender.getId(), recipient.getId(),
+                NotificationType.MATCH_INVITATION,
+                "Match Invitation",
+                "A invites you to a match");
+    }
+
+    @Test
+    void acceptMatchInvite_success() {
+        User player1 = User.builder().id(1L).build();
+        User player2 = User.builder().id(2L).build();
+
+        Notification invite = new Notification();
+        invite.setSenderId(player2.getId());
+        invite.setRecipientId(player1.getId());
+
+        Problem problem = new Problem();
+        problem.setId(10L);
+
+        when(notificationRepository.findById(100L)).thenReturn(java.util.Optional.of(invite));
+        when(userRepository.findById(player2.getId())).thenReturn(java.util.Optional.of(player2));
+
+        MatchService spyService = Mockito.spy(matchService);
+        doReturn(problem).when(spyService).selectProblem(player1, player2);
+        doReturn(new MatchResponseDto()).when(spyService).createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+
+        MatchResponseDto result = spyService.acceptMatchInvite(player1, 100L);
+
+        assertNotNull(result);
+        verify(spyService).createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+    }
+
+    @Test
+    void getMatchSubmissionLog_returnsLogs() {
+        User user = User.builder().id(1L).build();
+        MatchParticipant participant = MatchParticipant.builder().user(user).build();
+        Match match = Match.builder().id(100L).participants(List.of(participant)).build();
+        Submission submission = new Submission();
+        List<Submission> submissions = List.of(submission);
+
+        when(matchRepository.findById(100L)).thenReturn(java.util.Optional.of(match));
+        when(submissionRepository.findByUserIdAndMatchId(user.getId(), 100L)).thenReturn(submissions);
+        when(matchMapper.toMatchSubmissionLogDto(participant, submissions)).thenReturn(new MatchSubmissionLogDto());
+
+        List<MatchSubmissionLogDto> logs = matchService.getMatchSubmissionLog(100L);
+
+        assertEquals(1, logs.size());
+    }
+
+    @Test
+    void submitCode_callsNotificationsAndCompleteIfAccepted() {
+        User player = User.builder().id(1L).username("player").build();
+        Match match = Match.builder()
+                .id(10L)
+                .matchState(MatchState.ONGOING)
+                .participants(List.of(MatchParticipant.builder().user(player).build()))
+                .build();
+
+        SubmissionRequestDto dto = new SubmissionRequestDto();
+        dto.setMatchId(10L);
+
+        Submission submission = new Submission();
+        submission.setStatus(SubmissionStatus.ACCEPTED);
+        submission.setNumberOfPassedTestCases(5);
+
+        MatchService spyService = Mockito.spy(matchService);
+        doReturn(match).when(spyService).validateMatch(dto.getMatchId(), player);
+        doReturn(submission).when(submissionService).submitCode(dto, player);
+
+        spyService.submitCode(dto, player);
+
+        verify(notificationService, times(2)).sendMatchPop(any(), any(), any(), any());
+        verify(spyService).completeMatch(match, player);
+    }
+
+    @Test
+    void resignMatch_completesMatchWithOtherParticipant() {
+        User resigning = User.builder().id(1L).build();
+        User other = User.builder().id(2L).build();
+
+        MatchParticipant p1 = MatchParticipant.builder().user(resigning).build();
+        MatchParticipant p2 = MatchParticipant.builder().user(other).build();
+
+        Match match = Match.builder()
+                .id(10L)
+                .matchState(MatchState.ONGOING)
+                .participants(List.of(p1, p2))
+                .build();
+
+        when(matchRepository.findById(10L)).thenReturn(java.util.Optional.of(match));
+
+        MatchService spyService = Mockito.spy(matchService);
+        doNothing().when(spyService).completeMatch(match, other);
+
+        spyService.resignMatch(10L, resigning);
+
+        verify(spyService).completeMatch(match, other);
+    }
+
 }
