@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams , useNavigate} from "react-router-dom";
+import { useParams , useNavigate, useLocation} from "react-router-dom";
 import { LanguageVersion } from "../../enums/LanguageVersion";
 import SingleSelectDropdown from "../../components/common/SingleSelectDropDown";
 import Editor from "@monaco-editor/react";
@@ -7,17 +7,19 @@ import { monacoLanguageMap } from "../../utils/languageMap";
 import { submitCode } from "../../services/SubmissionsService";
 import{ getProblemTitle } from "../../services/SubmissionsService";
 import { getUsername } from "../../utils/jwtDecoder";
-
+import { submitMatchCode } from "../../services/MatchService"; 
 
 export default function Submit() {
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
+    const navigate = useNavigate();
     const [selectedLang, setSelectedLang] = useState<LanguageVersion>(LanguageVersion.PYTHON_3_8);
     const [code, setCode] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submitMessage, setSubmitMessage] = useState<string>("");
     const [problemTitle, setProblemTitle] = useState<string>("");
 
-    const navigate = useNavigate();
+    const isMatchRoute = location.pathname.includes("play-game");
 
     useEffect(() => {
         if (id) {
@@ -38,17 +40,34 @@ export default function Submit() {
         setSubmitMessage("");
 
         try {
-            submitCode(parseInt(id), code, selectedLang);
-            setSubmitMessage("Code submitted successfully!");
-            setTimeout(() => {
-            navigate(`/profile/${getUsername()}/submissions`);   // ⬅ REDIRECT HERE
-        }, 500);
-        } catch (error) {
+            if (isMatchRoute) {
+                // match submission
+                submitMatchCode(Number(id), {
+                problemId: Number(id),
+                code,
+                codeLanguage: selectedLang,
+                matchId: Number(id),
+                });
+                setSubmitMessage("Code submitted successfully!");
+                setTimeout(() => {
+                navigate(`/play-game/${id}/match-state`);
+                }, 500);
+            } else {
+                // practice submission
+                submitCode(Number(id), code, selectedLang);
+                setSubmitMessage("Code submitted successfully!");
+                setTimeout(() => {
+                navigate(`/profile/${getUsername()}/submissions`);
+                }, 500);
+            }
+            } catch (error) {
             setSubmitMessage("Failed to submit code. Please try again.");
-        } finally {
+            } finally {
             setIsSubmitting(false);
         }
     };
+
+     
 
     return (
         <div className="flex flex-col h-[calc(90vh-4rem)] p-6">

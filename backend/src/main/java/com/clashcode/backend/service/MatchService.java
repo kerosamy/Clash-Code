@@ -4,17 +4,22 @@ import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.GameMode;
+import com.clashcode.backend.dto.ProblemResponseDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.MatchMapper;
+import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.mapper.RankMapper;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Random;
@@ -33,6 +38,8 @@ public class MatchService {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
     private final SubmissionService submissionService;
+    private final ProblemMapper problemMapper;
+    private final TestCaseService testCaseService;
 
     public MatchService(
             UserRepository userRepository,
@@ -43,8 +50,11 @@ public class MatchService {
             SubmissionRepository submissionRepository,
             RankMapper rankMapper,
             MatchScheduler matchScheduler,
-            NotificationService notificationService, NotificationRepository notificationRepository,
-            SubmissionService submissionService
+            NotificationService notificationService,
+            NotificationRepository notificationRepository,
+            SubmissionService submissionService,
+            ProblemMapper problemMapper,
+            TestCaseService testCaseService
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -57,6 +67,8 @@ public class MatchService {
         this.notificationService = notificationService;
         this.notificationRepository = notificationRepository;
         this.submissionService = submissionService;
+        this.problemMapper = problemMapper;
+        this.testCaseService = testCaseService;
     }
 
     public Problem selectProblem(User userA, User userB) {
@@ -156,7 +168,6 @@ public class MatchService {
         if (match.getMatchState() != MatchState.ONGOING) {
             throw new IllegalStateException("Match is not ongoing, submissions are not allowed");
         }
-
         boolean isParticipant = match.getParticipants().stream()
                 .anyMatch(mp -> mp.getUser().getId().equals(user.getId()));
 
@@ -249,4 +260,23 @@ public class MatchService {
         completeMatch(match, winnerParticipant.getUser());
     }
 
+
+    public ProblemResponseDto getMatchProblem(Long matchId) {
+        System.out.println(matchId+"match i");
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Match not found"));
+
+        Problem problem = match.getProblem();
+        System.out.println("problem is null");
+        if (problem == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Match has no problem assigned");
+        }
+        System.out.println("problem is not null");
+
+        ProblemResponseDto dto = problemMapper.toResponseDto(problem, testCaseService.getVisibleTestCasesForProblem(problem));
+
+        return dto;
+    }
 }

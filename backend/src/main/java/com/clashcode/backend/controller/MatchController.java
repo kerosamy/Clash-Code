@@ -1,9 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.CreateMatchRequestDto;
-import com.clashcode.backend.dto.MatchResponseDto;
-import com.clashcode.backend.dto.MatchSubmissionLogDto;
-import com.clashcode.backend.dto.SubmissionRequestDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.model.User;
@@ -69,5 +66,10 @@ public class MatchController {
             @AuthenticationPrincipal User player1) {
         MatchResponseDto matchResponseDto = matchService.acceptMatchInvite(player1, notificationId);
         return ResponseEntity.ok(matchResponseDto);
+    }
+
+    @GetMapping("/{matchId}/problem")
+    public ResponseEntity<ProblemResponseDto> getMatchProblem(@PathVariable Long matchId) {
+        return ResponseEntity.ok(matchService.getMatchProblem(matchId));
     }
 }
