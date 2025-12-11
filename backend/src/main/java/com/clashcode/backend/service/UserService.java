@@ -8,6 +8,9 @@ import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -78,10 +81,38 @@ public class UserService {
         return getProfile(user);
     }
 
-    public User updateUserRole(Long userId, Roles newRole) {
+    public void updateUserRole(Long userId, Roles newRole) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        if (user.getRole() == Roles.SUPER_ADMIN) {
+            throw new RuntimeException("Cannot modify SUPER_ADMIN role");
+        }
         user.setRole(newRole);
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
+    public Page<UserManagementDto> getAllUsers(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return userRepository.findAllByRoleNot(Roles.SUPER_ADMIN, pageRequest)
+                .map(user -> userMapper.toUserManagementDto(user, getRank(user.getCurrentRate())));
+    }
+
+    public Page<UserManagementDto> searchUsersByUsername(String keyword, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(keyword);
+
+        int start = (int) pageRequest.getOffset();
+        int end = Math.min((start + pageRequest.getPageSize()), users.size());
+
+        List<UserManagementDto> userDtos = users.subList(start, end).stream()
+                .map(user -> userMapper.toUserManagementDto(user, getRank(user.getCurrentRate())))
+                .toList();
+
+        return new PageImpl<>(userDtos, pageRequest, users.size());
+    }
+
+    public Page<UserManagementDto> getFilteredUsersByRole(Roles role, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return userRepository.findAllByRole(role, pageRequest)
+                .map(user -> userMapper.toUserManagementDto(user, getRank(user.getCurrentRate())));
+    }
 }

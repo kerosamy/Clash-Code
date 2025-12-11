@@ -1,10 +1,8 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.CategoryDto;
-import com.clashcode.backend.dto.ProfileDto;
-import com.clashcode.backend.dto.RegisterUserDto;
-import com.clashcode.backend.dto.StatsDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.RecoveryQuestion;
+import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,5 +111,43 @@ class UserMapperTest {
         assertNull(profile.getAvatarUrl());
         assertEquals(stats, profile.getStats());
         assertNull(profile.getCategories());
+    }
+
+    @Test
+    void testToUserManagementDto() {
+        User user = User.builder()
+                .id(1L)
+                .username("mina")
+                .email("mina@example.com")
+                .role(Roles.USER)
+                .currentRate(800)
+                .build();
+
+        UserManagementDto dto = userMapper.toUserManagementDto(user, "SILVER");
+
+        assertEquals(1L, dto.getId());
+        assertEquals("mina", dto.getUsername());
+        assertEquals("mina@example.com", dto.getEmail());
+        assertEquals("USER", dto.getRole());
+        assertEquals("SILVER", dto.getRank());
+    }
+
+    @Test
+    void testToUserManagementDto_WithAdminRole() {
+        User admin = User.builder()
+                .id(2L)
+                .username("adminUser")
+                .email("admin@example.com")
+                .role(Roles.ADMIN)
+                .currentRate(1200)
+                .build();
+
+        UserManagementDto dto = userMapper.toUserManagementDto(admin, "DIAMOND");
+
+        assertEquals(2L, dto.getId());
+        assertEquals("adminUser", dto.getUsername());
+        assertEquals("admin@example.com", dto.getEmail());
+        assertEquals("ADMIN", dto.getRole());
+        assertEquals("DIAMOND", dto.getRank());
     }
 }
