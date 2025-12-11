@@ -34,10 +34,13 @@ public class ProblemService {
     }
 
     public void addProblem (ProblemRequestDto problemRequestDto,
-                            List<MultipartFile> files){
+                            List<MultipartFile> files,
+                            String username){
 
         Problem problem = problemMapper.toProblem(problemRequestDto);
+        problem.setAuthor(username);
         problemRepository.save(problem);
+
 
         List<TestCase> testCases = testCaseService.addTestCases(files,problem,problemRequestDto.getVisibleFlags());
 

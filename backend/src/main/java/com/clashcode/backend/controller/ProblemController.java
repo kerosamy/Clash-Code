@@ -4,10 +4,12 @@ import com.clashcode.backend.dto.ProblemFilterDto;
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.ProblemService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,13 +34,15 @@ public class ProblemController {
         ProblemResponseDto problem = problemService.getProblemById(id);
         return ResponseEntity.ok(problem);
     }
-
     @PostMapping
     public ResponseEntity<Void> addProblem(
             @RequestPart("problem") ProblemRequestDto problemRequestDto,
-            @RequestPart("testcases") List<MultipartFile> files
+            @RequestPart("testcases") List<MultipartFile> files,
+            @AuthenticationPrincipal User user
     ) {
-        problemService.addProblem(problemRequestDto, files);
+        String username = user.getUsername();
+        problemService.addProblem(problemRequestDto, files, username);
+
         return ResponseEntity.ok().build();
     }
 
