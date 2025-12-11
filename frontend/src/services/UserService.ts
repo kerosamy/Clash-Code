@@ -160,3 +160,17 @@ export async function getFilteredUsersByRole(
     params: { role, page, size },
   });
 }
+interface UploadImageResponse {
+    imageUrl: string;
+}
+
+export async function uploadProfileImage(file: File): Promise<UploadImageResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return apiRequest<UploadImageResponse>({
+        method: 'POST',
+        url: '/users/profile/image',
+        data: formData,
+    });
+}

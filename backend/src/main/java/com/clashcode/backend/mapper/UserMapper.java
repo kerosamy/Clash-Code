@@ -24,7 +24,8 @@ public class UserMapper {
             String rank,
             int friendCount,
             StatsDto stats,
-            CategoryDto[] categories
+            CategoryDto[] categories,
+            String imageUrl
     ) {
         return ProfileDto.builder()
                 .username(user.getUsername())
@@ -32,7 +33,7 @@ public class UserMapper {
                 .currentRate(user.getCurrentRate())
                 .maxRate(user.getMaxRate())
                 .friendCount(friendCount)
-                .avatarUrl(user.getImgUrl())
+                .avatarUrl(imageUrl)  // Now using the full URL passed as parameter
                 .stats(stats)
                 .categories(categories)
                 .build();
@@ -49,3 +50,4 @@ public class UserMapper {
     }
 
 }
+

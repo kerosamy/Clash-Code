@@ -9,8 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -31,7 +33,7 @@ public class UserController {
 
     @GetMapping("/profile/{username}")
     public ResponseEntity<ProfileDto> getUserProfile(@PathVariable String username) {
-        ProfileDto profile= userService.getUserProfile(username);
+        ProfileDto profile = userService.getUserProfile(username);
         return ResponseEntity.ok(profile);
     }
 
@@ -39,5 +41,20 @@ public class UserController {
     public ResponseEntity<List<UserSearchResponseDto>> searchUsers(@RequestParam String username) {
         List<UserSearchResponseDto> results = userService.searchByUsername(username);
         return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/profile/image")
+    public ResponseEntity<Map<String, String>> uploadProfileImage(
+            @AuthenticationPrincipal User user,
+            @RequestParam("file") MultipartFile file) {
+        String imageUrl = userService.updateProfileImage(user, file);
+        System.out.print(imageUrl);
+        return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+    }
+
+    @DeleteMapping("/profile/image")
+    public ResponseEntity<Void> deleteProfileImage(@AuthenticationPrincipal User user) {
+        userService.deleteProfileImage(user);
+        return ResponseEntity.noContent().build();
     }
 }

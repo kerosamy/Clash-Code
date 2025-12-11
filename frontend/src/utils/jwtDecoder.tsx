@@ -4,7 +4,7 @@ import { UserRole } from "../enums/UserRole";
 export interface DecodedToken {
   role: string;
   username: string;
-  sub: string; //email
+  sub: string; 
   iat: number;
   exp: number;
 }
@@ -23,7 +23,7 @@ export function decodeToken(token: string): DecodedToken | null {
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     );
-
+    console.log(JSON.parse(jsonPayload))
     return JSON.parse(jsonPayload);
   } catch (err) {
     console.error("Failed to decode token:", err);

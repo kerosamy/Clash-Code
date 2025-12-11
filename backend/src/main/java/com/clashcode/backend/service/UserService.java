@@ -11,7 +11,9 @@ import com.clashcode.backend.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,10 +21,15 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
 
-    public UserService(UserRepository userRepository) {
+    @Value("${server.url:http://localhost:8080}")
+    private String serverUrl;
+
+    public UserService(UserRepository userRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
+        this.imageFileStorageService = imageFileStorageService;
     }
 
     public List<UserSearchResponseDto> searchByUsername(String username) {
@@ -71,7 +78,11 @@ public class UserService {
         int friendCount = getFriendCount(user);
         StatsDto stats = getStats(user);
         CategoryDto[] categories = getCategories(user);
-        return userMapper.toUserProfile(user, rank, friendCount, stats, categories);
+
+        // Convert stored filename to full URL
+        String imageUrl = buildImageUrl(user.getImgUrl());
+
+        return userMapper.toUserProfile(user, rank, friendCount, stats, categories, imageUrl);
     }
 
     public ProfileDto getUserProfile(String username) {
@@ -114,5 +125,37 @@ public class UserService {
         PageRequest pageRequest = PageRequest.of(page, size);
         return userRepository.findAllByRole(role, pageRequest)
                 .map(user -> userMapper.toUserManagementDto(user, getRank(user.getCurrentRate())));
+    }
+
+    public String updateProfileImage(User user, MultipartFile file) {
+        // Delete old image if exists
+        if (user.getImgUrl() != null && !user.getImgUrl().isEmpty()) {
+            imageFileStorageService.deleteFile(user.getImgUrl());
+        }
+
+        // Store new image
+        String fileName = imageFileStorageService.storeFile(file, user.getUsername());
+
+        // Update user record with filename
+        user.setImgUrl(fileName);
+        userRepository.save(user);
+
+        // Return full URL
+        return buildImageUrl(fileName);
+    }
+
+    public void deleteProfileImage(User user) {
+        if (user.getImgUrl() != null && !user.getImgUrl().isEmpty()) {
+            imageFileStorageService.deleteFile(user.getImgUrl());
+            user.setImgUrl(null);
+            userRepository.save(user);
+        }
+    }
+
+    private String buildImageUrl(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return null;
+        }
+        return serverUrl + "/files/profile-images/" + fileName;
     }
 }

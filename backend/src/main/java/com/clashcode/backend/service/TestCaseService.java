@@ -15,13 +15,13 @@ import java.util.List;
 public class TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
-    private final FileStorageService fileStorageService;
+    private final TestCasesFileStorageService testCasesFileStorageService;
     private final Judge0Client judge0Client;
     public TestCaseService(TestCaseRepository testCaseRepository ,
-                           FileStorageService fileStorageService,
+                           TestCasesFileStorageService testCasesFileStorageService,
                            Judge0Client judge0Client) {
         this.testCaseRepository = testCaseRepository;
-        this.fileStorageService = fileStorageService;
+        this.testCasesFileStorageService = testCasesFileStorageService;
         this.judge0Client = judge0Client;
     }
 
@@ -39,14 +39,14 @@ public class TestCaseService {
             TestCase testCase = testCases.get(i);
             MultipartFile file = files.get(i);
 
-            String inputPath = fileStorageService.storeTestCase(
+            String inputPath = testCasesFileStorageService.storeTestCase(
                     file,
                     problem.getId(),
                     testCase.getId()
             );
 
             testCase.setInputPath(inputPath);
-            String input = fileStorageService.getTestCaseContent(inputPath);
+            String input = testCasesFileStorageService.getTestCaseContent(inputPath);
 
             String expectedOutput = judge0Client.executeAndReturnOutput(
                     input,
@@ -56,7 +56,7 @@ public class TestCaseService {
                     problem.getMemoryLimit()
             );
 
-            String outputPath = fileStorageService.storeTestCaseOutput(
+            String outputPath = testCasesFileStorageService.storeTestCaseOutput(
                     expectedOutput,
                     problem.getId(),
                     testCase.getId()
@@ -71,8 +71,8 @@ public class TestCaseService {
 
         for (TestCase testCase : testCaseRepository.findByProblemAndVisibleTrue(problem)) {
             TestCaseResponseDto testCaseResponseDto = new TestCaseResponseDto();
-            testCaseResponseDto.setInput(fileStorageService.getTestCaseContent(testCase.getInputPath()));
-            testCaseResponseDto.setOutput(fileStorageService.getTestCaseContent(testCase.getOutputPath()));
+            testCaseResponseDto.setInput(testCasesFileStorageService.getTestCaseContent(testCase.getInputPath()));
+            testCaseResponseDto.setOutput(testCasesFileStorageService.getTestCaseContent(testCase.getOutputPath()));
             visibleTestCases.add(testCaseResponseDto);
         }
 
@@ -82,7 +82,7 @@ public class TestCaseService {
     public List<String> getInputTestCasesForProblem(Problem problem) {
         List<String> inputTestCases = new ArrayList<>();
         for (String path : testCaseRepository.findInputPathsByProblem(problem)) {
-            inputTestCases.add(fileStorageService.getTestCaseContent(path));
+            inputTestCases.add(testCasesFileStorageService.getTestCaseContent(path));
         }
         return inputTestCases;
     }
@@ -90,8 +90,8 @@ public class TestCaseService {
     public List<String> getOutputTestCasesForProblem(Problem problem) {
         List<String> OutputTestCases = new ArrayList<>();
         for (String path : testCaseRepository.findOutputPathsByProblem(problem)) {
-            OutputTestCases.add(fileStorageService.getTestCaseContent(path));
-            System.out.println("Test" + fileStorageService.getTestCaseContent(path));
+            OutputTestCases.add(testCasesFileStorageService.getTestCaseContent(path));
+            System.out.println("Test" + testCasesFileStorageService.getTestCaseContent(path));
         }
         return OutputTestCases;
     }

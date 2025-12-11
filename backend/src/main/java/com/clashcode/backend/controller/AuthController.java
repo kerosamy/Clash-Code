@@ -64,7 +64,7 @@ public class AuthController {
 
     private ResponseEntity<AuthResponseDto> buildAuthResponse(User user) {
         String jwtToken = jwtService.generateToken(user);
-        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken, jwtService.getExpirationTime(), user.getUsername());
+        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken, jwtService.getExpirationTime());
         return ResponseEntity.ok(authResponseDto);
     }
 }

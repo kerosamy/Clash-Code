@@ -34,6 +34,8 @@ export default function ProfileOverview() {
         setProfileBasic(profileBasic);
         setStats(stats);
         setCategories(categories);
+        console.log(profileBasic);
+
       } catch (error) {
         console.error("Failed to fetch profile:", error);
       } finally {
@@ -43,6 +45,17 @@ export default function ProfileOverview() {
 
     fetchProfile();
   }, [username, loggedInUsername]);
+
+  const handleImageUpdated = (newImageUrl: string) => {
+    // Update the profile basic data with the new image URL
+    setProfileBasic(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        avatarUrl: newImageUrl
+      };
+    });
+  };
 
   if (loading) {
     return <LogoLoader loadingMessage="Loading Profile"/>;
@@ -62,6 +75,7 @@ export default function ProfileOverview() {
         profile={profileBasic}
         isPrivate={username === loggedInUsername}
         color={rankColors[profileBasic.rank]}
+        onImageUpdated={handleImageUpdated}
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <StatsOverview stats={stats} color={rankColors[profileBasic.rank]} />

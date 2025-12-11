@@ -8,7 +8,7 @@ import lombok.Setter;
 public class AuthResponseDto {
     private String token;
 
-    public AuthResponseDto(String token, long expiresIn, String username) {
+    public AuthResponseDto(String token, long expiresIn) {
         this.token = token;
     }
 }
