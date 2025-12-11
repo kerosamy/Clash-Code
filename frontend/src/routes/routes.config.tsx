@@ -48,7 +48,7 @@ import addUser from '../assets/icons/add-user.svg';
 import ProblemDetailsIcon from '../assets/icons/problem-statement.svg';
 import SubmitsIcon from '../assets/icons/subimt.svg';
 import { UserRole } from '../enums/UserRole';
-import UserManagement from '../pages/UserManagemen';
+import UserManagement from '../pages/UserManagement';
 import ReviewProblems from '../pages/ReviewProblems';
 import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.svg';
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';

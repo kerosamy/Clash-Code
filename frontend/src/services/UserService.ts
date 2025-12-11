@@ -42,6 +42,24 @@ export interface CategoryItem {
   color: string;
 }
 
+interface Page<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface UserManagementDto {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  rank: string;
+}
+
 export const splitUserData = (response: BackendUserResponse) => {
   const profileBasic: UserProfileBasic = {
     username: response.username,
@@ -90,5 +108,55 @@ export async function addFriend(username: string): Promise<void> {
     method: "POST",
     url: "/users/add-friend",
     data: { username },
+  });
+}
+
+// get all users here with pagination
+export async function getAllUsers(
+  page = 0,
+  size = 20
+): Promise<Page<UserManagementDto>> {
+  return apiRequest<Page<UserManagementDto>>({
+    method: "GET",
+    url: "/super-admin/users",
+    params: { page, size },
+  });
+}
+
+export async function searchUsersByUsername(
+  keyword: string,
+  page = 0,
+  size = 20
+): Promise<Page<UserManagementDto>> {
+  return apiRequest<Page<UserManagementDto>>({
+    method: "GET",
+    url: "/super-admin/users/search",
+    params: { keyword, page, size },
+  });
+}
+
+export async function promoteUserToAdmin(userId: number): Promise<void> {
+  return apiRequest<void>({
+    method: "PUT",
+    url: `/super-admin/users/${userId}/promote-to-admin`,
+  });
+}
+
+export async function demoteUserToUser(userId: number): Promise<void> {
+  return apiRequest<void>({
+    method: "PUT",
+    url: `/super-admin/users/${userId}/demote-to-user`,
+  });
+}
+
+export async function getFilteredUsersByRole(
+  role: string,
+  page = 0,
+  size = 20
+): Promise<Page<UserManagementDto>> {
+  return apiRequest<Page<UserManagementDto>>({
+    method: "GET",
+    url: "/super-admin/users/filter",
+    params: { role, page, size },
   });
 }

@@ -78,11 +78,10 @@ export default function Practice() {
   };
 
   return (
-      // Added p-8 for outer margins/padding and space-y-6
-      <div className="flex flex-col h-[90vh] p-8 space-y-6">
-          
-          {/* Filters Section */}
-          <div className="flex items-center justify-between flex-wrap gap-4">
+
+      <div className="flex flex-col h-[90vh] space-y-4 p-scroll-x">
+          <div className="flex items-center justify-between flex-wrap space-y-4">
+
             <SearchBar 
               value={searchQuery}
               onChange={setSearchQuery}
@@ -123,7 +122,7 @@ export default function Practice() {
             </div>
           </div>
 
-          {/* Pagination - Updated Buttons */}
+          {/* Pagination */}
           <div className="flex justify-center gap-4">
             <button
               onClick={handlePrevPage}
