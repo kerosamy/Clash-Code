@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProblemSection from "../../components/problem/ProblemSectionProps";
 import TestCases from "../../components/problem/TestCase";
-import Loading from "../../components/Loading";
+import LogoLoader from "../../components/Loader/LogoLoader";
+import { waitForLoader } from "../../components/Loader/WaitLoader";
+
 import { fetchProblemById } from "../../services/ProblemService";
 
 export default function ProblemDetails() {
@@ -18,11 +20,14 @@ export default function ProblemDetails() {
       return;
     }
 
+    const startTime = Date.now();
+
     fetchProblemById(problemId)
-      .then((data) => {
+      .then(async (data) => {
         if (!data) {
           navigate("/not-found", { replace: true });
         } else {
+          await waitForLoader(startTime);
           setProblem(data);
         }
       })
@@ -33,8 +38,13 @@ export default function ProblemDetails() {
   }, [problemId, navigate]);
 
   if (loading) {
-    return <Loading message="Loading problem..." />;
+    return(
+    <div className="flex flex-col flex-1 font-anta">
+        <LogoLoader loadingMessage="Loading Problem" />
+    </div>
+    );
   }
+
 
   if (!problem) {
     return null;

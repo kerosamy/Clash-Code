@@ -6,7 +6,7 @@ export default function Profile() {
   return (
     <div className="flex flex-col h-screen font-anta">
       <TopNavigator navigators={profileSubRoutes} />
-      <div className="flex-1 overflow-y-auto custom-scroll">
+      <div className="flex-1 flex flex-col overflow-y-auto custom-scroll">
         <Outlet />
       </div>
     </div>

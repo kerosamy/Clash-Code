@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import Categories from "../../components/profile/Categories";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import StatsOverview from "../../components/profile/StatsOverview";
+import LogoLoader from "../../components/Loader/LogoLoader";
+import { waitForLoader } from "../../components/Loader/WaitLoader";
 import { fetchMyProfile, fetchUserProfile, splitUserData } from "../../services/UserService";
 import type { UserProfileBasic, UserStats, CategoryItem } from "../../services/UserService";
 import { rankColors } from "../../utils/colorMapper";
@@ -19,11 +21,15 @@ export default function ProfileOverview() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      const startTime = Date.now();
       try {
-        const data = username === loggedInUsername
-          ? await fetchMyProfile()
-          : await fetchUserProfile(username);
-        
+        const data =
+          username === loggedInUsername
+            ? await fetchMyProfile()
+            : await fetchUserProfile(username);
+
+        await waitForLoader(startTime);
+
         const { profileBasic, stats, categories } = splitUserData(data);
         setProfileBasic(profileBasic);
         setStats(stats);
@@ -39,11 +45,15 @@ export default function ProfileOverview() {
   }, [username, loggedInUsername]);
 
   if (loading) {
-    return <div className="p-8 text-center text-3xl text-gray-500">Loading profile...</div>;
+    return <LogoLoader loadingMessage="Loading Profile"/>;
   }
 
   if (!profileBasic || !stats) {
-    return <div className="p-8 text-center text-3xl text-orange">Failed to load profile data.</div>;
+    return (
+      <div className="p-8 text-center text-3xl text-orange">
+        Failed to load profile data.
+      </div>
+    );
   }
 
   return (
