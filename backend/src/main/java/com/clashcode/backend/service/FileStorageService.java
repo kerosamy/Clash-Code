@@ -1,73 +1,89 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.exception.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 public class FileStorageService {
-    @Value("${clashcode.filesystem.base-path}")
-    private String basePath ;
 
-    public String storeTestCase(MultipartFile file,
-                                Long problemId,
-                                Long testCaseId) {
+    private final Path fileStorageLocation;
+
+    public FileStorageService(@Value("${file.upload.dir:uploads/profile-images}") String uploadDir) {
+        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+
         try {
-            Path problemDir = Paths.get(basePath, String.valueOf(problemId));
-            if (!Files.exists(problemDir)) {
-                Files.createDirectories(problemDir);
+            Files.createDirectories(this.fileStorageLocation);
+        } catch (IOException ex) {
+            throw new FileStorageException("Could not create upload directory", ex);
+        }
+    }
+
+    public String storeFile(MultipartFile file, String username) {
+        // Validate file
+        if (file.isEmpty()) {
+            throw new FileStorageException("Failed to store empty file");
+        }
+
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new FileStorageException("Only image files are allowed");
+        }
+
+        // Get file extension
+        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+        String fileExtension = "";
+        if (originalFilename.contains(".")) {
+            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        // Create unique filename: username_timestamp_uuid.ext
+        String fileName = username + "_" + System.currentTimeMillis() + "_" +
+                UUID.randomUUID().toString().substring(0, 8) + fileExtension;
+
+        try {
+            // Check for invalid characters
+            if (fileName.contains("..")) {
+                throw new FileStorageException("Filename contains invalid path sequence " + fileName);
             }
 
-            String fileName = "testcase_" + testCaseId + "_" + "input" + ".txt";
-
-            Path filePath = problemDir.resolve(fileName);
-            Files.write(filePath, file.getBytes(), StandardOpenOption.CREATE_NEW);
-
-            return filePath.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null; // or throw a custom runtime exception if you prefer
-        }
-    }
-
-    public String getTestCaseContent(String testCasePathStr) {
-        if (testCasePathStr == null || testCasePathStr.isBlank()) {
-            return null; // avoid NullPointerException
-        }
-
-        try {
-            Path testCasePath = Paths.get(testCasePathStr.trim());
-            return Files.exists(testCasePath) ? Files.readString(testCasePath) : null;
-        } catch (IOException e) {
-            System.err.println("Error reading test case: " + e.getMessage());
-            return null;
-        }
-    }
-
-    public String storeTestCaseOutput(String content, Long problemId, Long testCaseId) {
-        try {
-            Path problemDir = Paths.get(basePath, String.valueOf(problemId));
-            if (!Files.exists(problemDir)) {
-                Files.createDirectories(problemDir);
+            // Copy file to target location
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            String fileName = "testcase_" + testCaseId + "_output.txt";
-            Path filePath = problemDir.resolve(fileName);
-
-            // Write string content to file
-            Files.writeString(filePath, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            return filePath.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null; // or throw a custom runtime exception
+            return fileName;
+        } catch (IOException ex) {
+            throw new FileStorageException("Could not store file " + fileName, ex);
         }
     }
 
+    public void deleteFile(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return;
+        }
+
+        try {
+            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Files.deleteIfExists(filePath);
+        } catch (IOException ex) {
+            throw new FileStorageException("Could not delete file " + fileName, ex);
+        }
+    }
+
+    public Path loadFile(String fileName) {
+        return this.fileStorageLocation.resolve(fileName).normalize();
+    }
 }

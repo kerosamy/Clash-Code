@@ -19,15 +19,15 @@ import static org.mockito.Mockito.*;
 class TestCaseServiceTest {
 
     private TestCaseRepository testCaseRepository;
-    private FileStorageService fileStorageService;
+    private TestCasesFileStorageService testCasesFileStorageService;
     private TestCaseService testCaseService;
 
     @BeforeEach
     void setUp() {
         testCaseRepository = mock(TestCaseRepository.class);
-        fileStorageService = mock(FileStorageService.class);
+        testCasesFileStorageService = mock(TestCasesFileStorageService.class);
         Judge0Client judge0Client = mock(Judge0Client.class);
-        testCaseService = new TestCaseService(testCaseRepository, fileStorageService, judge0Client);
+        testCaseService = new TestCaseService(testCaseRepository, testCasesFileStorageService, judge0Client);
     }
 
     @Test
@@ -52,8 +52,8 @@ class TestCaseServiceTest {
         when(testCaseRepository.saveAll(any())).thenReturn(List.of(tc1, tc2));
 
         // Mock file storage
-        when(fileStorageService.storeTestCase(file1, 1L, 101L)).thenReturn("path/input1.txt");
-        when(fileStorageService.storeTestCase(file2, 1L, 102L)).thenReturn("path/input2.txt");
+        when(testCasesFileStorageService.storeTestCase(file1, 1L, 101L)).thenReturn("path/input1.txt");
+        when(testCasesFileStorageService.storeTestCase(file2, 1L, 102L)).thenReturn("path/input2.txt");
 
         List<TestCase> result = testCaseService.addTestCases(files, problem, visibleFlags);
 
@@ -61,8 +61,8 @@ class TestCaseServiceTest {
         verify(testCaseRepository, times(2)).saveAll(any());
 
         // Verify file storage calls
-        verify(fileStorageService).storeTestCase(file1, 1L, 101L);
-        verify(fileStorageService).storeTestCase(file2, 1L, 102L);
+        verify(testCasesFileStorageService).storeTestCase(file1, 1L, 101L);
+        verify(testCasesFileStorageService).storeTestCase(file2, 1L, 102L);
 
         // Assertions
         assertEquals(2, result.size());
@@ -97,19 +97,19 @@ class TestCaseServiceTest {
         TestCaseResponseDto dto1 = new TestCaseResponseDto("input1", "output1");
         TestCaseResponseDto dto2 = new TestCaseResponseDto("input2", "output2");
 
-        when(fileStorageService.getTestCaseContent("path/to/input1.txt")).thenReturn("input1");
-        when(fileStorageService.getTestCaseContent("path/to/output1.txt")).thenReturn("output1");
-        when(fileStorageService.getTestCaseContent("path/to/input2.txt")).thenReturn("input2");
-        when(fileStorageService.getTestCaseContent("path/to/output2.txt")).thenReturn("output2");
+        when(testCasesFileStorageService.getTestCaseContent("path/to/input1.txt")).thenReturn("input1");
+        when(testCasesFileStorageService.getTestCaseContent("path/to/output1.txt")).thenReturn("output1");
+        when(testCasesFileStorageService.getTestCaseContent("path/to/input2.txt")).thenReturn("input2");
+        when(testCasesFileStorageService.getTestCaseContent("path/to/output2.txt")).thenReturn("output2");
 
         List<TestCaseResponseDto> result = testCaseService.getVisibleTestCasesForProblem(problem);
 
         // Verify repository and file storage calls
         verify(testCaseRepository).findByProblemAndVisibleTrue(problem);
-        verify(fileStorageService).getTestCaseContent("path/to/input1.txt");
-        verify(fileStorageService).getTestCaseContent("path/to/output1.txt");
-        verify(fileStorageService).getTestCaseContent("path/to/input2.txt");
-        verify(fileStorageService).getTestCaseContent("path/to/output2.txt");
+        verify(testCasesFileStorageService).getTestCaseContent("path/to/input1.txt");
+        verify(testCasesFileStorageService).getTestCaseContent("path/to/output1.txt");
+        verify(testCasesFileStorageService).getTestCaseContent("path/to/input2.txt");
+        verify(testCasesFileStorageService).getTestCaseContent("path/to/output2.txt");
 
         // Check result
         assertEquals(2, result.size());
