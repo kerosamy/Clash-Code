@@ -3,130 +3,164 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.exception.FriendRequestExistsException;
 import com.clashcode.backend.exception.FriendRequestNotFoundException;
+import com.clashcode.backend.exception.GlobalExceptionHandler;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.FriendService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(FriendController.class)
-@ExtendWith(SpringExtension.class)
-@AutoConfigureMockMvc(addFilters = false)
-class FriendControllerTest {
+public class FriendControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
+    @Mock
     private FriendService friendService;
 
-    @TestConfiguration
-    static class MockConfig {
-        @Bean
-        public FriendService friendService() {
-            return Mockito.mock(FriendService.class);
-        }
+    @InjectMocks
+    private FriendController friendController;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(friendController)
+                .setControllerAdvice(new GlobalExceptionHandler()) // matches project style
+                .build();
+
+        SecurityContextHolder.clearContext();
     }
 
-    private User makeUser(Long id, String username) {
-        User user = new User();
-        user.setId(id);
-        user.setUsername(username);
-        return user;
+    private void authenticate(User user) {
+        TestingAuthenticationToken auth = new TestingAuthenticationToken(user, null);
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
+    // --------------------------------------------------------
+    // 1) SEND FRIEND REQUEST - SUCCESS
+    // --------------------------------------------------------
     @Test
     void sendFriendRequest_success() throws Exception {
-        User sender = makeUser(1L, "alice");
-        Authentication auth = new UsernamePasswordAuthenticationToken(sender, null);
+        User sender = new User();
+        sender.setId(1L);
+        sender.setUsername("alice");
+
+        authenticate(sender);
+
+        doNothing().when(friendService).sendFriendRequest(sender, "bob");
 
         mockMvc.perform(post("/friends/send/bob")
-                        .with(authentication(auth)))
+                        .principal(SecurityContextHolder.getContext().getAuthentication()))
                 .andExpect(status().isOk());
 
-        verify(friendService).sendFriendRequest(sender, "bob");
+        verify(friendService, times(1)).sendFriendRequest(sender, "bob");
     }
 
+    // --------------------------------------------------------
+    // 2) SEND FRIEND REQUEST - CONFLICT
+    // --------------------------------------------------------
     @Test
     void sendFriendRequest_conflict() throws Exception {
-        User sender = makeUser(1L, "alice");
-        Authentication auth = new UsernamePasswordAuthenticationToken(sender, null);
+        User sender = new User();
+        sender.setId(1L);
+        sender.setUsername("alice");
 
-        doThrow(new FriendRequestExistsException("exists"))
+        authenticate(sender);
+
+        doThrow(new FriendRequestExistsException("Request already exists"))
                 .when(friendService).sendFriendRequest(sender, "bob");
 
         mockMvc.perform(post("/friends/send/bob")
-                        .with(authentication(auth)))
+                        .principal(SecurityContextHolder.getContext().getAuthentication()))
                 .andExpect(status().isConflict());
     }
 
+    // --------------------------------------------------------
+    // 3) ACCEPT FRIEND REQUEST - NOT FOUND
+    // --------------------------------------------------------
     @Test
     void acceptFriendRequest_notFound() throws Exception {
-        User u = makeUser(2L, "bob");
-        Authentication auth = new UsernamePasswordAuthenticationToken(u, null);
+        User user = new User();
+        user.setId(2L);
+        user.setUsername("bob");
+
+        authenticate(user);
 
         doThrow(new FriendRequestNotFoundException())
-                .when(friendService).acceptFriendRequest(u, "alice");
+                .when(friendService).acceptFriendRequest(user, "alice");
 
         mockMvc.perform(post("/friends/accept/alice")
-                        .with(authentication(auth)))
+                        .principal(SecurityContextHolder.getContext().getAuthentication()))
                 .andExpect(status().isNotFound());
     }
 
+    // --------------------------------------------------------
+    // 4) REJECT FRIEND REQUEST - CONFLICT
+    // --------------------------------------------------------
     @Test
     void rejectFriendRequest_conflict() throws Exception {
-        User u = makeUser(2L, "bob");
-        Authentication auth = new UsernamePasswordAuthenticationToken(u, null);
+        User user = new User();
+        user.setId(2L);
+        user.setUsername("bob");
 
-        doThrow(new FriendRequestExistsException("already accepted"))
-                .when(friendService).rejectFriendRequest(u, "alice");
+        authenticate(user);
+
+        doThrow(new FriendRequestExistsException("Already processed"))
+                .when(friendService).rejectFriendRequest(user, "alice");
 
         mockMvc.perform(delete("/friends/reject/alice")
-                        .with(authentication(auth)))
+                        .principal(SecurityContextHolder.getContext().getAuthentication()))
                 .andExpect(status().isConflict());
     }
 
+    // --------------------------------------------------------
+    // 5) GET STATUS - SUCCESS
+    // --------------------------------------------------------
     @Test
     void getStatus_success() throws Exception {
-        User u = makeUser(1L, "alice");
-        Authentication auth = new UsernamePasswordAuthenticationToken(u, null);
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("alice");
 
-        when(friendService.getStatus(u, "bob")).thenReturn(FriendStatus.FRIENDS);
+        authenticate(user);
+
+        when(friendService.getStatus(user, "bob"))
+                .thenReturn(FriendStatus.FRIENDS);
 
         mockMvc.perform(get("/friends/status/bob")
-                        .with(authentication(auth)))
+                        .principal(SecurityContextHolder.getContext().getAuthentication()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value("FRIENDS"));
+                .andExpect(content().string("FRIENDS"));
     }
 
+    // --------------------------------------------------------
+    // 6) GET STATUS - ILLEGAL ARG (BAD REQUEST)
+    // --------------------------------------------------------
     @Test
-    void getStatus_badRequest_illegalArgument() throws Exception {
-        User u = makeUser(1L, "alice");
-        Authentication auth = new UsernamePasswordAuthenticationToken(u, null);
+    void getStatus_illegalArgument() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("alice");
 
-        doThrow(new IllegalArgumentException("Cannot use your username"))
-                .when(friendService).getStatus(u, "alice");
+        authenticate(user);
+
+        doThrow(new IllegalArgumentException("Cannot use your own username"))
+                .when(friendService).getStatus(user, "alice");
 
         mockMvc.perform(get("/friends/status/alice")
-                        .with(authentication(auth)))
+                        .principal(SecurityContextHolder.getContext().getAuthentication()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Cannot use your username"))
+                .andExpect(jsonPath("$.error").value("Cannot use your own username"))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 }
