@@ -3,7 +3,6 @@ package com.clashcode.backend.dto;
 import lombok.*;
 
 @Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

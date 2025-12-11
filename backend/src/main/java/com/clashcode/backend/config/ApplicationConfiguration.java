@@ -1,7 +1,6 @@
 package com.clashcode.backend.config;
 
 
-import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
