@@ -52,46 +52,6 @@ class MatchControllerTest {
     @MockitoBean private JwtService jwtService;
 
     @Test
-    @DisplayName("POST /matches/create - Success")
-    void createMatch_success() throws Exception {
-        CreateMatchRequestDto requestDto = new CreateMatchRequestDto();
-        requestDto.setPlayer1Id(1L);
-        requestDto.setPlayer2Id(2L);
-        requestDto.setProblemId(10L);
-
-        MatchResponseDto responseDto = MatchResponseDto.builder()
-                .id(100L)
-                .problemId(10L)
-                .build();
-
-        when(matchService.createMatch(any(CreateMatchRequestDto.class))).thenReturn(responseDto);
-
-        mockMvc.perform(post("/matches/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(100))
-                .andExpect(jsonPath("$.problemId").value(10));
-    }
-
-    @Test
-    @DisplayName("POST /matches/create - Player Not Found")
-    void createMatch_PlayerNotExist() throws Exception {
-        CreateMatchRequestDto requestDto = new CreateMatchRequestDto();
-        requestDto.setPlayer1Id(99L);
-
-        when(matchService.createMatch(any(CreateMatchRequestDto.class)))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Player 1 does not exist"));
-
-        mockMvc.perform(post("/matches/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isNotFound())
-                .andExpect(status().reason("Player 1 does not exist"));
-    }
-
-    @Test
     @DisplayName("POST /matches/{matchId}/submit - Unauthorized")
     void submitCode_unauthorized() throws Exception {
         SubmissionRequestDto submissionRequestDto = new SubmissionRequestDto();

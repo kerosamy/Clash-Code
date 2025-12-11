@@ -5,6 +5,7 @@ import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.exception.UnauthorizedException;
+import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.MatchService;
 import com.clashcode.backend.service.SubmissionService;
@@ -17,17 +18,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/matches")
 public class MatchController {
-
     private final MatchService matchService;
 
     public MatchController(MatchService matchService, SubmissionService submissionService) {
         this.matchService = matchService;
-    }
-
-    @PostMapping("/create")
-    public ResponseEntity<MatchResponseDto> createMatch(@RequestBody CreateMatchRequestDto createMatchRequestDto) {
-        MatchResponseDto matchResponseDto = matchService.createMatch(createMatchRequestDto);
-        return ResponseEntity.ok(matchResponseDto);
     }
 
     @PostMapping("/{matchId}/submit")
@@ -58,5 +52,22 @@ public class MatchController {
 
         matchService.resignMatch(matchId, user);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/invite/{recipientUsername}")
+    public ResponseEntity<Void> invitePlayer(
+            @PathVariable String recipientUsername,
+            @AuthenticationPrincipal User sender
+    ) {
+        matchService.sendMatchInvite(sender, recipientUsername);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/invite/{notificationId}/accept")
+    public ResponseEntity<MatchResponseDto> acceptInvite(
+            @PathVariable Long notificationId,
+            @AuthenticationPrincipal User player1) {
+        MatchResponseDto matchResponseDto = matchService.acceptMatchInvite(player1, notificationId);
+        return ResponseEntity.ok(matchResponseDto);
     }
 }

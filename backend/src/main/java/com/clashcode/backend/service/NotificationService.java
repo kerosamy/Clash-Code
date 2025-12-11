@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.MatchNotificationDto;
+import com.clashcode.backend.dto.MatchStartNotificationDto;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.model.Match;
@@ -13,7 +14,6 @@ import java.util.List;
 
 @Service
 public class NotificationService {
-
     private final NotificationRepository repository;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -23,8 +23,9 @@ public class NotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void send(Long recipientId, NotificationType type, String title, String message) {
+    public void send(Long senderId, Long recipientId, NotificationType type, String title, String message) {
         Notification notification = Notification.builder()
+                .senderId(senderId)
                 .recipientId(recipientId)
                 .type(type)
                 .title(title)
@@ -37,6 +38,18 @@ public class NotificationService {
         messagingTemplate.convertAndSend(
                 "/topic/notifications/" + recipientId,
                 saved
+        );
+    }
+
+    public void sendMatchStart(Match match, String title, String message, long recipientId) {
+        MatchStartNotificationDto notification = new MatchStartNotificationDto(
+                match.getId(),
+                title,
+                message
+        );
+        messagingTemplate.convertAndSend(
+                "/topic/match-pop/" + recipientId,
+                notification
         );
     }
 
