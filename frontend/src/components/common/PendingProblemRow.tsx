@@ -14,7 +14,6 @@ interface PendingProblemRowProps {
   author: string | null;
   onApprove: () => void;
   onReject: () => void;
-  // New props for navigation
   onRowClick: () => void;
   onAuthorClick: () => void;
 }

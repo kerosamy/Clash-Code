@@ -15,7 +15,7 @@ interface PendingProblemRowProps {
 }
 
 export default function ReviewProblems() {
-  const navigate = useNavigate(); // Hook initialized
+  const navigate = useNavigate(); 
   const [problems, setProblems] = useState<PendingProblemRowProps[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
