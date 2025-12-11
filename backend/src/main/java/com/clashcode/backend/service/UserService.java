@@ -92,22 +92,15 @@ public class UserService {
         return getProfile(user);
     }
 
-<<<<<<< HEAD
     public void updateUserRole(Long userId, Roles newRole) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
         if (user.getRole() == Roles.SUPER_ADMIN) {
             throw new RuntimeException("Cannot modify SUPER_ADMIN role");
         }
-=======
-    public User updateUserRole(Long userId, Roles newRole) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
->>>>>>> b1b7342 ([CLASHCODE-11] set profile image controllers and file storage services)
         user.setRole(newRole);
         userRepository.save(user);
     }
 
-<<<<<<< HEAD
     public Page<UserManagementDto> getAllUsers(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return userRepository.findAllByRoleNot(Roles.SUPER_ADMIN, pageRequest)
@@ -133,8 +126,7 @@ public class UserService {
         return userRepository.findAllByRole(role, pageRequest)
                 .map(user -> userMapper.toUserManagementDto(user, getRank(user.getCurrentRate())));
     }
-}
-=======
+
     public String updateProfileImage(User user, MultipartFile file) {
         // Delete old image if exists
         if (user.getImgUrl() != null && !user.getImgUrl().isEmpty()) {
@@ -167,4 +159,3 @@ public class UserService {
         return serverUrl + "/files/profile-images/" + fileName;
     }
 }
->>>>>>> b1b7342 ([CLASHCODE-11] set profile image controllers and file storage services)
