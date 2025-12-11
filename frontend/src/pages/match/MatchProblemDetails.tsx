@@ -8,17 +8,17 @@ import {getProblemForMatch} from "../../services/MatchService"
 export default function ProblemDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const problemId = Number(id);
+  const matchId = Number(id);
   const [problem, setProblem] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!problemId || isNaN(problemId)) {
+    if (!matchId || isNaN(matchId)) {
       navigate("/not-found", { replace: true });
       return;
     }
 
-    fetchProblemById(problemId)
+    getProblemForMatch(matchId)
       .then((data) => {
         if (!data) {
           navigate("/not-found", { replace: true });
@@ -30,7 +30,7 @@ export default function ProblemDetails() {
         navigate("/not-found", { replace: true });
       })
       .finally(() => setLoading(false));
-  }, [problemId, navigate]);
+  }, [matchId, navigate]);
 
   if (loading) {
     return <Loading message="Loading problem..." />;

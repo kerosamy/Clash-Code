@@ -27,9 +27,9 @@ public class ProblemMapper {
                 .tags(problemRequestDto.getTags())
                 .solution(
                         Solution.builder()
-                        .solutionCode(problemRequestDto.getMainSolution())
-                        .languageVersion(LanguageVersion.valueOf(problemRequestDto.getSolutionLanguage()))
-                        .build()
+                                .solutionCode(problemRequestDto.getMainSolution())
+                                .languageVersion(LanguageVersion.valueOf(problemRequestDto.getSolutionLanguage()))
+                                .build()
                 )
                 .build();
     }
