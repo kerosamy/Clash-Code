@@ -114,11 +114,7 @@ useEffect(() => {
 
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-text text-xl font-anta">Loading submissions...</div>
-            </div>
-        );
+        return <LogoLoader loadingMessage="Loading Submissions"/>;
     }
 
     if (error) {

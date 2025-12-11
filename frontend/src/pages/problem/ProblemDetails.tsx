@@ -38,7 +38,11 @@ export default function ProblemDetails() {
   }, [problemId, navigate]);
 
   if (loading) {
-    return <LogoLoader loadingMessage="Loading Problem" />;
+    return(
+    <div className="flex flex-col flex-1 font-anta">
+        <LogoLoader loadingMessage="Loading Problem" />
+    </div>
+    );
   }
 
 
