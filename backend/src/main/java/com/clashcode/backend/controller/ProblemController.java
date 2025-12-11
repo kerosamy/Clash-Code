@@ -34,15 +34,18 @@ public class ProblemController {
         ProblemResponseDto problem = problemService.getProblemById(id);
         return ResponseEntity.ok(problem);
     }
-    @PostMapping
+
+    @PostMapping("/suggest")
     public ResponseEntity<Void> addProblem(
             @RequestPart("problem") ProblemRequestDto problemRequestDto,
             @RequestPart("testcases") List<MultipartFile> files,
             @AuthenticationPrincipal User user
     ) {
         String username = user.getUsername();
+        System.out.println("ARRIVE");
+        System.out.println(problemRequestDto.getMainSolution());
+        System.out.println(problemRequestDto.getRate());
         problemService.addProblem(problemRequestDto, files, username);
-
         return ResponseEntity.ok().build();
     }
 

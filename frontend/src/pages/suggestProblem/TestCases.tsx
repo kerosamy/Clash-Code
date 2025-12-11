@@ -6,12 +6,14 @@ export interface TestCase {
   id: string;
   input: string;
   actualOutput?: string;
+  visible: boolean;
 }
 
 interface TestCasesProps {
   onSave?: (testCases: TestCase[]) => void;
-  onRun?: (testCases: TestCase[]) => Promise<TestCase[]>; // Backend API call
+  onRun?: (testCases: TestCase[]) => Promise<TestCase[]>;
 }
+
 
 const STORAGE_KEY = "problem_testcases_draft";
 
@@ -36,7 +38,7 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
   const addTestCase = () => {
     setTestCases((prev) => [
       ...prev,
-      { id: `test_${Date.now()}`, input: "" },
+      { id: `test_${Date.now()}`, input: "", visible: true },
     ]);
   };
 
@@ -50,22 +52,26 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
     );
   };
 
+  const toggleVisibility = (id: string) => {
+    setTestCases((prev) =>
+      prev.map((tc) => (tc.id === id ? { ...tc, visible: !tc.visible } : tc))
+    );
+  };
+
   const runTestCases = async () => {
     setRunningTests(true);
     setSaveMessage("");
 
     try {
       if (onRun) {
-        // Call backend API through prop
         const results = await onRun(testCases);
         setTestCases(results);
         setSaveMessage("Test cases executed successfully!");
       } else {
-        // Mock implementation for testing
         setTimeout(() => {
           const updated = testCases.map((tc) => ({
             ...tc,
-            actualOutput: `Output for: ${tc.input}`, // Mock actual output from backend
+            actualOutput: `Output for: ${tc.input}`,
           }));
           setTestCases(updated);
           setSaveMessage("Test cases executed successfully!");
@@ -105,6 +111,7 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
             index={index}
             onUpdate={updateTestCase}
             onRemove={removeTestCase}
+            onToggleVisibility={toggleVisibility}
           />
         ))}
 

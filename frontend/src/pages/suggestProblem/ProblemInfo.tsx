@@ -4,7 +4,7 @@ import { ProblemTags } from "../../enums/ProblemTags";
 import SingleSelectDropdown from "../../components/common/SingleSelectDropDown";
 import Editor from "@monaco-editor/react";
 import { monacoLanguageMap } from "../../utils/languageMap";
-
+import { suggestProblemService } from "../../services/ProblemService";
 interface ProblemInfoProps {
   onSave?: (data: ProblemInfoData) => void;
 }
@@ -79,9 +79,31 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
       setTimeout(() => setSaveMessage(''), 3000);
     }
     
-    // Call parent callback if provided
     onSave?.(data);
   };
+
+const handleSuggestProblem = async () => {
+  console.log("🚀 Starting problem suggestion...");
+  
+  try {
+    const info = JSON.parse(localStorage.getItem("problem_info_draft") || "{}");
+    const statement = JSON.parse(localStorage.getItem("problem_statement_draft") || "{}");
+    const testCases = JSON.parse(localStorage.getItem("problem_testcases_draft") || "[]");
+
+    console.log("📦 Data to send:", { info, statement, testCases });
+
+    await suggestProblemService(info, statement, testCases);
+    
+    console.log("✅ Problem suggested successfully!");
+    alert("Problem suggestion sent successfully!");
+  } catch (err: any) {
+    console.error("❌ Error:", err);
+    console.error("❌ Error message:", err.message);
+    console.error("❌ Full error:", JSON.stringify(err, null, 2));
+    alert(err.message || "Failed to suggest problem.");
+  }
+};
+
 
   const formatTagName = (tag: string) => {
     return tag
@@ -208,7 +230,7 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
         </div>
 
         {/* Save Button and Message */}
-        <div className="text-center pt-4 pb-6">
+        <div className="text-center pt-4 ">
           <button
             onClick={handleSave}
             className="bg-orange hover:bg-orange/90 text-white px-20 py-3 rounded-button text-lg font-anta transition-colors duration-200"
@@ -224,7 +246,25 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
             </p>
           )}
         </div>
+        {/* Suggest problem */}
+        <div className="text-center">
+            <button
+                onClick={handleSuggestProblem}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-20 py-3 rounded-button text-lg font-anta transition-colors duration-200"
+            >
+                Suggest Problem
+            </button>
 
+        {saveMessage && (
+            <p
+                className={`mt-4 text-lg font-anta ${
+                    saveMessage.includes("success") ? "text-green-400" : "text-red-400"
+                }`}
+                >
+                {saveMessage}
+            </p>
+        )}
+        </div>
       </div>
     </div>
   );

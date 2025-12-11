@@ -1,5 +1,10 @@
 import type { ProblemTags } from "../enums/ProblemTags";
 import { apiRequest } from "./api";
+import type { ProblemInfoData } from "../pages/suggestProblem/ProblemInfo";
+import type { ProblemStatementData } from "../pages/suggestProblem/ProblemStatment";
+import type { TestCase } from "../pages/suggestProblem/TestCases";
+
+
 
 // Pagination wrapper 
 interface Page<T> {
@@ -7,7 +12,7 @@ interface Page<T> {
   totalPages: number;
   totalElements: number;
   size: number;
-  number: number; // current page index
+  number: number;
   first: boolean;
   last: boolean;
 }
@@ -74,4 +79,85 @@ export async function fetchProblemById(id: number): Promise<ProblemDto> {
     method: "GET",
     url: `/problem/${id}`,
   });
+}
+
+export interface ProblemRequestDto {
+  title: string;
+  inputFormat: string;
+  outputFormat: string;
+  statement: string;
+  notes: string;
+  mainSolution: string;
+  solutionLanguage: string;
+  timeLimit: number;
+  memoryLimit: number;
+  rate: number;
+  tags: ProblemTags[];
+  visibleFlags: boolean[];
+}
+export async function suggestProblemService(
+  info: ProblemInfoData,
+  statement: ProblemStatementData,
+  testCases: TestCase[]
+): Promise<void> {
+  if (!info || !statement || !testCases) {
+    throw new Error("Missing required problem data or test cases.");
+  }
+
+  const visibleFlags = testCases.map((tc) => tc.visible ?? true);
+
+  const dto: ProblemRequestDto = {
+    title: statement.title || "Untitled Problem",
+    inputFormat: statement.inputFormat || "",
+    outputFormat: statement.outputFormat || "",
+    statement: statement.statement || "",
+    notes: statement.notes || "",
+    mainSolution: info.solutionCode || "",
+    solutionLanguage: info.solutionLang,
+    timeLimit: info.timeLimit,
+    memoryLimit: info.memoryLimit,
+    rate: info.rating,
+    tags: info.topics,
+    visibleFlags,
+  };
+
+  // Convert test cases to files
+  const files: File[] = testCases.map((tc, index) => {
+    const blob = new Blob([tc.input || ""], { type: "text/plain" });
+    return new File([blob], `testcase_${index + 1}.txt`, { type: "text/plain" });
+  });
+
+  // Prepare FormData
+  const formData = new FormData();
+  
+  // FIX: Send as Blob with proper Content-Type header
+  // This mimics what Postman does when you select "application/json"
+  const problemBlob = new Blob(
+    [JSON.stringify(dto)], 
+    { type: "application/json" }
+  );
+  
+  // Important: Add a filename to help Spring recognize it properly
+  formData.append("problem", problemBlob, "problem.json");
+
+  // Append test cases
+  files.forEach((file) => {
+    formData.append("testcases", file);
+  });
+
+  console.log("📤 Sending request...");
+
+  // Send request
+  await apiRequest({
+    method: "POST",
+    url: "/problem/suggest",
+    data: formData,
+  });
+
+  console.log("✅ Request sent successfully");
+
+  // Clear localStorage
+  localStorage.removeItem("problem_info_draft");
+  localStorage.removeItem("problem_statement_draft");
+  localStorage.removeItem("problem_testcases_draft");
 }
