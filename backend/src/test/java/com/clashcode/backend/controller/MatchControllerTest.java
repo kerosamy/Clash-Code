@@ -1,9 +1,16 @@
 package com.clashcode.backend.controller;
 
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import com.clashcode.backend.dto.CreateMatchRequestDto;
 import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.MatchSubmissionLogDto;
+import com.clashcode.backend.dto.SubmissionRequestDto;
+import com.clashcode.backend.exception.UnauthorizedException;
+import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.MatchService;
+import com.clashcode.backend.service.SubmissionService;
 import com.clashcode.backend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -13,14 +20,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MatchController.class)
@@ -33,9 +45,8 @@ class MatchControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private MatchService matchService;
-
+    @MockitoBean private MatchService matchService;
+    @MockitoBean private SubmissionService submissionService;
     @MockitoBean private UserService userService;
     @MockitoBean private UserDetailsService userDetailsService;
     @MockitoBean private JwtService jwtService;
@@ -43,7 +54,6 @@ class MatchControllerTest {
     @Test
     @DisplayName("POST /matches/create - Success")
     void createMatch_success() throws Exception {
-        // Arrange
         CreateMatchRequestDto requestDto = new CreateMatchRequestDto();
         requestDto.setPlayer1Id(1L);
         requestDto.setPlayer2Id(2L);
@@ -56,7 +66,6 @@ class MatchControllerTest {
 
         when(matchService.createMatch(any(CreateMatchRequestDto.class))).thenReturn(responseDto);
 
-        // Act & Assert
         mockMvc.perform(post("/matches/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
@@ -69,18 +78,46 @@ class MatchControllerTest {
     @Test
     @DisplayName("POST /matches/create - Player Not Found")
     void createMatch_PlayerNotExist() throws Exception {
-        // Arrange
         CreateMatchRequestDto requestDto = new CreateMatchRequestDto();
         requestDto.setPlayer1Id(99L);
 
         when(matchService.createMatch(any(CreateMatchRequestDto.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Player 1 does not exist"));
 
-        // Act & Assert
         mockMvc.perform(post("/matches/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("Player 1 does not exist"));
+    }
+
+    @Test
+    @DisplayName("POST /matches/{matchId}/submit - Unauthorized")
+    void submitCode_unauthorized() throws Exception {
+        SubmissionRequestDto submissionRequestDto = new SubmissionRequestDto();
+        submissionRequestDto.setCode("print('Hello')");
+        submissionRequestDto.setCodeLanguage("python");
+
+        doThrow(new UnauthorizedException("User not authenticated"))
+                .when(submissionService).submitCode(any(SubmissionRequestDto.class), any(User.class));
+
+        mockMvc.perform(post("/matches/123/submit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(submissionRequestDto)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    @DisplayName("POST /matches/{matchId}/resign - Unauthorized")
+    void resignMatch_unauthorized() throws Exception {
+        doThrow(new UnauthorizedException("User not authenticated"))
+                .when(matchService).resignMatch(any(Long.class), any(User.class));
+
+        mockMvc.perform(post("/matches/123/resign"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("User not authenticated"));
     }
 }

@@ -1,13 +1,12 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.CreateMatchRequestDto;
-import com.clashcode.backend.dto.MatchParticipantDto;
-import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.model.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -56,6 +55,26 @@ public class MatchMapper {
                 .rank(null)
                 .rateChange(0)
                 .newRating(user.getCurrentRate())
+                .build();
+    }
+
+    public SubmissionLogEntryDto toSubmissionLogDto(Submission submission) {
+        return SubmissionLogEntryDto.builder()
+                .submittedAt(submission.getSubmittedAt().toString())
+                .submissionStatus(submission.getStatus().name())
+                .numberOfTotalTestCases(submission.getNumberOfTestCases())
+                .numberOfPassedTestCases(submission.getNumberOfPassedTestCases())
+                .build();
+    }
+
+    public MatchSubmissionLogDto toMatchSubmissionLogDto(MatchParticipant participant, List<Submission> submissions) {
+        List<SubmissionLogEntryDto> SubmissionsLog = submissions.stream()
+                .map(this::toSubmissionLogDto)
+                .toList();
+
+        return MatchSubmissionLogDto.builder()
+                .playerId(participant.getUser().getId())
+                .submissions(SubmissionsLog)
                 .build();
     }
 }

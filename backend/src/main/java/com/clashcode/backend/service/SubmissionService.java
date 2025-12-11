@@ -7,6 +7,7 @@ import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.mapper.SubmissionMapper;
+import com.clashcode.backend.model.Match;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
@@ -24,29 +25,29 @@ public class SubmissionService {
     private final TestCaseService testCaseService;
     private final Judge0Client judge0Client;
     private final SubmissionMapper submissionMapper;
+    private final MatchService matchService;
 
-    public SubmissionService(SubmissionRepository submissionRepository,
-                             ProblemRepository problemRepository,
-                             Judge0Client judge0Client,
-                             SubmissionMapper submissionMapper,
-                             TestCaseService testCaseService) {
-
+    public SubmissionService(SubmissionRepository submissionRepository, ProblemRepository problemRepository, TestCaseService testCaseService, Judge0Client judge0Client, SubmissionMapper submissionMapper, MatchService matchService) {
         this.submissionRepository = submissionRepository;
         this.problemRepository = problemRepository;
+        this.testCaseService = testCaseService;
         this.judge0Client = judge0Client;
         this.submissionMapper = submissionMapper;
-        this.testCaseService = testCaseService;
+        this.matchService = matchService;
     }
+
 
     public void submitCode(SubmissionRequestDto requestDto, User user) {
         Problem problem = problemRepository.findById(requestDto.getProblemId())
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
 
+        Match match = matchService.validateMatch(requestDto.getMatchId(),  user);
+
         List<String> inputs = testCaseService.getInputTestCasesForProblem(problem) ;
         List<String> outputs = testCaseService.getOutputTestCasesForProblem(problem);
 
         Submission submission = submissionMapper.toEntity(requestDto, user, problem, inputs.size());
-
+        submission.setMatch(match);
         submissionRepository.save(submission);
 
         List<ExecutionResultDto> executionResults = new ArrayList<>();
@@ -68,6 +69,10 @@ public class SubmissionService {
         submissionRepository.save(submissionMapper.toEntity(executionResults, submission));
         problem.setSubmissionsCount(problem.getSubmissionsCount()+1);
         problemRepository.save(problem);
+
+        if(submission.getMatch() != null && submission.getStatus() == SubmissionStatus.ACCEPTED) {
+            matchService.completeMatch(submission.getMatch(), user);
+        }
     }
 
     public List<SubmissionListDto> getSubmissionsByUser(Long userId) {
