@@ -23,16 +23,8 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
 
     Optional<Friend> findBySenderIdAndReceiverId(Long senderId, Long receiverId);
 
-    @Query("""
-        SELECT CASE
-                 WHEN f.sender.id = :userId THEN f.receiver
-                 ELSE f.sender
-               END
-        FROM Friend f
-        WHERE :userId IN (f.sender.id, f.receiver.id)
-          AND f.status = 'ACCEPTED'
-    """)
-    Page<User> findAllFriendsByUserId(@Param("userId") Long userId, Pageable pageable);
+    @Query("SELECT f FROM Friend f WHERE :userId IN (f.sender.id, f.receiver.id) AND f.status = 'ACCEPTED'")
+    Page<Friend> findAllFriendsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     // Incoming requests
     Page<Friend> findByReceiverIdAndStatus(Long receiverId, FriendRequestStatus status, Pageable pageable);
