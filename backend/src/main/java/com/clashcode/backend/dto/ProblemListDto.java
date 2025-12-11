@@ -15,6 +15,7 @@ public class ProblemListDto {
     private Long submissionsCount;
     private List<ProblemTags> tags;
     private int rate;
+    private String author;
 
     //private string for attempted holder empty for now waiting Submission entity
     private String attempted = "unsolved";

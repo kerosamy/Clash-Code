@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
 import com.clashcode.backend.dto.ProblemResponseDto;
 import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
@@ -32,6 +33,21 @@ public class ProblemService {
         this.testCaseService = testCaseService;
     }
 
+    public void addProblem (ProblemRequestDto problemRequestDto,
+                            List<MultipartFile> files,
+                            String username){
+
+        Problem problem = problemMapper.toProblem(problemRequestDto);
+        problem.setAuthor(username);
+        problemRepository.save(problem);
+
+
+        List<TestCase> testCases = testCaseService.addTestCases(files,problem,problemRequestDto.getVisibleFlags());
+
+        problem.setTestCases(testCases);
+        problemRepository.save(problem);
+    }
+
     public ProblemResponseDto getProblemById (Long id) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Problem not found"));
@@ -40,16 +56,28 @@ public class ProblemService {
         return problemMapper.toResponseDto(problem, visibleTestCases);
     }
 
-    public void addProblem (ProblemRequestDto problemRequestDto,
-                            List<MultipartFile> files){
 
-        Problem problem = problemMapper.toProblem(problemRequestDto);
-        problemRepository.save(problem);
+    public Page<ProblemListDto> getPendingProblems(int page, int size) {
 
-        List<TestCase> testCases = testCaseService.addTestCases(files,problem,problemRequestDto.getVisibleFlags());
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return problemRepository.findByProblemStatus(ProblemStatus.PENDING_APPROVAL, pageRequest)
+                .map(problemMapper::toListDto);
+    }
 
-        problem.setTestCases(testCases);
-        problemRepository.save(problem);
+    public void acceptProblem(Long id) {
+        Problem p = problemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Problem not found"));
+
+        p.setProblemStatus(ProblemStatus.APPROVED);
+        problemRepository.save(p);
+    }
+
+    public void rejectProblem(Long id, String note) {
+        Problem p = problemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Problem not found"));
+
+        p.setProblemStatus(ProblemStatus.REJECTED);
+        problemRepository.save(p);
     }
 
     public Page<ProblemListDto> getAllProblems(int page, int size) {

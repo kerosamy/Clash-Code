@@ -85,7 +85,7 @@ class ProblemServiceTest {
         when(problemRepository.save(problem)).thenReturn(savedProblem);
         when(testCaseService.addTestCases(anyList(), eq(problem), any())).thenReturn(testCases);
 
-        problemService.addProblem(requestDto, List.of(mock(MultipartFile.class)));
+        problemService.addProblem(requestDto, List.of(mock(MultipartFile.class)),any());
 
         // verify save called twice: first for problem, then after setting test cases
         verify(problemRepository, times(2)).save(any(Problem.class));

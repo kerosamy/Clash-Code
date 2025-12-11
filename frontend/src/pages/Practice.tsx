@@ -11,9 +11,6 @@ import SearchBar from "../components/common/SearchBar";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-
-
-
 export default function Practice() {
 
   const [problems, setProblems] = useState<ProblemRowProps[]>([]);
@@ -33,6 +30,7 @@ export default function Practice() {
         // search by title
         const backendPage = await searchProblemsByTitle(searchQuery, pageToLoad, 20);
         const mapped = backendPage.content.map(mapProblemDtoToProblemRow);
+        
         setProblems(mapped);
         setPage(pageToLoad);
         setTotalPages(backendPage.totalPages);
@@ -66,10 +64,10 @@ export default function Practice() {
     loadProblems();
   }, [selectedTags, minDifficulty, maxDifficulty, searchQuery]);  // re-run when filters/search triggered
   
-const handleProblemClick = (problem: ProblemRowProps) => {
-  console.log("Problem clicked:", problem);
-   navigate(`/practice/problem/${problem.id}`);
-};
+  const handleProblemClick = (problem: ProblemRowProps) => {
+    console.log("Problem clicked:", problem);
+    navigate(`/practice/problem/${problem.id}`);
+  };
 
   const handlePrevPage = () => {
     if (page > 0) loadProblems(page - 1);
@@ -80,10 +78,11 @@ const handleProblemClick = (problem: ProblemRowProps) => {
   };
 
   return (
-
-      <div className="flex flex-col h-[90vh] space-y-4">
-          <div className="flex items-center justify-between flex-wrap space-y-4">
-
+      // Added p-8 for outer margins/padding and space-y-6
+      <div className="flex flex-col h-[90vh] p-8 space-y-6">
+          
+          {/* Filters Section */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <SearchBar 
               value={searchQuery}
               onChange={setSearchQuery}
@@ -103,49 +102,50 @@ const handleProblemClick = (problem: ProblemRowProps) => {
               onMinChange={setMinDifficulty}
               onMaxChange={setMaxDifficulty}
             />
-
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scroll">
-          <Board<ProblemRowProps>
-            data={problems}
-            columns={["#", "Name", "Tags", "Diff", "#Solvers", "Stat"]}
-            onRowClick={handleProblemClick}
-            renderRow={(problem, onClick) => (
-              <ProblemRow
-                key={problem.id}
-                {...problem}
-                onClick={onClick}
-                className="cursor-pointer"
+          {/* Table Area - Wrapped in styled container */}
+          <div className="flex-1 overflow-hidden rounded-xl border border-white/5 bg-sidebar/10 shadow-xl">
+            <div className="h-full overflow-y-auto custom-scroll">
+              <Board<ProblemRowProps>
+                data={problems}
+                columns={["#", "Name", "Tags", "Diff", "#Solvers", "Stat"]}
+                onRowClick={handleProblemClick}
+                renderRow={(problem, onClick) => (
+                  <ProblemRow
+                    key={problem.id}
+                    {...problem}
+                    onClick={onClick}
+                    className="cursor-pointer"
+                  />
+                )}
               />
-            )}
-          />
+            </div>
           </div>
 
-          <div className="flex justify-center gap-4 mt-4">
+          {/* Pagination - Updated Buttons */}
+          <div className="flex justify-center gap-4">
             <button
               onClick={handlePrevPage}
               disabled={page === 0}
-              className="px-4 py-2 bg-orange text-white rounded-button hover:bg-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="px-5 py-2 bg-sidebar/50 border border-white/10 text-white rounded-full hover:bg-orange hover:border-orange disabled:opacity-30 disabled:hover:bg-sidebar/50 disabled:hover:border-white/10 disabled:cursor-not-allowed transition-all duration-300 font-anta text-sm"
             >
-              {"<"} Previous
+              Previous
             </button>
 
-            <span className="flex items-center text-white">
+            <span className="flex items-center text-text/80 font-anta text-sm bg-sidebar/30 px-4 rounded-full border border-white/5">
               Page {page + 1} of {totalPages}
             </span>
 
             <button
               onClick={handleNextPage}
               disabled={page >= totalPages - 1}
-              className="px-4 py-2 bg-orange text-white rounded-button hover:bg-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="px-5 py-2 bg-sidebar/50 border border-white/10 text-white rounded-full hover:bg-orange hover:border-orange disabled:opacity-30 disabled:hover:bg-sidebar/50 disabled:hover:border-white/10 disabled:cursor-not-allowed transition-all duration-300 font-anta text-sm"
             >
-              Next {">"}
+              Next
             </button>
           </div>
 
-
       </div>
-
   );
 }

@@ -21,6 +21,7 @@ public class ProblemResponseDto {
     private int timeLimit;
     private int memoryLimit;
     private int rate;
+    private String author;
 
     @Builder.Default
     private List<ProblemTags> tags = new ArrayList<>();

@@ -49,6 +49,7 @@ public class ProblemMapper {
                 .rate(problem.getRate())
                 .tags(problem.getTags())
                 .visibleTestCases(visibleTestCases)
+                .author(problem.getAuthor())
                 .build();
     }
 
@@ -60,6 +61,7 @@ public class ProblemMapper {
                 .tags(problem.getTags())
                 .rate(problem.getRate())
                 .attempted("unsolved")   // placeholder
+                .author(problem.getAuthor())
                 .build();
     }
 }

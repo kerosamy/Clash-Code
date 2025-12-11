@@ -57,7 +57,7 @@ class ProblemControllerTest {
         ProblemRequestDto request = new ProblemRequestDto();
         request.setTitle("Add Two Integers");
 
-        doNothing().when(problemService).addProblem(any(), any());
+        doNothing().when(problemService).addProblem(any(), any(),any());
 
         MockMultipartFile problemPart = new MockMultipartFile(
                 "problem",

@@ -59,14 +59,6 @@ export interface PageConfig {
   component: ComponentType;
 }
 
-export const pages: PageConfig[] = [
-  { path: '/sign-up', component: SignUp },
-  { path: '/not-found', component: NotFound },
-  { path: '/log-in', component: LogIn },
-  { path: '/auth/callback', component: OAuthCallback },
-  { path: '/complete-registration', component: CompleteRegistration },
-  { path: '/profile/:username/*', component: Profile, },
-];
 
 export interface ChildRouteConfig {
   path?: string;
@@ -83,6 +75,15 @@ export interface RouteConfig {
   requiredRoles?: UserRole[]; // field for rbac
   hideFromNav?: boolean; // hide from navigation menu
 }
+
+export const pages: PageConfig[] = [
+  { path: '/sign-up', component: SignUp },
+  { path: '/not-found', component: NotFound },
+  { path: '/log-in', component: LogIn },
+  { path: '/auth/callback', component: OAuthCallback },
+  { path: '/complete-registration', component: CompleteRegistration },
+  { path: '/profile/:username/*', component: Profile, },
+];
 
 export const routes: RouteConfig[] = [
   {
@@ -169,6 +170,7 @@ export const friendsSubRoutes: RouteConfig[] = [
   { path: 'pending', name: 'Pending', icon: friends, component: Pending },
   { path: 'add-friend', name: 'Add Friend', icon: addUser, component: AddFriend },
 ];
+
 export const ProblemSubRoutes: RouteConfig[] = [
   { path: '', name: 'Problem Statment', icon: ProblemDetailsIcon, component: ProblemDetails },
   { path: 'submit', name: 'Submit Solution', icon: SubmitsIcon, component: Submit },

@@ -41,6 +41,9 @@ public class Problem {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(nullable = true)
+    private String author;
+
     @Min(250) //ms
     @Max(10000)
     @Column(nullable = false)
