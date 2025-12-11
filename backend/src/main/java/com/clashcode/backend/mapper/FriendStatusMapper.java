@@ -5,11 +5,11 @@ import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 
-public final class FriendStatusMapper {
+public class FriendStatusMapper {
 
     private FriendStatusMapper() {}
 
-    public static FriendStatus map(User requester, Friend friendship) {
+    public FriendStatus map(User requester, Friend friendship) {
         if (friendship == null) return FriendStatus.NONE;
         FriendRequestStatus status = friendship.getStatus();
 

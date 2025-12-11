@@ -5,6 +5,7 @@ import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.exception.FriendRequestExistsException;
 import com.clashcode.backend.exception.FriendRequestNotFoundException;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.FriendStatusMapper;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.FriendRepository;
@@ -20,10 +21,12 @@ import java.util.Optional;
 public class FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
+    private final FriendStatusMapper friendStatusMapper;
 
-    public FriendService(UserRepository userRepository, FriendRepository friendRepository) {
+    public FriendService(UserRepository userRepository, FriendRepository friendRepository, FriendStatusMapper friendStatusMapper) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
+        this.friendStatusMapper = friendStatusMapper;
     }
 
     public void sendFriendRequest(User sender, String receiverUsername) {
@@ -69,20 +72,7 @@ public class FriendService {
         Optional<Friend> friendshipOpt =
                 friendRepository.findRelationshipBetweenUsers(userOne.getId(), userTwo.getId());
 
-        if (friendshipOpt.isEmpty()) {
-            return FriendStatus.NONE;
-        }
-
-        Friend friendship = friendshipOpt.get();
-        FriendRequestStatus status = friendship.getStatus();
-
-        if (status == FriendRequestStatus.ACCEPTED) {
-            return FriendStatus.FRIENDS;
-        }
-
-        return userOne.equals(friendship.getSender())
-                ? FriendStatus.PENDING_SENT
-                : FriendStatus.PENDING_RECEIVED;
+        return friendStatusMapper.map(userOne, friendshipOpt.orElse(null));
     }
 
     public void removeFriend(User userOne, String userTwoUsername) {
