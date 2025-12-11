@@ -122,7 +122,7 @@ export default function Practice() {
             </div>
           </div>
 
-          {/* Pagination - Updated Buttons */}
+          {/* Pagination */}
           <div className="flex justify-center gap-4">
             <button
               onClick={handlePrevPage}

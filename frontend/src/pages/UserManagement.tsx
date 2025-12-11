@@ -122,25 +122,25 @@ export default function UserManagement() {
         />
       </div>
 
-      <div className="flex justify-center gap-4 mt-4">
+      <div className="flex justify-center gap-4">
         <button
           onClick={handlePrevPage}
           disabled={page === 0 || loading}
-          className="px-4 py-2 bg-orange text-white rounded-button hover:bg-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          className="px-5 py-2 bg-sidebar/50 border border-white/10 text-white rounded-full hover:bg-orange hover:border-orange disabled:opacity-30 disabled:hover:bg-sidebar/50 disabled:hover:border-white/10 disabled:cursor-not-allowed transition-all duration-300 font-anta text-sm"
         >
-          {"<"} Previous
+          Previous
         </button>
 
-        <span className="flex items-center text-white">
+        <span className="flex items-center text-text/80 font-anta text-sm bg-sidebar/30 px-4 rounded-full border border-white/5">
           Page {page + 1} of {totalPages}
         </span>
 
         <button
           onClick={handleNextPage}
           disabled={page >= totalPages - 1 || loading}
-          className="px-4 py-2 bg-orange text-white rounded-button hover:bg-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          className="px-5 py-2 bg-sidebar/50 border border-white/10 text-white rounded-full hover:bg-orange hover:border-orange disabled:opacity-30 disabled:hover:bg-sidebar/50 disabled:hover:border-white/10 disabled:cursor-not-allowed transition-all duration-300 font-anta text-sm"
         >
-          Next {">"}
+          Next
         </button>
       </div>
     </div>
