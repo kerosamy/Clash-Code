@@ -50,6 +50,8 @@ public class SecurityConfig {
                 // ===== Authorization rules =====
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/ws/**").permitAll()
+                        .requestMatchers("/files/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
 
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN") // Most restrictive first

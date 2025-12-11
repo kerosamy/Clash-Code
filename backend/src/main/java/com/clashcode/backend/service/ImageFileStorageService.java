@@ -15,17 +15,20 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
-public class FileStorageService {
+public class ImageFileStorageService {
 
     private final Path fileStorageLocation;
 
-    public FileStorageService(@Value("${file.upload.dir:uploads/profile-images}") String uploadDir) {
-        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+    public ImageFileStorageService(@Value("${CLASH_CODE_FS_PATH}") String baseUploadDir) {
+        // Create profile-images subfolder within CLASH_CODE_FS_PATH
+        this.fileStorageLocation = Paths.get(baseUploadDir, "profile-images")
+                .toAbsolutePath()
+                .normalize();
 
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (IOException ex) {
-            throw new FileStorageException("Could not create upload directory", ex);
+            throw new FileStorageException("Could not create upload directory: " + this.fileStorageLocation, ex);
         }
     }
 

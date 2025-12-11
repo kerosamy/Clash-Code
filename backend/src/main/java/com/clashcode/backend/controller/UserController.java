@@ -48,6 +48,7 @@ public class UserController {
             @AuthenticationPrincipal User user,
             @RequestParam("file") MultipartFile file) {
         String imageUrl = userService.updateProfileImage(user, file);
+        System.out.print(imageUrl);
         return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 

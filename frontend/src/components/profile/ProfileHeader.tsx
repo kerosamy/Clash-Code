@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, UserPlus, X, Upload } from 'lucide-react';
+import { Camera, UserPlus, Upload } from 'lucide-react';
 
 interface UserProfile {
     username: string;
@@ -41,8 +41,8 @@ export default function ProfileHeader({
         }
 
         // Validate file size (5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setError('Image must be less than 5MB');
+        if (file.size > 10 * 1024 * 1024) {
+            setError('Image must be less than 10MB');
             setTimeout(() => setError(null), 3000);
             return;
         }
@@ -71,7 +71,7 @@ export default function ProfileHeader({
             // Adjust the authorization header based on your auth implementation
             const token = localStorage.getItem('token'); // or however you store your token
             
-            const response = await fetch('/users/profile/image', {
+            const response = await fetch('http://localhost:8080/users/profile/image', {
                 method: 'POST',
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })
@@ -86,11 +86,13 @@ export default function ProfileHeader({
 
             const data = await response.json();
             setPreview(null);
-            
+
             // Notify parent component of the new image URL
             if (onImageUpdated) {
                 onImageUpdated(data.imageUrl);
             }
+
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to upload image');
             setPreview(null);
@@ -100,40 +102,6 @@ export default function ProfileHeader({
         }
     };
 
-    const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete your profile image?')) {
-            return;
-        }
-
-        setUploading(true);
-        setError(null);
-
-        try {
-            const token = localStorage.getItem('token');
-            
-            const response = await fetch('/users/profile/image', {
-                method: 'DELETE',
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to delete image');
-            }
-
-            // Notify parent component to update to default/null image
-            if (onImageUpdated) {
-                onImageUpdated('');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to delete image');
-            setTimeout(() => setError(null), 3000);
-        } finally {
-            setUploading(false);
-        }
-    };
 
     return (
         <div className="bg-container rounded-lg p-8 mb-8">
@@ -203,19 +171,7 @@ export default function ProfileHeader({
                                     <Camera className="w-8 h-8" style={{ color }} />
                                 </label>
 
-                                {profile.avatarUrl && (
-                                    <button
-                                        onClick={handleDelete}
-                                        disabled={uploading}
-                                        className={`bg-background rounded-full p-3 hover:bg-red-900 transition-colors ${
-                                            uploading ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
-                                        style={{ border: `3px solid ${color}` }}
-                                        aria-label="Delete profile image"
-                                    >
-                                        <X className="w-8 h-8 text-red-500" />
-                                    </button>
-                                )}
+
                             </div>
                         </>
                     ) : (

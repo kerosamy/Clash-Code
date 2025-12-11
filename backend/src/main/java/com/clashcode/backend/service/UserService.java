@@ -21,15 +21,15 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final FileStorageService fileStorageService;
+    private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
 
     @Value("${server.url:http://localhost:8080}")
     private String serverUrl;
 
-    public UserService(UserRepository userRepository, FileStorageService fileStorageService) {
+    public UserService(UserRepository userRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
-        this.fileStorageService = fileStorageService;
+        this.imageFileStorageService = imageFileStorageService;
     }
 
     public List<UserSearchResponseDto> searchByUsername(String username) {
@@ -138,11 +138,11 @@ public class UserService {
     public String updateProfileImage(User user, MultipartFile file) {
         // Delete old image if exists
         if (user.getImgUrl() != null && !user.getImgUrl().isEmpty()) {
-            fileStorageService.deleteFile(user.getImgUrl());
+            imageFileStorageService.deleteFile(user.getImgUrl());
         }
 
         // Store new image
-        String fileName = fileStorageService.storeFile(file, user.getUsername());
+        String fileName = imageFileStorageService.storeFile(file, user.getUsername());
 
         // Update user record with filename
         user.setImgUrl(fileName);
@@ -154,7 +154,7 @@ public class UserService {
 
     public void deleteProfileImage(User user) {
         if (user.getImgUrl() != null && !user.getImgUrl().isEmpty()) {
-            fileStorageService.deleteFile(user.getImgUrl());
+            imageFileStorageService.deleteFile(user.getImgUrl());
             user.setImgUrl(null);
             userRepository.save(user);
         }

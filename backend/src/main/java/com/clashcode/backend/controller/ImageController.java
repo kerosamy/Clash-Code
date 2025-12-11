@@ -1,7 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.exception.FileStorageException;
-import com.clashcode.backend.service.FileStorageService;
+import com.clashcode.backend.service.ImageFileStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -15,18 +15,18 @@ import java.nio.file.Path;
 
 @RestController
 @RequestMapping("/files")
-public class FileController {
+public class ImageController {
 
-    private final FileStorageService fileStorageService;
+    private final ImageFileStorageService imageFileStorageService;
 
-    public FileController(FileStorageService fileStorageService) {
-        this.fileStorageService = fileStorageService;
+    public ImageController(ImageFileStorageService imageFileStorageService) {
+        this.imageFileStorageService = imageFileStorageService;
     }
 
     @GetMapping("/profile-images/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
         try {
-            Path filePath = fileStorageService.loadFile(fileName);
+            Path filePath = imageFileStorageService.loadFile(fileName);
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
