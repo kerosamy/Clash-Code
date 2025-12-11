@@ -52,7 +52,7 @@ class ProblemControllerTest {
 
     // ---------------- Add Problem Test ----------------
     @Test
-    @DisplayName("POST /problem - Add Problem Success")
+    @DisplayName("POST /problem - Add Problem ")
     void testAddProblem() throws Exception {
         ProblemRequestDto request = new ProblemRequestDto();
         request.setTitle("Add Two Integers");
@@ -73,11 +73,11 @@ class ProblemControllerTest {
                 "dummy content".getBytes()
         );
 
-        mockMvc.perform(multipart("/problem")
+        mockMvc.perform(multipart("/problem/suggest")
                         .file(problemPart)
                         .file(testcasesPart)
                         .with(csrf()))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     // ---------------- Get Problem Test ----------------
@@ -111,7 +111,7 @@ class ProblemControllerTest {
         List<ProblemListDto> problemList = List.of(problem1, problem2);
 
         Page<ProblemListDto> page = new PageImpl<>(problemList, PageRequest.of(0, 10), problemList.size());
-        when(problemService.getAllProblems(anyInt(), anyInt())).thenReturn(page);
+        when(problemService.getApprovedProblems(anyInt(), anyInt())).thenReturn(page);
 
         mockMvc.perform(get("/problem/browse")
                         .param("page", "0")

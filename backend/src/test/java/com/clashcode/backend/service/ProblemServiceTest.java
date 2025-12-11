@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
@@ -95,11 +96,14 @@ class ProblemServiceTest {
 
     // ---------------- Test: getAllProblems ----------------
     @Test
-    void testGetAllProblems() {
+    void testGetApprovedProblems() {
         Problem problem1 = new Problem();
         problem1.setId(1L);
+        problem1.setProblemStatus(ProblemStatus.APPROVED);
+
         Problem problem2 = new Problem();
         problem2.setId(2L);
+        problem2.setProblemStatus(ProblemStatus.APPROVED);
 
         ProblemListDto dto1 = new ProblemListDto();
         dto1.setId(1L);
@@ -108,30 +112,33 @@ class ProblemServiceTest {
 
         Page<Problem> page = new PageImpl<>(List.of(problem1, problem2));
 
-        when(problemRepository.findAll(PageRequest.of(0, 10))).thenReturn(page);
+        when(problemRepository.findByProblemStatus(ProblemStatus.APPROVED, PageRequest.of(0, 10)))
+                .thenReturn(page);
         when(problemMapper.toListDto(problem1)).thenReturn(dto1);
         when(problemMapper.toListDto(problem2)).thenReturn(dto2);
 
-        Page<ProblemListDto> result = problemService.getAllProblems(0, 10);
+        Page<ProblemListDto> result = problemService.getApprovedProblems(0, 10);
 
         assertEquals(2, result.getContent().size());
         assertEquals(1L, result.getContent().get(0).getId());
         assertEquals(2L, result.getContent().get(1).getId());
 
-        verify(problemRepository).findAll(PageRequest.of(0, 10));
+        verify(problemRepository).findByProblemStatus(ProblemStatus.APPROVED, PageRequest.of(0, 10));
         verify(problemMapper).toListDto(problem1);
         verify(problemMapper).toListDto(problem2);
     }
 
-    @Test
-    void testGetAllProblems_EmptyResult() {
-        Page<Problem> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(problemRepository.findAll(any(PageRequest.class))).thenReturn(emptyPage);
 
-        Page<ProblemListDto> result = problemService.getAllProblems(0, 10);
+    @Test
+    void testGetApprovedProblems_EmptyResult() {
+        Page<Problem> emptyPage = new PageImpl<>(Collections.emptyList());
+        when(problemRepository.findByProblemStatus(eq(ProblemStatus.APPROVED), any(PageRequest.class)))
+                .thenReturn(emptyPage);
+
+        Page<ProblemListDto> result = problemService.getApprovedProblems(0, 10);
 
         assertTrue(result.isEmpty());
-        verify(problemRepository).findAll(any(PageRequest.class));
+        verify(problemRepository).findByProblemStatus(eq(ProblemStatus.APPROVED), any(PageRequest.class));
     }
 
 

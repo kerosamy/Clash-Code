@@ -41,7 +41,6 @@ public class ProblemService {
         problem.setAuthor(username);
         problemRepository.save(problem);
 
-
         List<TestCase> testCases = testCaseService.addTestCases(files,problem,problemRequestDto.getVisibleFlags());
 
         problem.setTestCases(testCases);
@@ -80,10 +79,9 @@ public class ProblemService {
         problemRepository.save(p);
     }
 
-    public Page<ProblemListDto> getAllProblems(int page, int size) {
+    public Page<ProblemListDto> getApprovedProblems(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
-
-        return problemRepository.findAll(pageRequest)
+        return problemRepository.findByProblemStatus(ProblemStatus.APPROVED, pageRequest)
                 .map(problemMapper::toListDto);
     }
 

@@ -41,10 +41,10 @@ public class ProblemController {
             @RequestPart("testcases") List<MultipartFile> files,
             @AuthenticationPrincipal User user
     ) {
+        if(user == null) {
+            return ResponseEntity.badRequest().build();
+        }
         String username = user.getUsername();
-        System.out.println("ARRIVE");
-        System.out.println(problemRequestDto.getMainSolution());
-        System.out.println(problemRequestDto.getRate());
         problemService.addProblem(problemRequestDto, files, username);
         return ResponseEntity.ok().build();
     }
@@ -54,7 +54,7 @@ public class ProblemController {
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
     ) {
-        Page<ProblemListDto> problems = problemService.getAllProblems(page, size);
+        Page<ProblemListDto> problems = problemService.getApprovedProblems(page, size);
         return ResponseEntity.ok(problems);
     }
 

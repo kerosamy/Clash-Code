@@ -4,6 +4,7 @@ export interface SubmissionRequest {
   problemId: number;
   code: string;
   codeLanguage: string;
+  matchId: number | null;
 }
 
 export interface SubmissionResponse {
@@ -38,6 +39,7 @@ export async function submitCode(
     problemId,
     code,
     codeLanguage,
+    matchId: null, 
   };
 
   return apiRequest<void>({
