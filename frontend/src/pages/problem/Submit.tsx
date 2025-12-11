@@ -42,7 +42,7 @@ export default function Submit() {
         try {
             if (isMatchRoute) {
                 // match submission
-                await submitMatchCode(Number(id), {
+                submitMatchCode(Number(id), {
                 problemId: Number(id),
                 code,
                 codeLanguage: selectedLang,
@@ -54,7 +54,7 @@ export default function Submit() {
                 }, 500);
             } else {
                 // practice submission
-                await submitCode(Number(id), code, selectedLang);
+                submitCode(Number(id), code, selectedLang);
                 setSubmitMessage("Code submitted successfully!");
                 setTimeout(() => {
                 navigate(`/profile/${getUsername()}/submissions`);

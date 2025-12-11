@@ -1,4 +1,19 @@
 import { apiRequest } from "./api";
+import type { ProblemTags } from "../enums/ProblemTags";
+export interface ProblemRequestDto {
+  title: string;
+  inputFormat: string;
+  outputFormat: string;
+  statement: string;
+  notes: string;
+  mainSolution: string;
+  solutionLanguage: string;
+  timeLimit: number;
+  memoryLimit: number;
+  rate: number;
+  tags: ProblemTags[];
+  visibleFlags: boolean[];
+}
 
 export interface CreateMatchRequestDto {
   player1Id: number;
@@ -82,8 +97,8 @@ export async function resignMatch(matchId: number): Promise<void> {
   });
 }
 
-export async function getProblemForMatch(matchId: number): Promise<number> {
-  return apiRequest<number>({
+export async function getProblemForMatch(matchId: number): Promise<ProblemRequestDto> {
+  return apiRequest<ProblemRequestDto>({
     method: "GET",
     url: `/matches/${matchId}/problem`,
   });

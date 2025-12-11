@@ -262,15 +262,18 @@ public class MatchService {
 
 
     public ProblemResponseDto getMatchProblem(Long matchId) {
+        System.out.println(matchId+"match i");
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Match not found"));
 
         Problem problem = match.getProblem();
+        System.out.println("problem is null");
         if (problem == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Match has no problem assigned");
         }
+        System.out.println("problem is not null");
 
         ProblemResponseDto dto = problemMapper.toResponseDto(problem, testCaseService.getVisibleTestCasesForProblem(problem));
 
