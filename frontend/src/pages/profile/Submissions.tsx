@@ -5,6 +5,8 @@ import SubmissionRow from "../../components/common/SubmissionRow";
 import { getUserSubmissions  , getSubmissionStatus} from "../../services/SubmissionsService";
 import { SubmissionStatus } from "../../enums/SubmissionStatus";
 import SubmissionDetails from "../../components/common/SubmissionDetails";
+import LogoLoader from "../../components/Loader/LogoLoader";
+import { waitForLoader } from "../../components/Loader/WaitLoader";
 
 export interface Submission {
     submissionId: number;
@@ -76,9 +78,11 @@ useEffect(() => {
     const fetchSubmissions = async () => {
         setLoading(true);
         setError("");
+        const startTime = Date.now();
         
         try {
             const data = await getUserSubmissions();
+            await waitForLoader(startTime);
             
             const formattedSubmissions: Submission[] = data.map((item: any) => ({
                 submissionId: item.submissionId,
