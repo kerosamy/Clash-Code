@@ -6,6 +6,7 @@ import StatsOverview from "../../components/profile/StatsOverview";
 import { fetchMyProfile, fetchUserProfile, splitUserData } from "../../services/UserService";
 import type { UserProfileBasic, UserStats, CategoryItem } from "../../services/UserService";
 import { rankColors } from "../../utils/colorMapper";
+import { getUsername } from "../../utils/jwtDecoder";
 
 export default function ProfileOverview() {
   const [profileBasic, setProfileBasic] = useState<UserProfileBasic | null>(null);
@@ -13,7 +14,7 @@ export default function ProfileOverview() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { username: paramUsername } = useParams<{ username?: string }>();
-  const loggedInUsername = localStorage.getItem("username");
+  const loggedInUsername = getUsername();
   const username = paramUsername ?? loggedInUsername!;
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function ProfileOverview() {
     <div className="space-y-8 p-scroll-x">
       <ProfileHeader
         profile={profileBasic}
-        isPrivate={username === localStorage.getItem("username")}
+        isPrivate={username === loggedInUsername}
         color={rankColors[profileBasic.rank]}
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
