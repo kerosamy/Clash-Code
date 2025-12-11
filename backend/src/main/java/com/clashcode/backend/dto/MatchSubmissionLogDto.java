@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 public class MatchSubmissionLogDto {
     private Long playerId;
-    private List<SubmissionLogDto> submissions;
+    private List<SubmissionLogEntryDto> submissions;
 }
 

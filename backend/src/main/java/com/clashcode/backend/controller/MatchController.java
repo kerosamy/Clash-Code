@@ -61,5 +61,4 @@ public class MatchController {
         matchService.resignMatch(matchId, user);
         return ResponseEntity.ok().build();
     }
-
 }

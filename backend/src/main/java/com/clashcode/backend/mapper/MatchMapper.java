@@ -58,15 +58,17 @@ public class MatchMapper {
                 .build();
     }
 
-    public SubmissionLogDto toSubmissionLogDto(Submission submission) {
-        return SubmissionLogDto.builder()
+    public SubmissionLogEntryDto toSubmissionLogDto(Submission submission) {
+        return SubmissionLogEntryDto.builder()
                 .submittedAt(submission.getSubmittedAt().toString())
                 .submissionStatus(submission.getStatus().name())
+                .numberOfTotalTestCases(submission.getNumberOfTestCases())
+                .numberOfPassedTestCases(submission.getNumberOfPassedTestCases())
                 .build();
     }
 
     public MatchSubmissionLogDto toMatchSubmissionLogDto(MatchParticipant participant, List<Submission> submissions) {
-        List<SubmissionLogDto> SubmissionsLog = submissions.stream()
+        List<SubmissionLogEntryDto> SubmissionsLog = submissions.stream()
                 .map(this::toSubmissionLogDto)
                 .toList();
 

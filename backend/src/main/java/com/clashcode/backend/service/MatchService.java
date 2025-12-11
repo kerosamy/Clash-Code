@@ -10,6 +10,7 @@ import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -46,6 +47,7 @@ public class MatchService {
         this.matchScheduler = matchScheduler;
     }
 
+    @Transactional
     public MatchResponseDto createMatch(CreateMatchRequestDto createMatchRequestDto) {
         User player1 = userRepository.findById(createMatchRequestDto.getPlayer1Id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Player 1 does not exist"));
@@ -103,6 +105,7 @@ public class MatchService {
                 .toList();
     }
 
+    @Transactional
     public void completeMatch(Match match, User winner) {
         if (match.getMatchState() == MatchState.COMPLETED) return;
 
@@ -126,7 +129,7 @@ public class MatchService {
         matchParticipantRepository.saveAll(match.getParticipants());
     }
 
-
+    @Transactional
     public void resignMatch(Long matchId, User resigningUser) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found"));

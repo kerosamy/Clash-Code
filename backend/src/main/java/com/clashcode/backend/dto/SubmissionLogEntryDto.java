@@ -7,7 +7,9 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SubmissionLogDto {
+public class SubmissionLogEntryDto {
     private String submittedAt;
     private String submissionStatus;
+    private int numberOfPassedTestCases;
+    private int numberOfTotalTestCases;
 }

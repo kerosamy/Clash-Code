@@ -30,7 +30,7 @@ class MatchServiceTest {
     @Mock private MatchRepository matchRepository;
     @Mock private MatchParticipantRepository matchParticipantRepository;
     @Mock private MatchMapper matchMapper;
-    @Mock private MatchScheduler matchScheduler; // ✅ add this
+    @Mock private MatchScheduler matchScheduler;
     @Mock private SubmissionRepository submissionRepository;
     @Mock private RankMapper rankMapper;
     @InjectMocks
