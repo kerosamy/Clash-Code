@@ -76,14 +76,13 @@ class UserMapperTest {
         CategoryDto category1 = new CategoryDto("DP", 20);
         CategoryDto category2 = new CategoryDto("GRAPH", 30);
 
-        ProfileDto profile = userMapper.toUserProfile(user, "DIAMOND", 5, stats, new CategoryDto[]{category1, category2});
+        ProfileDto profile = userMapper.toUserProfile(user, "DIAMOND", 5, stats, new CategoryDto[]{category1, category2},"");
 
         assertEquals("caroline", profile.getUsername());
         assertEquals("DIAMOND", profile.getRank());
         assertEquals(1200, profile.getCurrentRate());
         assertEquals(1300, profile.getMaxRate());
         assertEquals(5, profile.getFriendCount());
-        assertEquals("https://example.com/avatar.png", profile.getAvatarUrl());
         assertEquals(stats, profile.getStats());
         assertEquals(2, profile.getCategories().length);
         assertEquals("DP", profile.getCategories()[0].getName());
@@ -101,14 +100,13 @@ class UserMapperTest {
 
         StatsDto stats = new StatsDto();
 
-        ProfileDto profile = userMapper.toUserProfile(user, "BRONZE", 0, stats, null);
+        ProfileDto profile = userMapper.toUserProfile(user, "BRONZE", 0, stats, null,"");
 
         assertEquals("alex", profile.getUsername());
         assertEquals("BRONZE", profile.getRank());
         assertEquals(500, profile.getCurrentRate());
         assertEquals(600, profile.getMaxRate());
         assertEquals(0, profile.getFriendCount());
-        assertNull(profile.getAvatarUrl());
         assertEquals(stats, profile.getStats());
         assertNull(profile.getCategories());
     }
