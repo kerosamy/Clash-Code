@@ -50,7 +50,7 @@ class NotificationServiceTest {
 
         when(repository.save(any(Notification.class))).thenReturn(notification);
 
-        notificationService.send(1L, NotificationType.FRIEND_REQUEST_RECEIVED,
+        notificationService.send(2L, 1L, NotificationType.FRIEND_REQUEST_RECEIVED,
                 "Friend Request", "You have a new friend request");
 
         verify(repository).save(any(Notification.class));

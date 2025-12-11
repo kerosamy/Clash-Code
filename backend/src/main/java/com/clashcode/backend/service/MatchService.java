@@ -1,21 +1,23 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.CreateMatchRequestDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
+import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.enums.MatchState;
+import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
+import com.clashcode.backend.exception.UnauthorizedException;
+import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.RankMapper;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class MatchService {
@@ -29,6 +31,7 @@ public class MatchService {
     private final RankMapper rankMapper;
     private final MatchScheduler matchScheduler;
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
     private final SubmissionService submissionService;
 
     public MatchService(
@@ -40,7 +43,7 @@ public class MatchService {
             SubmissionRepository submissionRepository,
             RankMapper rankMapper,
             MatchScheduler matchScheduler,
-            NotificationService notificationService,
+            NotificationService notificationService, NotificationRepository notificationRepository,
             SubmissionService submissionService
     ) {
         this.userRepository = userRepository;
@@ -52,21 +55,74 @@ public class MatchService {
         this.rankMapper = rankMapper;
         this.matchScheduler = matchScheduler;
         this.notificationService = notificationService;
+        this.notificationRepository = notificationRepository;
         this.submissionService = submissionService;
     }
 
+    public Problem selectProblem(User userA, User userB) {
+        int avgRate = (userA.getCurrentRate() + userB.getCurrentRate()) / 2;
+        int minRate = avgRate - 300;
+        int maxRate = avgRate + 300;
+
+        minRate = Math.max(minRate, 0);
+        maxRate = Math.min(maxRate, 2000);
+
+        //TODO exclude the problems solved by both of them
+
+        List<Problem> problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
+
+        while (problems.isEmpty() && (minRate > 0 || maxRate < 2000)) {
+            minRate = Math.max(minRate - 100, 0);
+            maxRate = Math.min(maxRate + 100, 2000);
+
+            problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
+        }
+
+        if (problems.isEmpty()) {
+            throw new IllegalStateException("No problems available in the full range 0–2000");
+        }
+
+        return problems.get(new Random().nextInt(problems.size()));
+    }
+
+    public void sendMatchInvite(User sender, String recipientUsername) {
+        User recipient = userRepository.findByUsername(recipientUsername)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username " + recipientUsername));
+
+        notificationService.send(sender.getId(), recipient.getId(), NotificationType.MATCH_INVITATION,
+                "Match Invitation",
+                sender.getUsername() + " invites you to a match");
+    }
+
+    public MatchResponseDto acceptMatchInvite(User player1, long notificationId) {
+        Notification invite = notificationRepository.findById(notificationId).orElseThrow();
+
+        if (!invite.getRecipientId().equals(player1.getId())) {
+            throw new UnauthorizedException("Not your invite");
+        }
+
+        User player2 = userRepository.findById(invite.getSenderId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + invite.getSenderId()));
+
+        Problem problem = selectProblem(player1, player2);
+        return createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+    }
+
     @Transactional
-    public MatchResponseDto createMatch(CreateMatchRequestDto createMatchRequestDto) {
-        User player1 = userRepository.findById(createMatchRequestDto.getPlayer1Id())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Player 1 does not exist"));
+    public MatchResponseDto createMatch(
+            User player1,
+            User player2,
+            Problem problem,
+            int duration,
+            GameMode gameMode
+    ) {
+        Match match = Match.builder()
+                .duration(duration)
+                .gameMode(gameMode)
+                .matchState(MatchState.ONGOING)
+                .problem(problem)
+                .build();
 
-        User player2 = userRepository.findById(createMatchRequestDto.getPlayer2Id())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Player 2 does not exist"));
-
-        Problem problem = problemRepository.findById(createMatchRequestDto.getProblemId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem does not exist"));
-
-        Match match = matchMapper.toMatchEntity(createMatchRequestDto, problem);
         Match savedMatch = matchRepository.save(match);
 
         MatchParticipant p1 = matchMapper.createParticipant(player1, savedMatch);
@@ -77,6 +133,18 @@ public class MatchService {
 
         savedMatch.setParticipants(participants);
         matchScheduler.scheduleMatchEnd(savedMatch);
+        notificationService.sendMatchStart(
+                match,
+                "Match Begins",
+                String.format("Try Your Best, %s", player1.getUsername()),
+                player1.getId()
+        );
+        notificationService.sendMatchStart(
+                match,
+                "Code Submission",
+                String.format("Try Your Best, %s", player2.getUsername()),
+                player2.getId()
+        );
         return matchMapper.toResponseDto(savedMatch);
     }
 

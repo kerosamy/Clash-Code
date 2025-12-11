@@ -1,23 +1,24 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.CreateMatchRequestDto;
 import com.clashcode.backend.dto.MatchResponseDto;
-import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.enums.MatchState;
+import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.RankMapper;
-import com.clashcode.backend.model.*;
-import com.clashcode.backend.repository.*;
+import com.clashcode.backend.model.Match;
+import com.clashcode.backend.model.MatchParticipant;
+import com.clashcode.backend.model.Problem;
+import com.clashcode.backend.model.User;
+import com.clashcode.backend.repository.MatchParticipantRepository;
+import com.clashcode.backend.repository.MatchRepository;
+import com.clashcode.backend.repository.SubmissionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,125 +26,70 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private ProblemRepository problemRepository;
     @Mock private MatchRepository matchRepository;
     @Mock private MatchParticipantRepository matchParticipantRepository;
     @Mock private MatchMapper matchMapper;
     @Mock private MatchScheduler matchScheduler;
     @Mock private SubmissionRepository submissionRepository;
     @Mock private RankMapper rankMapper;
+
     @InjectMocks
     private MatchService matchService;
 
     @Test
-    void createMatch_success() {
-        Long p1Id = 1L;
-        Long p2Id = 2L;
-        Long problemId = 10L;
+    void createMatch_withEntities_success() {
+        // Arrange
         Long matchId = 100L;
+        int duration = 30;
+        GameMode gameMode = GameMode.UNRATED;
 
-        CreateMatchRequestDto reqDto = new CreateMatchRequestDto();
-        reqDto.setPlayer1Id(p1Id);
-        reqDto.setPlayer2Id(p2Id);
-        reqDto.setProblemId(problemId);
-
-        User user1 = User.builder().id(p1Id).build();
-        User user2 = User.builder().id(p2Id).build();
+        User player1 = User.builder().id(1L).username("p1").build();
+        User player2 = User.builder().id(2L).username("p2").build();
         Problem problem = new Problem();
-        problem.setId(problemId);
+        problem.setId(10L);
 
-        Match matchBeforeSave = new Match();
-        Match matchSaved = Match.builder().id(matchId).build();
+        // The service constructs a new Match internally and calls save
+        Match savedMatch = Match.builder().id(matchId).build();
 
-        MatchParticipant p1 = MatchParticipant.builder().user(user1).build();
-        MatchParticipant p2 = MatchParticipant.builder().user(user2).build();
+        MatchParticipant p1 = MatchParticipant.builder().user(player1).build();
+        MatchParticipant p2 = MatchParticipant.builder().user(player2).build();
 
         MatchResponseDto expectedResponse = MatchResponseDto.builder().id(matchId).build();
 
-        when(userRepository.findById(p1Id)).thenReturn(Optional.of(user1));
-        when(userRepository.findById(p2Id)).thenReturn(Optional.of(user2));
-        when(problemRepository.findById(problemId)).thenReturn(Optional.of(problem));
-        when(matchMapper.toMatchEntity(reqDto, problem)).thenReturn(matchBeforeSave);
-        when(matchRepository.save(matchBeforeSave)).thenReturn(matchSaved);
-        when(matchMapper.createParticipant(user1, matchSaved)).thenReturn(p1);
-        when(matchMapper.createParticipant(user2, matchSaved)).thenReturn(p2);
-        when(matchMapper.toResponseDto(matchSaved)).thenReturn(expectedResponse);
+        when(matchRepository.save(any(Match.class))).thenReturn(savedMatch);
+        when(matchMapper.createParticipant(player1, savedMatch)).thenReturn(p1);
+        when(matchMapper.createParticipant(player2, savedMatch)).thenReturn(p2);
+        when(matchMapper.toResponseDto(savedMatch)).thenReturn(expectedResponse);
+        when(matchScheduler.scheduleMatchEnd(savedMatch)).thenReturn(null);
 
-        // ✅ stub scheduler correctly
-        when(matchScheduler.scheduleMatchEnd(matchSaved)).thenReturn(null);
+        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
 
         // Act
-        MatchResponseDto result = matchService.createMatch(reqDto);
+        MatchResponseDto result = matchService.createMatch(player1, player2, problem, duration, gameMode);
 
-        // Assert
+        // Assert response
         assertNotNull(result);
         assertEquals(matchId, result.getId());
 
-        verify(matchRepository).save(matchBeforeSave);
-        verify(matchParticipantRepository).saveAll(anyList());
-        verify(matchScheduler).scheduleMatchEnd(matchSaved); // verify scheduler called
-    }
+        // Verify save and capture the constructed match to assert fields
+        verify(matchRepository).save(matchCaptor.capture());
+        Match constructed = matchCaptor.getValue();
+        assertEquals(problem, constructed.getProblem());
+        assertEquals(duration, constructed.getDuration());
+        assertEquals(gameMode, constructed.getGameMode());
+        assertEquals(MatchState.ONGOING, constructed.getMatchState());
 
-    @Test
-    void createMatch_Player1DoesNotExist() {
-        // Arrange
-        CreateMatchRequestDto reqDto = new CreateMatchRequestDto();
-        reqDto.setPlayer1Id(99L);
+        // Verify participants persisted and scheduler invoked
+        verify(matchParticipantRepository).saveAll(argThat(iterable -> {
+            List<MatchParticipant> participants = new ArrayList<>();
+            iterable.forEach(participants::add);
+            return participants.size() == 2 && participants.containsAll(List.of(p1, p2));
+        }));
 
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        verify(matchScheduler).scheduleMatchEnd(savedMatch);
 
-        // Act & Assert
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> matchService.createMatch(reqDto));
-
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
-        assertEquals("Player 1 does not exist", ex.getReason());
-
-        verify(userRepository, never()).findById(reqDto.getPlayer2Id());
-        verifyNoInteractions(matchRepository);
-    }
-
-    @Test
-    void createMatch_Player2DoesNotExist() {
-        // Arrange
-        CreateMatchRequestDto reqDto = new CreateMatchRequestDto();
-        reqDto.setPlayer1Id(1L);
-        reqDto.setPlayer2Id(99L);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> matchService.createMatch(reqDto));
-
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
-        assertEquals("Player 2 does not exist", ex.getReason());
-
-        verifyNoInteractions(matchRepository);
-    }
-
-    @Test
-    void createMatch_ProblemDoesNotExist() {
-        // Arrange
-        CreateMatchRequestDto reqDto = new CreateMatchRequestDto();
-        reqDto.setPlayer1Id(1L);
-        reqDto.setPlayer2Id(2L);
-        reqDto.setProblemId(99L);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(new User()));
-        when(problemRepository.findById(99L)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> matchService.createMatch(reqDto));
-
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
-        assertEquals("Problem does not exist", ex.getReason());
-
-        verifyNoInteractions(matchRepository);
+        // Ensure participants set on saved match before mapping
+        assertEquals(2, savedMatch.getParticipants().size());
     }
 
     @Test
@@ -156,7 +102,7 @@ class MatchServiceTest {
                 .participants(List.of(participant))
                 .build();
 
-        when(matchRepository.findById(123L)).thenReturn(Optional.of(match));
+        when(matchRepository.findById(123L)).thenReturn(java.util.Optional.of(match));
 
         Match result = matchService.validateMatch(123L, user);
 
@@ -172,7 +118,7 @@ class MatchServiceTest {
                 .participants(List.of(MatchParticipant.builder().user(user).build()))
                 .build();
 
-        when(matchRepository.findById(123L)).thenReturn(Optional.of(match));
+        when(matchRepository.findById(123L)).thenReturn(java.util.Optional.of(match));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> matchService.validateMatch(123L, user));
@@ -189,7 +135,7 @@ class MatchServiceTest {
                 .participants(List.of(MatchParticipant.builder().user(other).build()))
                 .build();
 
-        when(matchRepository.findById(123L)).thenReturn(Optional.of(match));
+        when(matchRepository.findById(123L)).thenReturn(java.util.Optional.of(match));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> matchService.validateMatch(123L, user));
