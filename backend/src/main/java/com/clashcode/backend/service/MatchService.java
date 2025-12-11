@@ -3,7 +3,9 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.CreateMatchRequestDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
+import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.MatchState;
+import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.RankMapper;
 import com.clashcode.backend.model.*;
@@ -26,6 +28,8 @@ public class MatchService {
     private final SubmissionRepository submissionRepository;
     private final RankMapper rankMapper;
     private final MatchScheduler matchScheduler;
+    private final NotificationService notificationService;
+    private final SubmissionService submissionService;
 
     public MatchService(
             UserRepository userRepository,
@@ -35,7 +39,9 @@ public class MatchService {
             MatchMapper matchMapper,
             SubmissionRepository submissionRepository,
             RankMapper rankMapper,
-            MatchScheduler matchScheduler
+            MatchScheduler matchScheduler,
+            NotificationService notificationService,
+            SubmissionService submissionService
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -45,6 +51,8 @@ public class MatchService {
         this.submissionRepository = submissionRepository;
         this.rankMapper = rankMapper;
         this.matchScheduler = matchScheduler;
+        this.notificationService = notificationService;
+        this.submissionService = submissionService;
     }
 
     @Transactional
@@ -97,12 +105,39 @@ public class MatchService {
                 .orElseThrow(() -> new IllegalArgumentException("Match not found"));
 
         return match.getParticipants().stream()
-                .map(particicpant -> {
+                .map(participant -> {
                     List<Submission> submissions = submissionRepository
-                            .findByUserIdAndMatchId(particicpant.getUser().getId(), matchId);
-                    return matchMapper.toMatchSubmissionLogDto(particicpant, submissions);
+                            .findByUserIdAndMatchId(participant.getUser().getId(), matchId);
+                    return matchMapper.toMatchSubmissionLogDto(participant, submissions);
                 })
                 .toList();
+    }
+
+    public void submitCode(SubmissionRequestDto submissionRequestDto, User player) {
+        Match match = validateMatch(submissionRequestDto.getMatchId(),  player);
+
+        notificationService.sendMatchPop(
+                match,
+                "Code Submission",
+                String.format("%s submitted a solution", player.getUsername()),
+                player.getUsername()
+        );
+
+        Submission submission = submissionService.submitCode(submissionRequestDto, player);
+
+        notificationService.sendMatchPop(
+                match,
+                "Submission Status",
+                String.format("%s got %s and passed %d test case",
+                        player.getUsername(),
+                        submission.getStatus(),
+                        submission.getNumberOfPassedTestCases()),
+                player.getUsername()
+        );
+
+        if (submission.getStatus() == SubmissionStatus.ACCEPTED) {
+            completeMatch(match, player);
+        }
     }
 
     @Transactional

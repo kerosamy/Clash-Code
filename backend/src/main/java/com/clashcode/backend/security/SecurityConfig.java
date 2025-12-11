@@ -49,7 +49,7 @@ public class SecurityConfig {
 
                 // ===== Authorization rules =====
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/**", "/ws/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
 
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN") // Most restrictive first

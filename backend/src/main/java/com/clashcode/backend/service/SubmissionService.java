@@ -11,6 +11,7 @@ import com.clashcode.backend.model.Match;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
+import com.clashcode.backend.repository.MatchRepository;
 import com.clashcode.backend.repository.ProblemRepository;
 import com.clashcode.backend.repository.SubmissionRepository;
 import org.springframework.stereotype.Service;
@@ -25,28 +26,35 @@ public class SubmissionService {
     private final TestCaseService testCaseService;
     private final Judge0Client judge0Client;
     private final SubmissionMapper submissionMapper;
-    private final MatchService matchService;
+    private final MatchRepository matchRepository;
 
-    public SubmissionService(SubmissionRepository submissionRepository, ProblemRepository problemRepository, TestCaseService testCaseService, Judge0Client judge0Client, SubmissionMapper submissionMapper, MatchService matchService) {
+    public SubmissionService(
+            SubmissionRepository submissionRepository,
+            ProblemRepository problemRepository,
+            TestCaseService testCaseService,
+            Judge0Client judge0Client,
+            SubmissionMapper submissionMapper,
+            MatchRepository matchRepository
+    ) {
         this.submissionRepository = submissionRepository;
         this.problemRepository = problemRepository;
         this.testCaseService = testCaseService;
         this.judge0Client = judge0Client;
         this.submissionMapper = submissionMapper;
-        this.matchService = matchService;
+        this.matchRepository = matchRepository;
     }
 
-
-    public void submitCode(SubmissionRequestDto requestDto, User user) {
+    public Submission submitCode(SubmissionRequestDto requestDto, User user) {
         Problem problem = problemRepository.findById(requestDto.getProblemId())
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
-
-        Match match = matchService.validateMatch(requestDto.getMatchId(),  user);
 
         List<String> inputs = testCaseService.getInputTestCasesForProblem(problem) ;
         List<String> outputs = testCaseService.getOutputTestCasesForProblem(problem);
 
         Submission submission = submissionMapper.toEntity(requestDto, user, problem, inputs.size());
+        Match match = matchRepository.findById(requestDto.getMatchId())
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+
         submission.setMatch(match);
         submissionRepository.save(submission);
 
@@ -70,9 +78,7 @@ public class SubmissionService {
         problem.setSubmissionsCount(problem.getSubmissionsCount()+1);
         problemRepository.save(problem);
 
-        if(submission.getMatch() != null && submission.getStatus() == SubmissionStatus.ACCEPTED) {
-            matchService.completeMatch(submission.getMatch(), user);
-        }
+        return submission;
     }
 
     public List<SubmissionListDto> getSubmissionsByUser(Long userId) {
