@@ -19,11 +19,9 @@ import java.util.List;
 public class MatchController {
 
     private final MatchService matchService;
-    private final SubmissionService submissionService;
 
     public MatchController(MatchService matchService, SubmissionService submissionService) {
         this.matchService = matchService;
-        this.submissionService = submissionService;
     }
 
     @PostMapping("/create")
@@ -40,7 +38,7 @@ public class MatchController {
         if (user == null) {
             throw new UnauthorizedException("User not authenticated");
         }
-        submissionService.submitCode(submissionRequestDto, user);
+        matchService.submitCode(submissionRequestDto, user);
         return ResponseEntity.ok().build();
     }
 
