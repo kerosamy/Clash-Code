@@ -57,14 +57,12 @@ public class UserService {
         return new StatsDto(solvedProblems, attemptedProblems, matchesPlayed, matchesWon);
     }
 
-    private CategoryDto[] getCategories(User user) {
-        //TODO
-        return new CategoryDto[]{
-                new CategoryDto(ProblemTags.DP.name(), 20),
-                new CategoryDto(ProblemTags.TWO_POINTERS.name(), 40),
-                new CategoryDto(ProblemTags.BRUTE_FORCE.name(), 30),
-                new CategoryDto(ProblemTags.BFS.name(), 15),
-        };
+    private CategoryDto[] getCategories(long userId) {
+        List<Object[]> results = submissionRepository.countProblemsByCategory(userId, SubmissionStatus.ACCEPTED);
+
+        return results.stream()
+                .map(r -> new CategoryDto(r[0].toString(), ((Number) r[1]).intValue()))
+                .toArray(CategoryDto[]::new);
     }
 
     private int getFriendCount(long userId) {
@@ -82,7 +80,7 @@ public class UserService {
         String rank = getRank(user.getCurrentRate());
         int friendCount = getFriendCount(user.getId());
         StatsDto stats = getStats(user.getId());
-        CategoryDto[] categories = getCategories(user);
+        CategoryDto[] categories = getCategories(user.getId());
 
         // Convert stored filename to full URL
         String imageUrl = buildImageUrl(user.getImgUrl());
