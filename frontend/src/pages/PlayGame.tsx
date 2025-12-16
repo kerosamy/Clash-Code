@@ -3,6 +3,7 @@ import { Outlet, useParams, useNavigate } from 'react-router-dom';
 
 import TopNavigator from "../components/common/TopNavigators";
 import ConfirmationModal from "../components/common/ConfirmationModal";
+import Timer from "../components/match/Timer";
 
 import { matchSubRoutes } from '../routes/routes.config';
 import { resignMatch, getMatchDetails } from "../services/MatchService";
@@ -13,7 +14,7 @@ export default function PlayGame() {
 
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-   
+    
     const [matchData, setMatchData] = useState<{ startAt: string, duration: number, state: string } | null>(null);
 
     useEffect(() => {
@@ -25,7 +26,7 @@ export default function PlayGame() {
                 setMatchData({
                     startAt: data.startAt,
                     duration: data.duration,
-                    state: data.matchState 
+                    state: data.matchState
                 });
             } catch (error) {
                 console.error("Could not fetch match details", error);
@@ -47,7 +48,9 @@ export default function PlayGame() {
         setIsProcessing(true);
         try {
             resignMatch(Number(id));
+            
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+            
             setIsResignModalOpen(false);
             navigate(`/play-game/${id}/match-state`);
         } catch (error) {
@@ -59,10 +62,13 @@ export default function PlayGame() {
     };
 
     const isMatchOngoing = matchData?.state === "ONGOING";
+
     return (
         <div className="flex flex-col min-h-screen font-anta relative bg-background">
+            
             <div className="relative w-full">
                 <TopNavigator navigators={matchSubRoutes} />
+
                 {isMatchOngoing && (
                     <div className="absolute top-3 right-0 h-full flex items-center pr-6 pointer-events-none">
                         <button
@@ -76,7 +82,20 @@ export default function PlayGame() {
                     </div>
                 )}
             </div>
+
             <Outlet />
+
+            {matchData && (
+                <Timer 
+                    startAt={matchData.startAt} 
+                    durationMinutes={matchData.duration} 
+                    isMatchOver={!isMatchOngoing} 
+                    onTimeExpire={() => {
+                         console.log("Time is up!");
+                    }}
+                />
+            )}
+
             <ConfirmationModal
                 isOpen={isResignModalOpen}
                 onClose={() => setIsResignModalOpen(false)}
