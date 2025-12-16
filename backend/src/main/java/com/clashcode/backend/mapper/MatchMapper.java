@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.model.*;
+import com.clashcode.backend.service.UserService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,6 +12,11 @@ import java.util.stream.Collectors;
 
 @Component
 public class MatchMapper {
+    private final UserService userService;
+
+    public MatchMapper(UserService userService) {
+        this.userService = userService;
+    }
 
     public MatchResponseDto toResponseDto(Match match) {
         return MatchResponseDto.builder()
@@ -60,21 +66,25 @@ public class MatchMapper {
 
     public SubmissionLogEntryDto toSubmissionLogDto(Submission submission) {
         return SubmissionLogEntryDto.builder()
-                .submittedAt(submission.getSubmittedAt().toString())
-                .submissionStatus(submission.getStatus().name())
-                .numberOfTotalTestCases(submission.getNumberOfTestCases())
-                .numberOfPassedTestCases(submission.getNumberOfPassedTestCases())
+                .submissionId(submission.getId())
+                .status(submission.getStatus() != null ? submission.getStatus().toString() : "UNKNOWN")
+                .submittedAt(submission.getSubmittedAt() != null ? submission.getSubmittedAt().toString() : "")
+                .numberOfPassedTestCases(submission.getNumberOfPassedTestCases() !=null ? submission.getNumberOfPassedTestCases() : 0)
+                .numberOfTotalTestCases(submission.getNumberOfTestCases() !=null ? submission.getNumberOfTestCases() : 0)
+                .numberOfCurrentTestCase(submission.getNumberOfCurrentTestCase() !=null ? submission.getNumberOfCurrentTestCase() : 0)
                 .build();
     }
 
     public MatchSubmissionLogDto toMatchSubmissionLogDto(MatchParticipant participant, List<Submission> submissions) {
-        List<SubmissionLogEntryDto> SubmissionsLog = submissions.stream()
+        List<SubmissionLogEntryDto> submissionsLog = submissions.stream()
                 .map(this::toSubmissionLogDto)
                 .toList();
 
+        ProfileDto profile = userService.getUserProfile(participant.getUser().getUsername());
+
         return MatchSubmissionLogDto.builder()
-                .playerId(participant.getUser().getId())
-                .submissions(SubmissionsLog)
+                .profile(profile)
+                .submissions(submissionsLog)
                 .build();
     }
 }

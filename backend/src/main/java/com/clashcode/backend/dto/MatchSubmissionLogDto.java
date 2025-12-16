@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class MatchSubmissionLogDto {
-    private Long playerId;
+    private ProfileDto profile;
     private List<SubmissionLogEntryDto> submissions;
 }
 

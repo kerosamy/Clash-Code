@@ -179,17 +179,17 @@ public class MatchService {
         return match;
     }
 
+    @Transactional
     public List<MatchSubmissionLogDto> getMatchSubmissionLog(Long matchId) {
-        Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
-
-        return match.getParticipants().stream()
-                .map(participant -> {
-                    List<Submission> submissions = submissionRepository
-                            .findByUserIdAndMatchId(participant.getUser().getId(), matchId);
-                    return matchMapper.toMatchSubmissionLogDto(participant, submissions);
-                })
-                .toList();
+            Match match = matchRepository.findById(matchId)
+                    .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+            return match.getParticipants().stream()
+                    .map(participant -> {
+                        List<Submission> submissions = submissionRepository
+                                .findByUserIdAndMatchId(participant.getUser().getId(), matchId);
+                        return matchMapper.toMatchSubmissionLogDto(participant, submissions);
+                    })
+                    .toList();
     }
 
     public void submitCode(SubmissionRequestDto submissionRequestDto, User player) {
@@ -241,6 +241,8 @@ public class MatchService {
         match.setMatchState(MatchState.COMPLETED);
         matchRepository.save(match);
         matchParticipantRepository.saveAll(match.getParticipants());
+
+        //TODO calculate new ratings
     }
 
     @Transactional
@@ -262,21 +264,22 @@ public class MatchService {
 
 
     public ProblemResponseDto getMatchProblem(Long matchId) {
-        System.out.println(matchId+"match i");
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Match not found"));
-
         Problem problem = match.getProblem();
-        System.out.println("problem is null");
         if (problem == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Match has no problem assigned");
         }
-        System.out.println("problem is not null");
+        return problemMapper.toResponseDto(problem, testCaseService.getVisibleTestCasesForProblem(problem));
+    }
 
-        ProblemResponseDto dto = problemMapper.toResponseDto(problem, testCaseService.getVisibleTestCasesForProblem(problem));
-
-        return dto;
+    public MatchResponseDto getMatchDetails(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+        return matchMapper.toResponseDto(match);
     }
 }
+
+

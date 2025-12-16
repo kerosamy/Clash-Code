@@ -1,33 +1,47 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import ProblemSection from "../../components/problem/ProblemSectionProps";
 import TestCases from "../../components/problem/TestCase";
 import LogoLoader from "../../components/Loader/LogoLoader";
 import { waitForLoader } from "../../components/Loader/WaitLoader";
 
 import { fetchProblemById } from "../../services/ProblemService";
+import { getProblemForMatch } from "../../services/MatchService";
 
 export default function ProblemDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const problemId = Number(id);
+  const location = useLocation();
+
+  const numericId = Number(id);
   const [problem, setProblem] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const mode: "practice" | "match" = location.pathname.startsWith("/practice")
+    ? "practice"
+    : "match";
+
   useEffect(() => {
-    if (!problemId || isNaN(problemId)) {
+    if (!numericId || isNaN(numericId)) {
       navigate("/not-found", { replace: true });
       return;
     }
 
     const startTime = Date.now();
 
-    fetchProblemById(problemId)
+    const fetchData =
+      mode === "practice"
+        ? fetchProblemById(numericId)
+        : getProblemForMatch(numericId);
+
+    fetchData
       .then(async (data) => {
         if (!data) {
           navigate("/not-found", { replace: true });
         } else {
-          await waitForLoader(startTime);
+          if (mode === "practice") {
+            await waitForLoader(startTime);
+          }
           setProblem(data);
         }
       })
@@ -35,21 +49,20 @@ export default function ProblemDetails() {
         navigate("/not-found", { replace: true });
       })
       .finally(() => setLoading(false));
-  }, [problemId, navigate]);
+  }, [numericId, navigate, mode]);
 
   if (loading) {
-    return(
-    <div className="flex flex-col flex-1 font-anta">
+    return (
+      <div className="flex flex-col flex-1 font-anta">
         <LogoLoader loadingMessage="Loading Problem" />
-    </div>
+      </div>
     );
   }
-
 
   if (!problem) {
     return null;
   }
-
+ 
   return (
     <div className="w-full text-white font-anta my-8 p-scroll-x">
       <div className="max-w-6xl mx-auto w-full">

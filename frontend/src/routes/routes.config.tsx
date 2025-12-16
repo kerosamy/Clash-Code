@@ -15,8 +15,6 @@ import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
 import ProblemDetails from '../pages/problem/ProblemDetails';
 import Submit from '../pages/problem/Submit';
-import MatchState from '../pages/match/MatchState' 
-import MatchProblemDetails from '../pages/match/MatchProblemDetails'
 
 // Profile sub-pages
 import ProfileOverview from '../pages/profile/ProfileOverview';
@@ -33,6 +31,9 @@ import AddFriend from '../pages/friends/AddFriend';
 import ProblemInfo from '../pages/suggestProblem/ProblemInfo';
 import ProblemStatment from '../pages/suggestProblem/ProblemStatment';
 import TestCases from '../pages/suggestProblem/TestCases';
+
+// match sub-pages
+import MatchState from '../pages/match/MatchState' 
 
 // Icons
 import ProfileIcon from '../assets/icons/profile.svg';
@@ -132,7 +133,7 @@ export const routes: RouteConfig[] = [
     icon: SwordIcon, 
     component: PlayGame,
     children: [
-      { index: true, component: MatchProblemDetails }, 
+      { index: true, component: ProblemDetails }, 
       { path: 'submit', component: Submit },
       { path: 'match-state', component: MatchState } 
     ]

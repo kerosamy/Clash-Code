@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProblemSection from "../../components/problem/ProblemSectionProps";
 import TestCases from "../../components/problem/TestCase";
-import Loading from "../../components/Loader/LogoLoader";
+//import Loading from "../../components/Loading";
 import {getProblemForMatch} from "../../services/MatchService"
 
 export default function ProblemDetails() {
@@ -13,10 +13,10 @@ export default function ProblemDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // if (!matchId || isNaN(matchId)) {
-    //   navigate("/not-found", { replace: true });
-    //   return;
-    // }
+    if (!matchId || isNaN(matchId)) {
+      navigate("/not-found", { replace: true });
+      return;
+    }
 
     getProblemForMatch(matchId)
       .then((data) => {
@@ -33,7 +33,7 @@ export default function ProblemDetails() {
   }, [matchId, navigate]);
 
   if (loading) {
-    return <Loading message="Loading problem..." />;
+    //return <Loading message="Loading problem..." />;
   }
 
   if (!problem) {

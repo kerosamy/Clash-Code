@@ -1,4 +1,3 @@
-// pages/Submissions.tsx
 import { useState, useEffect } from "react";
 import Board from "../../components/common/Board";
 import SubmissionRow from "../../components/common/SubmissionRow";
