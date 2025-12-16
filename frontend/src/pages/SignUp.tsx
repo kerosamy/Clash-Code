@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../services/AuthService.ts";
-import InputField from "../components/authentication/InputField.tsx";
-import PasswordField from "../components/authentication/PasswordField.tsx";
-import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal.tsx";
+import { registerUser, type RegisterRequest } from "../services/AuthService";
+import InputField from "../components/authentication/InputField";
+import PasswordField from "../components/authentication/PasswordField";
+import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal";
 import {
   validateUsername,
   validateEmail,
@@ -47,20 +47,24 @@ export default function SignUp() {
   const validateAllInputs = () => {
     const newErrors: { [key: string]: string } = {};
 
-    const validations = [
-      { fn: validateUsername(formData.username), field: 'username' },
-      { fn: validateEmail(formData.email), field: 'email' },
-      { fn: validatePassword(formData.password), field: 'password' },
-      { fn: validatePasswordMatch(formData.password, formData.confirmPassword), field: 'confirmPassword' },
-      { fn: validateRecoveryQuestion(formData.recoveryQuestion), field: 'recoveryQuestion' },
-      { fn: validateRecoveryAnswer(formData.recoveryAnswer), field: 'recoveryAnswer' }
-    ];
+    // Execute all validations from validation.ts
+    const usernameVal = validateUsername(formData.username);
+    if (!usernameVal.isValid) newErrors.username = usernameVal.error!;
 
-    validations.forEach(({ fn, field }) => {
-      if (!fn.isValid) {
-        newErrors[field] = fn.error!;
-      }
-    });
+    const emailVal = validateEmail(formData.email);
+    if (!emailVal.isValid) newErrors.email = emailVal.error!;
+
+    const passVal = validatePassword(formData.password);
+    if (!passVal.isValid) newErrors.password = passVal.error!;
+
+    const matchVal = validatePasswordMatch(formData.password, formData.confirmPassword);
+    if (!matchVal.isValid) newErrors.confirmPassword = matchVal.error!;
+
+    const qVal = validateRecoveryQuestion(formData.recoveryQuestion);
+    if (!qVal.isValid) newErrors.recoveryQuestion = qVal.error!;
+
+    const aVal = validateRecoveryAnswer(formData.recoveryAnswer);
+    if (!aVal.isValid) newErrors.recoveryAnswer = aVal.error!;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -70,70 +74,30 @@ export default function SignUp() {
     e.preventDefault();
     setErrors({});
 
-    // Client-side validation
     if (!validateAllInputs()) return;
 
     setIsLoading(true);
 
+    const requestData: RegisterRequest = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      recoveryQuestion: formData.recoveryQuestion,
+      recoveryAnswer: formData.recoveryAnswer,
+    };
+
     try {
-      const requestData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        recoveryQuestion: formData.recoveryQuestion,
-        recoveryAnswer: formData.recoveryAnswer,
-      };
-
       await registerUser(requestData);
-      navigate("/profile/1/overview");
-    } catch (err: any) {
-      // --- IMPROVED ERROR HANDLING ---
+
+      navigate(`/profile/${formData.username}/overview`);
       
-      // 1. Extract the deep backend message (ignoring generic 404/500 wrappers if possible)
-      // Checks: err.response.data.message -> err.response.data -> err.message
-      const backendError = 
-        err.response?.data?.message || 
-        err.response?.data || 
-        err.message || 
-        "Unknown error";
-
-      const errorString = String(backendError).toLowerCase();
-
-      // 2. Map the error to the specific field based on keywords
-      if (errorString.includes("email")) {
-        setErrors({ email: "This email is already registered." });
-      } 
-      else if (errorString.includes("username")) {
-        setErrors({ username: "This username is already taken." });
-      } 
-      else {
-        // Fallback for generic errors (e.g. server down)
-        setErrors({ global: typeof backendError === 'string' ? backendError : "Registration failed. Please try again." });
-      }
+    } catch (err: any) {
+      const errorMessage = err || "Registration failed";
+      setErrors({ global: errorMessage });
     } finally {
       setIsLoading(false);
     }
   };
-
-  try {
-    // Call backend and receive token
-    await registerUser(requestData);
-
-    // Redirect
-    navigate(`/profile/${username}/overview`);
-    
-  } catch (err: any) {
-    const errorMessage = err.message?.toLowerCase() || "";
-
-    if (errorMessage.includes("email")) {
-      setErrors({ email: err.message });
-    } else if (errorMessage.includes("username")) {
-      setErrors({ username: err.message });
-    } else {
-      alert(err.message || "Something went wrong. Try again later.");
-    }
-  }
-};
 
   const updateRecoveryData = (question: string, answer: string) => {
     setFormData(prev => ({
@@ -141,8 +105,14 @@ export default function SignUp() {
       recoveryQuestion: question,
       recoveryAnswer: answer
     }));
-    if(errors.recoveryQuestion) setErrors(prev => ({ ...prev, recoveryQuestion: "" }));
-    if(errors.recoveryAnswer) setErrors(prev => ({ ...prev, recoveryAnswer: "" }));
+    
+    // Clear errors if valid
+    if(errors.recoveryQuestion && validateRecoveryQuestion(question).isValid) {
+        setErrors(prev => ({ ...prev, recoveryQuestion: "" }));
+    }
+    if(errors.recoveryAnswer && validateRecoveryAnswer(answer).isValid) {
+        setErrors(prev => ({ ...prev, recoveryAnswer: "" }));
+    }
   };
 
   return (
@@ -164,7 +134,7 @@ export default function SignUp() {
             placeholder="Username"
             value={formData.username}
             onChange={handleInputChange('username')}
-            error={errors.username} // Error appears here
+            error={errors.username}
           />
 
           <InputField
@@ -172,7 +142,7 @@ export default function SignUp() {
             placeholder="Email"
             value={formData.email}
             onChange={handleInputChange('email')}
-            error={errors.email} // Error appears here
+            error={errors.email}
           />
 
           <PasswordField
@@ -192,13 +162,15 @@ export default function SignUp() {
           <button
             type="button"
             onClick={() => setIsRecoveryModalOpen(true)}
-            className="bg-background border border-gray-600 p-2 rounded-button hover:opacity-90 transition-colors"
+            className={`bg-background border p-2 rounded-button hover:opacity-90 transition-colors
+              ${(errors.recoveryQuestion || errors.recoveryAnswer) ? 'border-red-500 text-red-100' : 'border-gray-600'}
+            `}
           >
             {formData.recoveryQuestion ? '✓ Recovery Question Set' : 'Set Recovery Question'}
           </button>
           
           {(errors.recoveryQuestion || errors.recoveryAnswer) && (
-            <p className="text-red-500 text-sm">
+            <p className="text-red-500 text-sm text-center">
               {errors.recoveryQuestion || errors.recoveryAnswer}
             </p>
           )}

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getGoogleToken, getAuthenticatedUser } from "../services/AuthService";
+import { getUsername } from "../utils/jwtDecoder";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-
+  const username = getUsername();
   useEffect(() => {
     const processOAuth = async () => {
       try {
@@ -14,7 +15,6 @@ export default function OAuthCallback() {
 
         if (!token) throw new Error("Token not returned");
         localStorage.setItem("token", token);
-
         sessionStorage.getItem("oauth_flow");
 
         await new Promise((resolve) => setTimeout(resolve, 800));
@@ -30,7 +30,7 @@ export default function OAuthCallback() {
         sessionStorage.removeItem("oauth_flow");
 
         if (userExists) {
-          navigate("/profile/1/overview");
+          navigate(`/profile/${getUsername()}/overview`);
         } else {
           navigate("/complete-registration");
         }

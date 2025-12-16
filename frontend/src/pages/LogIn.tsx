@@ -19,18 +19,19 @@ export default function LogIn() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 1. Reset Errors
     const newErrors = { email: '', password: '' };
     setApiError('');
     let formValid = true;
 
-    // Validate email/username
+    // 2. Validate Email/Username using provided validation util
     const emailValidation = validateEmailOrUsername(email);
     if (!emailValidation.isValid) {
       newErrors.email = emailValidation.error!;
       formValid = false;
     }
 
-    // Validate password
+    // 3. Validate Password using provided validation util
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       newErrors.password = passwordValidation.error!;
@@ -44,16 +45,17 @@ export default function LogIn() {
     
     try {
       const credentials: LoginRequest = {
-        email: email,
+        email: email, // This field handles both email or username on backend usually
         password: password
       };
 
       await loginUser(credentials);
-    
+      
+      // Navigate to profile using the decoded username from the stored token
       navigate(`/profile/${getUsername()}/overview`);
 
     } catch (err: any) {
-      setApiError(err.error || 'Login failed. Please try again.');
+      setApiError(err || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +66,8 @@ export default function LogIn() {
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
-  const isFormValid = email.length >= 4 && password.length >= 8 && password.length <= 64;
+  // Basic check for button disable state (UX optimization)
+  const isFormValid = email.trim().length >= 4 && password.trim().length >= 8;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
@@ -81,16 +84,22 @@ export default function LogIn() {
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <InputField
-            placeholder="Email"
+            placeholder="Email or Username"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+            }}
             error={errors.email}
           />
 
           <PasswordField
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
+            }}
             error={errors.password}
           />
 

@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.LoginUserDto;
 import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.enums.Roles;
+import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import com.clashcode.backend.mapper.UserMapper;
@@ -36,11 +37,10 @@ public class AuthService {
     public User signup(RegisterUserDto input) {
 
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new RuntimeException("Username Already Taken");
         }
-
         if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already taken");
+            throw new RuntimeException("Email Already Taken");
         }
 
         String password = passwordEncoder.encode(input.getPassword());

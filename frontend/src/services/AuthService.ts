@@ -87,7 +87,6 @@ export const logout = () => {
 }
 
 export const fetchRecoveryQuestion = async (email: string): Promise<string> => {
-  // Note: We explicitly set Content-Type to text/plain as the backend expects raw body
   return apiRequest<string>({
     method: "POST",
     url: "/auth/recovery-question",
