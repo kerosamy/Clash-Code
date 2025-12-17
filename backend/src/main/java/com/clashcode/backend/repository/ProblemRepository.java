@@ -51,4 +51,13 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
     @Query("SELECT p FROM Problem p WHERE p.rate BETWEEN :minRate AND :maxRate AND p.problemStatus = 'APPROVED'")
     List<Problem> findProblemsInRateRange(@Param("minRate") int minRate,
                                           @Param("maxRate") int maxRate);
+
+    @Query("SELECT p FROM Problem p " +
+            "WHERE p.problemStatus = :status " +
+            "AND p.author = :username")
+    Page<Problem> findByStatusAndUsername(
+            @Param("status") ProblemStatus status,
+            @Param("username") String username,
+            Pageable pageable
+    );
 }

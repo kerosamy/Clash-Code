@@ -12,6 +12,9 @@ import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,6 +88,8 @@ public class ProblemService {
                 .map(problemMapper::toListDto);
     }
 
+
+
     public Page<ProblemListDto> getFilteredProblems(
             List<ProblemTags> tags,
             Integer minRate,
@@ -131,4 +136,15 @@ public class ProblemService {
         return problemRepository.findByTitleContainingIgnoreCase(keyword, pageRequest)
                 .map(problemMapper::toListDto);
     }
+
+    public Page<ProblemListDto> getRejectedProblems(int page, int size, String username) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        return problemRepository.findByStatusAndUsername(
+                ProblemStatus.REJECTED,
+                username,
+                pageRequest
+        ).map(problemMapper::toListDto);
+    }
+
 }

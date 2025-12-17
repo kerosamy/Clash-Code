@@ -58,6 +58,16 @@ public class ProblemController {
         return ResponseEntity.ok(problems);
     }
 
+    @GetMapping("/browse/rejected")
+    public ResponseEntity<Page<ProblemListDto>> browseRejected(
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @AuthenticationPrincipal User user
+    ) {
+        Page<ProblemListDto> problems = problemService.getRejectedProblems(page, size, user.getUsername());
+        return ResponseEntity.ok(problems);
+    }
+
     @PostMapping("/browse/filter")
     public ResponseEntity<Page<ProblemListDto>> browseFiltered(
             @RequestBody ProblemFilterDto filterDto,

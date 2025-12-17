@@ -31,6 +31,7 @@ import AddFriend from '../pages/friends/AddFriend';
 import ProblemInfo from '../pages/suggestProblem/ProblemInfo';
 import ProblemStatment from '../pages/suggestProblem/ProblemStatment';
 import TestCases from '../pages/suggestProblem/TestCases';
+import RejectedProblems from '../pages/suggestProblem/RejectedProblems';
 
 // match sub-pages
 import MatchState from '../pages/match/MatchState' 
@@ -56,6 +57,8 @@ import ReviewProblems from '../pages/ReviewProblems';
 import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.svg';
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
+import RejectedProblemsIcon from '../assets/icons/RejectedProblems.svg';
+
 
 export interface PageConfig {
   path: string;
@@ -148,7 +151,9 @@ export const routes: RouteConfig[] = [
       { index: true, component: () => <Navigate to="info" replace /> },
       { path: 'info' , component: ProblemInfo },
       { path: 'statement' , component: ProblemStatment },
-      { path: 'test-cases', component: TestCases }
+      { path: 'test-cases', component: TestCases },
+      { path: 'rejected-problems', component: RejectedProblems }
+
     ]
   },
   // admin and super admin 
@@ -195,6 +200,8 @@ export const SuggestProblemSubRoutes: RouteConfig[] = [
   {path: 'info', name: 'Problem Info', icon: ProblemInfoIcon, component: ProblemInfo },
   {path: 'statement', name: 'Problem Statment', icon: WriteProblemStatmentIcon, component: ProblemStatment },
   {path: 'test-cases', name: 'Test Cases', icon: TestCasesIcon, component: TestCases },
+  {path: 'rejected-problems', name: 'Rejected', icon: RejectedProblemsIcon, component: RejectedProblems },
+
 ];
 export const matchSubRoutes: RouteConfig[] = [
   { path: '', name: 'Problem Statment', icon: ProblemDetailsIcon, component: ProblemDetails },
