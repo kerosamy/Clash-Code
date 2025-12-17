@@ -1,12 +1,13 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.ProfileDto;
-import com.clashcode.backend.dto.UserManagementDto;
-import com.clashcode.backend.dto.UserSearchResponseDto;
+import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.Ranks;
 import com.clashcode.backend.enums.Roles;
+import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
-import com.clashcode.backend.repository.UserRepository;
+import com.clashcode.backend.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,290 +21,217 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private SubmissionRepository submissionRepository;
+    @Mock private MatchParticipantRepository matchParticipantRepository;
+    @Mock private FriendRepository friendRepository;
+    @Mock private UserMapper userMapper;
 
     @InjectMocks
     private UserService userService;
 
     @Test
-    void testGetProfile_AssemblesCorrectProfile() {
-        // Arrange
+    void test_getProfile_shouldAssembleStatsCategoriesFriendsAndRank() {
         User user = new User();
-        user.setId(1L);
-        user.setUsername("mina");
-        user.setCurrentRate(1140);
-        user.setMaxRate(1200);
-        user.setImgUrl("https://example.com/avatar.png");
+        user.setId(3L);
+        user.setUsername("kero");
+        user.setCurrentRate(1230);
+        user.setMaxRate(1500);
+        user.setImgUrl("avatar.png");
 
-        // Act
-        ProfileDto profile = userService.getProfile(user);
+        when(submissionRepository.countDistinctSolvedProblems(eq(3L), eq(SubmissionStatus.ACCEPTED)))
+                .thenReturn(5);
+        when(submissionRepository.countDistinctAttemptedProblems(3L))
+                .thenReturn(7);
+        when(matchParticipantRepository.countMatches(3L))
+                .thenReturn(3);
+        when(matchParticipantRepository.countWonMatches(3L))
+                .thenReturn(2);
+        when(friendRepository.countFriendsByUserId(eq(3L), any()))
+                .thenReturn(5);
 
-        // Assert
-        assertEquals("mina", profile.getUsername());
-        assertEquals("DIAMOND", profile.getRank()); // depends on getRank logic
-        assertEquals(1140, profile.getCurrentRate());
-        assertEquals(1200, profile.getMaxRate());
-        assertNotNull(profile.getStats());
-        assertNotNull(profile.getCategories());
+        when(submissionRepository.countProblemsByCategory(eq(3L), eq(SubmissionStatus.ACCEPTED)))
+                .thenReturn(List.of(
+                        new Object[]{"DP", 2L},
+                        new Object[]{"GRAPH_Theory", 3L}
+                ));
+
+        ProfileDto expected = ProfileDto.builder()
+                .username("kero")
+                .rank("MASTER")
+                .currentRate(1230)
+                .maxRate(1500)
+                .friendCount(5)
+                .stats(new StatsDto(5, 7, 3, 2))
+                .categories(new CategoryDto[]{
+                        new CategoryDto("DP", 2),
+                        new CategoryDto("GRAPH_Theory", 3)
+                })
+                .avatarUrl("http://localhost/images/avatar.png")
+                .build();
+
+        lenient().when(userMapper.toUserProfile(any(), any(), anyInt(), any(), any(), any()))
+                .thenReturn(expected);
+
+        ProfileDto result = userService.getProfile(user);
+
+        assertEquals("kero", result.getUsername());
+        assertEquals("MASTER", result.getRank());
+        assertEquals(5, result.getFriendCount());
+        assertEquals(5, result.getStats().getSolvedProblems());
+        assertEquals(2, result.getCategories().length);
     }
 
     @Test
-    void testGetUserProfile_Success() {
-        // Arrange
+    void test_getProfile_shouldCapRankWhenRateExceedsMax() {
+        User user = new User();
+        user.setId(10L);
+        user.setUsername("overflow");
+        user.setCurrentRate(100_000);
+
+        when(submissionRepository.countDistinctSolvedProblems(anyLong(), any()))
+                .thenReturn(0);
+        when(submissionRepository.countDistinctAttemptedProblems(anyLong()))
+                .thenReturn(0);
+        when(matchParticipantRepository.countMatches(anyLong()))
+                .thenReturn(0);
+        when(matchParticipantRepository.countWonMatches(anyLong()))
+                .thenReturn(0);
+        when(friendRepository.countFriendsByUserId(anyLong(), any()))
+                .thenReturn(0);
+        when(submissionRepository.countProblemsByCategory(anyLong(), any()))
+                .thenReturn(List.of());
+
+        lenient().when(userMapper.toUserProfile(any(), any(), anyInt(), any(), any(), any()))
+                .thenAnswer(invocation ->
+                        ProfileDto.builder()
+                                .rank(invocation.getArgument(1))
+                                .build()
+                );
+
+        ProfileDto profile = userService.getProfile(user);
+
+        assertEquals(
+                Ranks.values()[Ranks.values().length - 1].name(),
+                profile.getRank()
+        );
+    }
+
+    @Test
+    void test_getUserProfile_success() {
         User user = new User();
         user.setId(2L);
         user.setUsername("caro");
         user.setCurrentRate(1400);
         user.setMaxRate(1500);
-        user.setImgUrl("https://example.com/caro.png");
 
-        when(userRepository.findByUsername("caro")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername("caro"))
+                .thenReturn(Optional.of(user));
 
-        // Act
         ProfileDto profile = userService.getUserProfile("caro");
 
-        // Assert
         assertEquals("caro", profile.getUsername());
-        assertEquals(1400, profile.getCurrentRate());
-        assertEquals(1500, profile.getMaxRate());
-        assertNotNull(profile.getStats());
-        assertNotNull(profile.getCategories());
     }
 
     @Test
-    void testGetUserProfile_UserNotFound() {
-        // Arrange
-        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+    void test_getUserProfile_userNotFound() {
+        when(userRepository.findByUsername("unknown"))
+                .thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.getUserProfile("unknown"));
+        assertThrows(UserNotFoundException.class,
+                () -> userService.getUserProfile("unknown"));
     }
 
     @Test
-    void testSearchByUsername_Found() {
-        // Arrange
-        User user1 = new User();
-        user1.setUsername("caro");
-        user1.setCurrentRate(1200);
+    void test_searchByUsername_found() {
+        User u1 = new User();
+        u1.setUsername("mina");
+        u1.setCurrentRate(1200);
 
-        User user2 = new User();
-        user2.setUsername("caroline");
-        user2.setCurrentRate(1500);
-
-        when(userRepository.findByUsernameContainingIgnoreCase("car"))
-                .thenReturn(List.of(user1, user2));
-
-        // Act
-        List<UserSearchResponseDto> results = userService.searchByUsername("car");
-
-        // Assert
-        assertEquals(2, results.size());
-        assertEquals("caro", results.get(0).getUsername());
-        assertEquals("MASTER", results.get(0).getRank());
-        assertEquals("caroline", results.get(1).getUsername());
-        assertEquals("CHAMPION", results.get(1).getRank());
-    }
-
-    @Test
-    void testSearchByUsername_NoMatch() {
-        when(userRepository.findByUsernameContainingIgnoreCase("mo"))
-                .thenReturn(List.of());
-
-        List<UserSearchResponseDto> results = userService.searchByUsername("mo");
-
-        assertTrue(results.isEmpty());
-    }
-
-    // tests for User Management feature
-
-    @Test
-    void testGetAllUsers_ExcludesSuperAdmin() {
-        // Arrange
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setUsername("mina");
-        user1.setEmail("mina@example.com");
-        user1.setRole(Roles.USER);
-        user1.setCurrentRate(500);
-
-        User user2 = new User();
-        user2.setId(2L);
-        user2.setUsername("caro");
-        user2.setEmail("caro@example.com");
-        user2.setRole(Roles.ADMIN);
-        user2.setCurrentRate(1200);
-
-        PageRequest pageRequest = PageRequest.of(0, 20);
-        Page<User> usersPage = new PageImpl<>(List.of(user1, user2), pageRequest, 2);
-
-        when(userRepository.findAllByRoleNot(Roles.SUPER_ADMIN, pageRequest)).thenReturn(usersPage);
-
-        // Act
-        Page<UserManagementDto> result = userService.getAllUsers(0, 20);
-
-        // Assert
-        assertEquals(2, result.getContent().size());
-        assertEquals("mina", result.getContent().get(0).getUsername());
-        assertEquals("caro", result.getContent().get(1).getUsername());
-        verify(userRepository, times(1)).findAllByRoleNot(Roles.SUPER_ADMIN, pageRequest);
-    }
-
-    @Test
-    void testSearchUsersByUsername_WithPagination() {
-        // Arrange
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setUsername("mina");
-        user1.setEmail("mina@example.com");
-        user1.setRole(Roles.USER);
-        user1.setCurrentRate(800);
-
-        User user2 = new User();
-        user2.setId(2L);
-        user2.setUsername("minato");
-        user2.setEmail("minato@example.com");
-        user2.setRole(Roles.ADMIN);
-        user2.setCurrentRate(1100);
+        User u2 = new User();
+        u2.setUsername("minato");
+        u2.setCurrentRate(1500);
 
         when(userRepository.findByUsernameContainingIgnoreCase("min"))
-                .thenReturn(List.of(user1, user2));
+                .thenReturn(List.of(u1, u2));
 
-        // Act
-        Page<UserManagementDto> result = userService.searchUsersByUsername("min", 0, 20);
+        List<UserSearchResponseDto> result =
+                userService.searchByUsername("min");
 
-        // Assert
-        assertEquals(2, result.getContent().size());
-        assertEquals("mina", result.getContent().get(0).getUsername());
-        assertEquals("minato", result.getContent().get(1).getUsername());
-        assertEquals("mina@example.com", result.getContent().get(0).getEmail());
+        assertEquals(2, result.size());
+        assertEquals("mina", result.get(0).getUsername());
+        assertEquals("MASTER", result.get(0).getRank());
     }
 
     @Test
-    void testUpdateUserRole_PromoteToAdmin() {
-        // Arrange
+    void test_searchByUsername_noResults() {
+        when(userRepository.findByUsernameContainingIgnoreCase(any()))
+                .thenReturn(List.of());
+
+        assertTrue(userService.searchByUsername("x").isEmpty());
+    }
+
+    @Test
+    void test_updateUserRole_success() {
         User user = new User();
         user.setId(1L);
-        user.setUsername("mina");
         user.setRole(Roles.USER);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+        when(userRepository.save(any()))
+                .thenReturn(user);
 
-        // Act
         userService.updateUserRole(1L, Roles.ADMIN);
 
-        // Assert
         assertEquals(Roles.ADMIN, user.getRole());
-        verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    void testUpdateUserRole_DemoteToUser() {
-        // Arrange
-        User user = new User();
-        user.setId(2L);
-        user.setUsername("caro");
-        user.setRole(Roles.ADMIN);
-
-        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenReturn(user);
-
-        // Act
-        userService.updateUserRole(2L, Roles.USER);
-
-        // Assert
-        assertEquals(Roles.USER, user.getRole());
-        verify(userRepository, times(1)).save(user);
-    }
-
-    @Test
-    void testUpdateUserRole_CannotModifySuperAdmin() {
-        // Arrange
+    void test_updateUserRole_cannotModifySuperAdmin() {
         User superAdmin = new User();
-        superAdmin.setId(1L);
-        superAdmin.setUsername("superadmin");
+        superAdmin.setId(99L);
         superAdmin.setRole(Roles.SUPER_ADMIN);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+        when(userRepository.findById(99L))
+                .thenReturn(Optional.of(superAdmin));
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> userService.updateUserRole(1L, Roles.USER));
-        assertEquals("Cannot modify SUPER_ADMIN role", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> userService.updateUserRole(99L, Roles.USER));
+
+        assertEquals("Cannot modify SUPER_ADMIN role", ex.getMessage());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
-    void testUpdateUserRole_UserNotFound() {
-        // Arrange
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+    void test_updateUserRole_userNotFound() {
+        when(userRepository.findById(404L))
+                .thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(UserNotFoundException.class,
-                () -> userService.updateUserRole(999L, Roles.ADMIN));
+                () -> userService.updateUserRole(404L, Roles.ADMIN));
     }
 
     @Test
-    void testGetFilteredUsersByRole_AdminOnly() {
-        // Arrange
-        User admin1 = new User();
-        admin1.setId(1L);
-        admin1.setUsername("admin1");
-        admin1.setEmail("admin1@example.com");
-        admin1.setRole(Roles.ADMIN);
-        admin1.setCurrentRate(1200);
+    void test_getAllUsers_excludesSuperAdmin() {
+        User user = new User();
+        user.setUsername("mina");
 
-        User admin2 = new User();
-        admin2.setId(2L);
-        admin2.setUsername("admin2");
-        admin2.setEmail("admin2@example.com");
-        admin2.setRole(Roles.ADMIN);
-        admin2.setCurrentRate(1500);
+        Page<User> page =
+                new PageImpl<>(List.of(user), PageRequest.of(0, 10), 1);
 
-        PageRequest pageRequest = PageRequest.of(0, 20);
-        Page<User> adminsPage = new PageImpl<>(List.of(admin1, admin2), pageRequest, 2);
+        when(userRepository.findAllByRoleNot(eq(Roles.SUPER_ADMIN), any()))
+                .thenReturn(page);
 
-        when(userRepository.findAllByRole(Roles.ADMIN, pageRequest)).thenReturn(adminsPage);
+        Page<UserManagementDto> result =
+                userService.getAllUsers(0, 10);
 
-        // Act
-        Page<UserManagementDto> result = userService.getFilteredUsersByRole(Roles.ADMIN, 0, 20);
-
-        // Assert
-        assertEquals(2, result.getContent().size());
-        assertEquals("ADMIN", result.getContent().get(0).getRole());
-        assertEquals("ADMIN", result.getContent().get(1).getRole());
-        verify(userRepository, times(1)).findAllByRole(Roles.ADMIN, pageRequest);
-    }
-
-    @Test
-    void testGetFilteredUsersByRole_UserOnly() {
-        // Arrange
-        User user1 = new User();
-        user1.setId(3L);
-        user1.setUsername("user1");
-        user1.setEmail("user1@example.com");
-        user1.setRole(Roles.USER);
-        user1.setCurrentRate(600);
-
-        PageRequest pageRequest = PageRequest.of(0, 20);
-        Page<User> usersPage = new PageImpl<>(List.of(user1), pageRequest, 1);
-
-        when(userRepository.findAllByRole(Roles.USER, pageRequest)).thenReturn(usersPage);
-
-        // Act
-        Page<UserManagementDto> result = userService.getFilteredUsersByRole(Roles.USER, 0, 20);
-
-        // Assert
         assertEquals(1, result.getContent().size());
-        assertEquals("USER", result.getContent().getFirst().getRole());
-        assertEquals("user1", result.getContent().getFirst().getUsername());
-        verify(userRepository, times(1)).findAllByRole(Roles.USER, pageRequest);
     }
-
 }

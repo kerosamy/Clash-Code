@@ -27,6 +27,8 @@ public class UserService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
+    private static final int RATING_PER_RANK = 300;
+    private static final Ranks[] RANKS = Ranks.values();
 
     @Value("${server.url:http://localhost:8080}")
     private String serverUrl;
@@ -70,10 +72,10 @@ public class UserService {
     }
 
     private String getRank(int rate) {
-        int index = rate / 300;
+        int index = rate / RATING_PER_RANK;
         if (index >= Ranks.values().length)
             index = Ranks.values().length - 1;
-        return Ranks.values()[index].name();
+        return RANKS[index].name();
     }
 
     public ProfileDto getProfile(User user) {
