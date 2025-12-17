@@ -18,4 +18,5 @@ public class SubmissionListDto {
     private String submittedAt;
     private String problemTitle;
     private String submissionStatus;
+    private Long matchId;
 }

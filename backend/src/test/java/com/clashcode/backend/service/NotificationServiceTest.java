@@ -1,11 +1,9 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.MatchNotificationDto;
+import com.clashcode.backend.dto.NotificationPayload;
+import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.model.Notification;
-import com.clashcode.backend.model.Match;
-import com.clashcode.backend.model.MatchParticipant;
-import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,66 +34,82 @@ class NotificationServiceTest {
     }
 
     @Test
-    void send_persistsAndBroadcastsNotification() {
-        Notification notification = Notification.builder()
+    void test_send_persistent_notification_savesAndSends() {
+        NotificationPayload payload = mock(NotificationPayload.class);
+        when(payload.getMode()).thenReturn(NotificationMode.PERSISTENT);
+        when(payload.getNotificationType()).thenReturn(NotificationType.MATCH_INVITATION);
+        when(payload.getTitle()).thenReturn("Title");
+        when(payload.getMessage()).thenReturn("Message");
+        when(payload.getDestination("user")).thenReturn("/topic/notifications/user");
+
+        notificationService.send(1L, 2L, "user", payload);
+
+        verify(repository).save(argThat(n ->
+                n.getSenderId().equals(1L) &&
+                        n.getRecipientId().equals(2L) &&
+                        n.getTitle().equals("Title") &&
+                        n.getMessage().equals("Message") &&
+                        n.getType() == NotificationType.MATCH_INVITATION
+        ));
+
+        verify(messagingTemplate).convertAndSend("/topic/notifications/user", payload);
+    }
+
+    @Test
+    void test_send_nonPersistent_notification_onlySends() {
+        NotificationPayload payload = mock(NotificationPayload.class);
+        when(payload.getMode()).thenReturn(NotificationMode.EPHEMERAL);
+        when(payload.getDestination("user")).thenReturn("/topic/notifications/user");
+
+        notificationService.send(1L, 2L, "user", payload);
+
+        verify(repository, never()).save(any());
+        verify(messagingTemplate).convertAndSend("/topic/notifications/user", payload);
+    }
+
+    @Test
+    void test_getUserNotifications_returnsList() {
+        Notification n = Notification.builder()
                 .id(1L)
-                .recipientId(1L)
                 .senderId(2L)
-                .type(NotificationType.FRIEND_REQUEST_RECEIVED)
-                .title("Friend Request")
-                .message("You have a new friend request")
+                .recipientId(1L)
+                .type(NotificationType.MATCH_INVITATION)
+                .title("Title")
+                .message("Message")
                 .createdAt(Instant.now())
                 .read(false)
                 .build();
 
-        when(repository.save(any(Notification.class))).thenReturn(notification);
-
-        notificationService.send(2L, 1L, NotificationType.FRIEND_REQUEST_RECEIVED,
-                "Friend Request", "You have a new friend request");
-
-        verify(repository).save(any(Notification.class));
-        verify(messagingTemplate).convertAndSend(eq("/topic/notifications/1"), any(Notification.class));
-    }
-
-    @Test
-    void sendMatchPop_broadcastsToAllParticipants() {
-        User u1 = User.builder().id(1L).username("Alice").build();
-        User u2 = User.builder().id(2L).username("Bob").build();
-
-        MatchParticipant p1 = MatchParticipant.builder().user(u1).build();
-        MatchParticipant p2 = MatchParticipant.builder().user(u2).build();
-
-        Match match = Match.builder().id(99L).participants(List.of(p1, p2)).build();
-
-        notificationService.sendMatchPop(match, "Code Submission", "Alice submitted code", "Alice");
-
-        verify(messagingTemplate).convertAndSend(eq("/topic/match-pop/1"), any(MatchNotificationDto.class));
-        verify(messagingTemplate).convertAndSend(eq("/topic/match-pop/2"), any(MatchNotificationDto.class));
-    }
-
-    @Test
-    void getUserNotifications_returnsList() {
-        Notification n = Notification.builder().id(1L).recipientId(1L).title("Test").message("Msg").createdAt(Instant.now()).build();
         when(repository.findByRecipientIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(n));
 
         List<Notification> result = notificationService.getUserNotifications(1L);
 
         assertEquals(1, result.size());
-        assertEquals("Test", result.get(0).getTitle());
+        assertEquals(n, result.get(0));
     }
 
     @Test
-    void getUnreadCount_returnsCount() {
-        when(repository.countByRecipientIdAndReadFalse(1L)).thenReturn(3L);
+    void test_getUnreadCount_returnsCount() {
+        when(repository.countByRecipientIdAndReadFalse(1L)).thenReturn(5L);
 
         long count = notificationService.getUnreadCount(1L);
 
-        assertEquals(3L, count);
+        assertEquals(5L, count);
     }
 
     @Test
-    void markAsRead_updatesNotification() {
-        Notification n = Notification.builder().id(1L).recipientId(1L).read(false).build();
+    void test_markAsRead_marksCorrectNotification() {
+        Notification n = Notification.builder()
+                .id(1L)
+                .recipientId(1L)
+                .read(false)
+                .type(NotificationType.MATCH_INVITATION)
+                .senderId(2L)
+                .title("Title")
+                .message("Message")
+                .createdAt(Instant.now())
+                .build();
+
         when(repository.findById(1L)).thenReturn(Optional.of(n));
 
         notificationService.markAsRead(1L, 1L);
@@ -105,13 +119,23 @@ class NotificationServiceTest {
     }
 
     @Test
-    void markAsRead_doesNothingIfNotRecipient() {
-        Notification n = Notification.builder().id(1L).recipientId(2L).read(false).build();
+    void test_markAsRead_doesNotMarkIfDifferentUser() {
+        Notification n = Notification.builder()
+                .id(1L)
+                .recipientId(2L)
+                .read(false)
+                .type(NotificationType.MATCH_INVITATION)
+                .senderId(1L)
+                .title("Title")
+                .message("Message")
+                .createdAt(Instant.now())
+                .build();
+
         when(repository.findById(1L)).thenReturn(Optional.of(n));
 
         notificationService.markAsRead(1L, 1L);
 
         assertFalse(n.isRead());
-        verify(repository, never()).save(n);
+        verify(repository, never()).save(any());
     }
 }

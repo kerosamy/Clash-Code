@@ -1,9 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.MatchParticipantDto;
-import com.clashcode.backend.dto.MatchResponseDto;
-import com.clashcode.backend.dto.MatchSubmissionLogDto;
-import com.clashcode.backend.dto.SubmissionRequestDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
@@ -23,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +47,7 @@ class MatchControllerTest {
 
     @Test
     @DisplayName("POST /matches/{matchId}/submit - Unauthorized")
-    void submitCode_unauthorized() throws Exception {
+    void test_submitCode_unauthorized() throws Exception {
         SubmissionRequestDto submissionRequestDto = new SubmissionRequestDto();
         submissionRequestDto.setCode("print('Hello')");
         submissionRequestDto.setCodeLanguage("python");
@@ -67,7 +65,7 @@ class MatchControllerTest {
 
     @Test
     @DisplayName("POST /matches/{matchId}/resign - Unauthorized")
-    void resignMatch_unauthorized() throws Exception {
+    void test_resignMatch_unauthorized() throws Exception {
         doThrow(new UnauthorizedException("User not authenticated"))
                 .when(matchService).resignMatch(any(Long.class), any(User.class));
 
@@ -78,9 +76,8 @@ class MatchControllerTest {
     }
     @Test
     @DisplayName("GET /matches/{matchId}/submission-log - Success")
-    void getMatchSubmissionLog_success() throws Exception {
+    void test_getMatchSubmissionLog_success() throws Exception {
         MatchSubmissionLogDto logDto = MatchSubmissionLogDto.builder()
-                .playerId(1L)
                 .submissions(List.of()) // empty submissions for simplicity
                 .build();
 
@@ -88,13 +85,12 @@ class MatchControllerTest {
 
         mockMvc.perform(get("/matches/123/submission-log"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].playerId").value(1));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
     @DisplayName("POST /matches/invite/{recipientUsername} - Success")
-    void invitePlayer_success() throws Exception {
+    void test_invitePlayer_success() throws Exception {
         User sender = new User();
         sender.setId(1L);
         sender.setUsername("senderUser");
@@ -106,4 +102,49 @@ class MatchControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("GET /matches/{matchId}/problem - Success")
+    void test_getMatchProblem_success() throws Exception {
+        ProblemResponseDto problemDto = ProblemResponseDto.builder()
+                .id(10L)
+                .submissionsCount(0L)
+                .title("Problem Title")
+                .inputFormat("")
+                .outputFormat("")
+                .statement("")
+                .notes("")
+                .timeLimit(1)
+                .memoryLimit(1)
+                .rate(0)
+                .author("author")
+                .tags(new ArrayList<>())
+                .visibleTestCases(new ArrayList<>())
+                .build();
+        when(matchService.getMatchProblem(10L)).thenReturn(problemDto);
+
+        mockMvc.perform(get("/matches/10/problem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.title").value("Problem Title"))
+                .andExpect(jsonPath("$.tags").isArray())
+                .andExpect(jsonPath("$.tags").isEmpty())
+                .andExpect(jsonPath("$.visibleTestCases").isArray())
+                .andExpect(jsonPath("$.visibleTestCases").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /matches/{matchId} - Success")
+    void test_getMatchDetails_success() throws Exception {
+        MatchResponseDto matchDto = MatchResponseDto.builder()
+                .id(10L)
+                .matchState(MatchState.ONGOING)
+                .participants(List.of())
+                .build();
+
+        when(matchService.getMatchDetails(10L)).thenReturn(matchDto);
+
+        mockMvc.perform(get("/matches/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10));
+    }
 }

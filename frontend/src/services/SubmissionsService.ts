@@ -18,6 +18,7 @@ export interface SubmissionResponse {
   numberOfPassedTestCases: number;
   numberOfTotalTestCases: number;
   numberOfCurrentTestCase: number;
+  matchId?: number | null;
 }
 
 export interface SubmissionDetailsDto {

@@ -14,16 +14,7 @@ import { getUsername } from "../../utils/jwtDecoder";
 import { getSubmissionStatusColor } from "../../utils/getSubmissionStatusColor"; 
 import { SubmissionStatus } from "../../enums/SubmissionStatus"; 
 import { getSubmissionStatusDisplay } from "../../utils/getSubmissionStatusDisplay";
-
-const DEFAULT_AVATAR = "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png";
-
-
-const formatTime = (isoString: string) => {
-  if (!isoString) return "--:--";
-  return new Date(isoString).toLocaleTimeString("en-GB", {
-    hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit",
-  });
-};
+import { isFinalStatus, formatTime } from "../../utils/matchUtils";
 
 export default function MatchStatePage() {
   const { id: matchIdString } = useParams<{ id: string }>();
@@ -50,12 +41,20 @@ export default function MatchStatePage() {
       getMatchSubmissionLog(numericId)
         .then((data) => {
             if (Array.isArray(data)) {
-                const sortedData = data.map(playerLog => ({
-                    ...playerLog,
-                    submissions: playerLog.submissions.sort((a, b) => 
+                const sortedData = data.map(playerLog => {
+                    const cleanSubmissions = playerLog.submissions.filter(sub => 
+                        isFinalStatus(sub.status)
+                    );
+
+                    cleanSubmissions.sort((a, b) => 
                         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-                    )
-                }));
+                    );
+
+                    return {
+                        ...playerLog,
+                        submissions: cleanSubmissions
+                    };
+                });
                 setLogs(sortedData); 
             }
         })
@@ -66,6 +65,7 @@ export default function MatchStatePage() {
             setLoading(false);
         });
     };
+
     fetchLogs(); 
     const intervalId = setInterval(fetchLogs, 3000); 
     return () => clearInterval(intervalId);
@@ -108,7 +108,7 @@ export default function MatchStatePage() {
         <div className="flex flex-col items-center gap-4">
             <div className="relative group">
                 <img
-                    src={player.avatarUrl }
+                    src={player.avatarUrl} 
                     alt={player.username}
                     className="relative w-56 h-56 rounded-full object-cover border-4 border-container shadow-2xl"
                 />
@@ -125,7 +125,7 @@ export default function MatchStatePage() {
     );
   };
 
-const VersusBadge = () => (
+  const VersusBadge = () => (
     <div className="flex flex-col items-center justify-center select-none">
       <div className="font-black italic flex items-end leading-none font-anta">
         <span className="text-orange text-[6rem] md:text-[8rem] transform -translate-y-2 -translate-x-2 drop-shadow-lg z-10">
@@ -140,9 +140,7 @@ const VersusBadge = () => (
 
    const renderSubmissionRow = (submission: SubmissionLogEntryDto, onClick?: () => void) => {
     const status = submission.status as SubmissionStatus;
-    const statusText = status === SubmissionStatus.RUNNING_ON_TEST
-        ? `Running on Test ${submission.numberOfCurrentTestCase || 0} / ${submission.numberOfTotalTestCases || 0}`
-        : getSubmissionStatusDisplay(status);
+    const statusText = getSubmissionStatusDisplay(status);
 
     return (
         <div 
@@ -159,6 +157,7 @@ const VersusBadge = () => (
         </div>
     );
   };
+
   if (loading) return <LogoLoader loadingMessage="Loading Match State" />;
 
   const columns = ["Time", "Verdict", "Passed"];
@@ -166,7 +165,7 @@ const VersusBadge = () => (
 
   return (
     <div className="w-full min-h-full flex flex-col gap-6 p-6 bg-background">
-      <div className="flex flex-col md:flex-row items-center justify-between w-full max-w-[950px] mx-auto mb-4 px-4 md:px-12">
+      <div className="flex flex-col md:flex-row items-center justify-between w-full max-w-[950px] mx-auto mb-4 px-8 md:px-12">
         <PlayerHeader player={leftPlayer?.profile} label={leftPlayer?.profile?.username || "Player 1"} />
         <VersusBadge />
         <PlayerHeader player={rightPlayer?.profile} label={rightPlayer?.profile?.username || "Player 2"} />
@@ -195,6 +194,7 @@ const VersusBadge = () => (
                 columns={columns}
                 gridCols={gridConfig}
                 renderRow={renderSubmissionRow}
+              
             />
         </div>
       </div>

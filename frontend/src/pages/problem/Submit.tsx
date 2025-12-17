@@ -50,7 +50,7 @@ export default function Submit() {
                 });
                 setSubmitMessage("Code submitted successfully!");
                 setTimeout(() => {
-                navigate(`/play-game/${id}/match-state`);
+                navigate(`/play-game/${id}/My-submissions`);
                 }, 500);
             } else {
                 // practice submission

@@ -5,7 +5,6 @@ interface DraggableTimerProps {
   durationMinutes: number;
   isMatchOver: boolean;
   onTimeExpire?: () => void;
-  onResign?: () => void;
 }
 
 export default function DraggableTimer({ 
@@ -13,7 +12,6 @@ export default function DraggableTimer({
   durationMinutes, 
   isMatchOver, 
   onTimeExpire,
-  onResign
 }: DraggableTimerProps) {
   
   const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -143,19 +141,6 @@ export default function DraggableTimer({
             {formatTime(timeLeft)}
         </span>
 
-        {/* Resign Button */}
-        {!isMatchOver && onResign && (
-            <button 
-                onClick={onResign}
-                onMouseDown={(e) => e.stopPropagation()} 
-                className="cursor-pointer group flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 transition-all active:scale-95"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-red-400 group-hover:text-red-300">
-                    <path fillRule="evenodd" d="M3 2.25a.75.75 0 0 1 .75.75v.54l1.838-.46a9.75 9.75 0 0 1 6.725.738l.108.054a8.25 8.25 0 0 0 5.58.652l3.109-.732a.75.75 0 0 1 .917.81 47.784 47.784 0 0 0 .005 10.337.75.75 0 0 1-.574.812l-3.114.733a9.75 9.75 0 0 1-6.594-.67l-.107-.05a8.25 8.25 0 0 0-5.69-.625l-2.202.55V21a.75.75 0 0 1-1.5 0V3A.75.75 0 0 1 3 2.25Z" clipRule="evenodd" />
-                </svg>
-                <span className="text-xs font-semibold text-red-400 group-hover:text-red-300 uppercase tracking-wide">Resign</span>
-            </button>
-        )}
       </div>
     </div>
   );
