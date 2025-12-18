@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProblemRequestDto {
+    private long id;
     private String title;
     private String inputFormat;
     private String outputFormat;

@@ -70,6 +70,27 @@ public class TestCasesFileStorageService {
         }
     }
 
+    public void deleteTestCasesDirectory(Long problemId) {
+        try {
+            Path problemDir = Paths.get(basePath, String.valueOf(problemId));
+            if (Files.exists(problemDir)) {
+                // This deletes the directory and all files inside it
+                Files.walk(problemDir)
+                        .sorted((a, b) -> b.compareTo(a)) // Delete files before directory
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                System.err.println("Failed to delete file: " + path);
+                            }
+                        });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 

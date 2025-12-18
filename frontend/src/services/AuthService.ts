@@ -29,6 +29,7 @@ export const registerUser = async (data: RegisterRequest): Promise<LoginResponse
     url: `/auth/signup`,
     data,
   });
+  localStorage.clear();
   localStorage.setItem("token", response.token);
   return response;
 };
@@ -39,6 +40,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     url: `/auth/login`,
     data: credentials,
   });
+  localStorage.clear();
   localStorage.setItem("token", response.token);
   return response;
 };
@@ -71,5 +73,5 @@ export const completeRegistration = async (username: string) => {
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
+  localStorage.clear();
 };

@@ -32,6 +32,30 @@ interface ProblemDto {
   tags: ProblemTags[];
 }
 
+interface VisibleTestCase {
+  id: string ;
+  input: string;
+  output: string;
+}
+
+export interface RejectedProblemDto {
+  id: number;
+  author: string;
+  title: string;
+  statement: string;      // Mapping to 'statement' in JSON
+  inputFormat: string;
+  outputFormat: string;
+  notes: string;
+  timeLimit: number;
+  memoryLimit: number;
+  rate: number;           // The JSON uses 'rate'
+  tags: string[];         // The JSON shows an array of strings like ['STRINGS']
+  visibleTestCases: VisibleTestCase[];
+  submissionsCount: number;
+  solutionCode: string | null;
+  solutionLanguage: string | null;
+}
+
 export async function fetchProblems(
   page = 0,
   size = 20
@@ -86,8 +110,8 @@ export async function searchProblemsByTitle(
   });
 }
 
-export async function fetchProblemById(id: number): Promise<ProblemDto> {
-  return apiRequest<ProblemDto>({
+export async function fetchProblemById(id: number): Promise<RejectedProblemDto> {
+  return apiRequest<RejectedProblemDto>({
     method: "GET",
     url: `/problem/${id}`,
   });
@@ -119,6 +143,7 @@ export async function suggestProblemService(
   const visibleFlags = testCases.map((tc) => tc.visible ?? true);
 
   const dto: ProblemRequestDto = {
+    id: info.id,
     title: statement.title || "Untitled Problem",
     inputFormat: statement.inputFormat || "",
     outputFormat: statement.outputFormat || "",

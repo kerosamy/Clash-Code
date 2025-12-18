@@ -44,6 +44,7 @@ public class ProblemController {
         if(user == null) {
             return ResponseEntity.badRequest().build();
         }
+
         String username = user.getUsername();
         problemService.addProblem(problemRequestDto, files, username);
         return ResponseEntity.ok().build();

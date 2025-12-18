@@ -10,6 +10,7 @@ interface ProblemInfoProps {
 }
 
 export interface ProblemInfoData {
+  id: number,
   solutionLang: LanguageVersion;
   timeLimit: number;
   memoryLimit: number;
@@ -27,27 +28,29 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
   const [rating, setRating] = useState<number>(800);
   const [selectedTopics, setSelectedTopics] = useState<ProblemTags[]>([]);
   const [solutionCode, setSolutionCode] = useState<string>("");
+  const [id, setId] = useState<number>(0);
   const [saveMessage, setSaveMessage] = useState<string>("");
 
   // Load saved data from localStorage on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    
-    if (savedData) {
-      try {
-        const parsedData: ProblemInfoData = JSON.parse(savedData);
-        setSolutionLang(parsedData.solutionLang);
-        setTimeLimit(parsedData.timeLimit);
-        setMemoryLimit(parsedData.memoryLimit);
-        setRating(parsedData.rating);
-        setSelectedTopics(parsedData.topics);
-        setSolutionCode(parsedData.solutionCode);
-        console.log('Loaded saved problem info:', parsedData);
-      } catch (error) {
-        console.error('Failed to load from localStorage:', error);
-      }
+ useEffect(() => {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    try {
+      const parsedData: ProblemInfoData = JSON.parse(savedData);
+      // Ensure the ID is captured and treated as a number
+      if (parsedData.id !== undefined) setId(Number(parsedData.id)); 
+      
+      setSolutionLang(parsedData.solutionLang);
+      setTimeLimit(parsedData.timeLimit);
+      setMemoryLimit(parsedData.memoryLimit);
+      setRating(parsedData.rating);
+      setSelectedTopics(parsedData.topics);
+      setSolutionCode(parsedData.solutionCode);
+    } catch (error) {
+      console.error('Failed to load from localStorage:', error);
     }
-  }, []);
+  }
+}, []);
 
   const handleTopicToggle = (tag: ProblemTags) => {
     setSelectedTopics(prev =>
@@ -58,7 +61,34 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
   };
 
   const handleSave = () => {
-    const data: ProblemInfoData = {
+  const data: ProblemInfoData = {
+    id, // This now uses the ID from state, preventing it from resetting to ""
+    solutionLang,
+    timeLimit,
+    memoryLimit,
+    rating,
+    topics: selectedTopics,
+    solutionCode,
+  };
+  
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    setSaveMessage('Problem info saved successfully!');
+    setTimeout(() => setSaveMessage(''), 3000);
+  } catch (error) {
+    setSaveMessage('Failed to save.');
+  }
+  
+  onSave?.(data);
+};
+
+const handleSuggestProblem = async () => {
+  console.log("🚀 Starting problem suggestion...");
+  
+  try {
+    // Construct the info object directly from component state
+    const info: ProblemInfoData = {
+      id, // This is now a number
       solutionLang,
       timeLimit,
       memoryLimit,
@@ -66,41 +96,37 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
       topics: selectedTopics,
       solutionCode,
     };
-    
-    // Save to localStorage
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log('Problem info saved to localStorage:', data);
-      setSaveMessage('Problem info saved successfully!');
-      setTimeout(() => setSaveMessage(''), 3000);
-    } catch (error) {
-      console.error('Failed to save to localStorage:', error);
-      setSaveMessage('Failed to save problem info. Please try again.');
-      setTimeout(() => setSaveMessage(''), 3000);
-    }
-    
-    onSave?.(data);
-  };
 
-const handleSuggestProblem = async () => {
-  console.log("🚀 Starting problem suggestion...");
-  
-  try {
-    const info = JSON.parse(localStorage.getItem("problem_info_draft") || "{}");
+    // Keep these from localStorage if they are managed by other tabs/components
     const statement = JSON.parse(localStorage.getItem("problem_statement_draft") || "{}");
     const testCases = JSON.parse(localStorage.getItem("problem_testcases_draft") || "[]");
 
     console.log("📦 Data to send:", { info, statement, testCases });
 
+    // Send the structured info object
     await suggestProblemService(info, statement, testCases);
     
-    console.log("✅ Problem suggested successfully!");
     alert("Problem suggestion sent successfully!");
   } catch (err: any) {
     console.error("❌ Error:", err);
-    console.error("❌ Error message:", err.message);
-    console.error("❌ Full error:", JSON.stringify(err, null, 2));
     alert(err.message || "Failed to suggest problem.");
+  }
+};
+
+
+const handleClearAll = () => {
+  const confirmed = window.confirm(
+    "Are you sure you want to clear all progress? This will delete your draft and reset the form."
+  );
+
+  if (confirmed) {
+    // Clear the specific keys used by your application
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("problem_statement_draft");
+    localStorage.removeItem("problem_testcases_draft");
+
+    // Refresh the page to clear state and start fresh
+    window.location.reload();
   }
 };
 
@@ -115,6 +141,19 @@ const handleSuggestProblem = async () => {
   return (
     <div className="bg-background text-white py-8">
       <div className="max-w-6xl mx-auto px-6 space-y-6">
+
+      {/* Dynamic Status Header */}
+      <div className="bg-gray-800/40 border-l-4 border-orange p-4 mb-8 rounded-r-lg shadow-sm">
+        {id ? (
+          <p className="text-orange font-anta text-xl">
+            You're editing problem with ID: <span className="text-white font-mono bg-black/30 px-2 py-1 rounded">{id}</span>
+          </p>
+        ) : (
+          <p className="text-blue-400 font-anta text-xl">
+            You're creating a <span className="text-white underline decoration-blue-400 underline-offset-4">new problem</span>
+          </p>
+        )}
+      </div>
         
         {/* Solution Language + Time Limit */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -255,6 +294,19 @@ const handleSuggestProblem = async () => {
                 Suggest Problem
             </button>
 
+            {/* --- Clear All / Quit Section --- */}
+        <div className="pt-10 mt-10 border-t border-white/10 text-center">
+          <button
+            onClick={handleClearAll}
+            className="bg-red-600 hover:bg-red-700 text-white px-10 py-3 rounded-button text-lg font-anta transition-all duration-200 shadow-lg shadow-red-900/20"
+          >
+            Clear All & Quit
+          </button>
+          <p className="text-gray-500 text-sm mt-3 font-anta">
+            Warning: This action will permanently delete your current draft.
+          </p>
+        </div>
+
         {saveMessage && (
             <p
                 className={`mt-4 text-lg font-anta ${
@@ -264,8 +316,10 @@ const handleSuggestProblem = async () => {
                 {saveMessage}
             </p>
         )}
+
         </div>
       </div>
     </div>
+    
   );
 }

@@ -91,6 +91,7 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
   const handleSave = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(testCases));
+      console.log(testCases);
       setSaveMessage("Test cases saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
       onSave?.(testCases);

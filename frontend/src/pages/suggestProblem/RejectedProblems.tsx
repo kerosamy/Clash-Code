@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Board from "../../components/common/Board";
 import RejectedProblemRow from "../../components/common/RejectedProblemRow";
 import { fetchRejectedProblems } from "../../services/ProblemService";
-
+import { fetchProblemById } from "../../services/ProblemService";
 interface RejectedProblemRowProps {
   id: number;
   name: string;
@@ -45,6 +45,53 @@ export default function RejectedProblems() {
     if (page < totalPages - 1) loadRejected(page + 1);
   };
 
+
+  const handleRowClick = async (id: number) => {
+  try {
+    const problem = await fetchProblemById(id);
+    console.log(problem);
+
+    // --- 1. Map and Set Problem Info Draft ---
+    const problemInfo = {
+      id: problem.id,
+      solutionLang: problem.solutionLanguage || "",
+      timeLimit: problem.timeLimit,
+      memoryLimit: problem.memoryLimit,
+      rating: problem.rate || "",
+      topics: problem.tags ||  [], // Assuming topics is an array of strings/ids
+      solutionCode: problem.solutionCode || "",
+    };
+    localStorage.setItem('problem_info_draft', JSON.stringify(problemInfo));
+
+    // --- 2. Map and Set Problem Statement Draft ---
+    const problemStatement = {
+      title: problem.title,
+      statement: problem.statement,
+      inputFormat: problem.inputFormat,
+      outputFormat: problem.outputFormat,
+      notes: problem.notes,
+    };
+    localStorage.setItem('problem_statement_draft', JSON.stringify(problemStatement));
+
+    // 3. Map to problem_testcases_draft as an ARRAY
+    const testcasesDraft = (problem.visibleTestCases || []).map((tc: any, index: number) => ({
+      id: tc.id || `test_${Date.now()}_${index}`,
+      input: tc.input,
+      visible: tc.visible ?? true,
+      actualOutput: tc.output, // Mapping actualOutput to output
+    }));
+
+    localStorage.setItem('problem_testcases_draft', JSON.stringify(testcasesDraft));
+    
+        // --- 4. Navigate to the first page of the multi-step form ---
+        navigate(`/add-problem/info`);
+
+      } catch (err) {
+        console.error("Failed to prepare problem draft:", err);
+        // You might want to show a toast notification here
+      }
+    };
+
   return (
     <div className="flex flex-col h-[90vh] p-8 space-y-6">
       <div className="flex-1 overflow-hidden rounded-xl border border-white/5 bg-sidebar/10 shadow-xl">
@@ -55,16 +102,16 @@ export default function RejectedProblems() {
               index: index + 1 + page * 20,
             }))}
             columns={["#", "Problem Name", "Rejection Note"]}
-            renderRow={(problem) => (
-              <RejectedProblemRow
-                key={problem.id}
-                id={problem.id}
-                index={problem.index}
-                name={problem.name}
-                rejectionNote={problem.rejectionNote}
-                onRowClick={() => navigate(`/practice/problem/${problem.id}`)}
-              />
-            )}
+           renderRow={(problem) => (
+            <RejectedProblemRow
+              key={problem.id}
+              id={problem.id}
+              index={problem.index}
+              name={problem.name}
+              rejectionNote={problem.rejectionNote}
+              onRowClick={() => handleRowClick(problem.id)} // Use the new handler
+            />
+          )}
           />
         </div>
       </div>

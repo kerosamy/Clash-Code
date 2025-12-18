@@ -5,6 +5,7 @@ import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.TestCaseRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -94,5 +95,11 @@ public class TestCaseService {
             System.out.println("Test" + testCasesFileStorageService.getTestCaseContent(path));
         }
         return OutputTestCases;
+    }
+
+    @Transactional
+    public void deleteByProblem(Problem problem) {
+        testCasesFileStorageService.deleteTestCasesDirectory(problem.getId());
+        testCaseRepository.deleteByProblem(problem);
     }
 }

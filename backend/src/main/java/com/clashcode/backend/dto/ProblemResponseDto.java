@@ -1,5 +1,6 @@
 package com.clashcode.backend.dto;
 
+import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.enums.ProblemTags;
 import lombok.*;
 import java.util.ArrayList;
@@ -22,7 +23,8 @@ public class ProblemResponseDto {
     private int memoryLimit;
     private int rate;
     private String author;
-
+    private String solutionCode;
+    private LanguageVersion solutionLanguage;
     @Builder.Default
     private List<ProblemTags> tags = new ArrayList<>();
 

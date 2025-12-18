@@ -35,6 +35,7 @@ public class ProblemMapper {
     }
 
     public ProblemResponseDto toResponseDto (Problem problem , List<TestCaseResponseDto> visibleTestCases) {
+        Solution solution = problem.getSolution();
         return ProblemResponseDto
                 .builder()
                 .id(problem.getId())
@@ -50,6 +51,8 @@ public class ProblemMapper {
                 .tags(problem.getTags())
                 .visibleTestCases(visibleTestCases)
                 .author(problem.getAuthor())
+                .solutionCode(solution != null ? solution.getSolutionCode() : null)
+                .solutionLanguage(solution != null ? solution.getLanguageVersion() : null)
                 .build();
     }
 
@@ -63,5 +66,24 @@ public class ProblemMapper {
                 .attempted("unsolved")   // placeholder
                 .author(problem.getAuthor())
                 .build();
+    }
+
+    public void updateProblem(Problem problem, ProblemRequestDto dto) {
+
+        problem.setTitle(dto.getTitle());
+        problem.setStatement(dto.getStatement());
+        problem.setInputFormat(dto.getInputFormat());
+        problem.setOutputFormat(dto.getOutputFormat());
+        problem.setNotes(dto.getNotes());
+        problem.setMemoryLimit(dto.getMemoryLimit());
+        problem.setTimeLimit(dto.getTimeLimit());
+        problem.setRate(dto.getRate());
+        problem.setTags(dto.getTags());
+        Solution solution = problem.getSolution();
+        solution.setSolutionCode(dto.getMainSolution());
+        solution.setLanguageVersion(
+                LanguageVersion.valueOf(dto.getSolutionLanguage())
+        );
+        problem.setSolution(solution);
     }
 }

@@ -22,7 +22,7 @@ import java.util.List;
 
 @Service
 public class ProblemService {
-
+    int present = 0;
     private final ProblemRepository problemRepository;
     private final TestCaseService testCaseService;
     private final ProblemMapper problemMapper;
@@ -36,19 +36,42 @@ public class ProblemService {
         this.testCaseService = testCaseService;
     }
 
-    public void addProblem (ProblemRequestDto problemRequestDto,
-                            List<MultipartFile> files,
-                            String username){
+    public void addProblem(
+            ProblemRequestDto dto,
+            List<MultipartFile> files,
+            String username
+    ) {
+        long id = dto.getId();
+        Problem problem;
 
-        Problem problem = problemMapper.toProblem(problemRequestDto);
-        problem.setAuthor(username);
-        problemRepository.save(problem);
+        // CREATE
+        if (id == present) {
+            problem = problemMapper.toProblem(dto);
+            problem.setAuthor(username);
+            problemRepository.save(problem);
+        }
+        // UPDATE
+        else {
+            problem = problemRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Problem not found"));
 
-        List<TestCase> testCases = testCaseService.addTestCases(files,problem,problemRequestDto.getVisibleFlags());
+            problemMapper.updateProblem(problem, dto);
+            problem.setProblemStatus(ProblemStatus.PENDING_APPROVAL);
+            problemRepository.save(problem);
+
+            testCaseService.deleteByProblem(problem);
+            problem.getTestCases().clear();
+            problemRepository.saveAndFlush(problem);
+        }
+
+        // COMMON: add test cases
+        List<TestCase> testCases =
+                testCaseService.addTestCases(files, problem, dto.getVisibleFlags());
 
         problem.setTestCases(testCases);
         problemRepository.save(problem);
     }
+
 
     public ProblemResponseDto getProblemById (Long id) {
         Problem problem = problemRepository.findById(id)
