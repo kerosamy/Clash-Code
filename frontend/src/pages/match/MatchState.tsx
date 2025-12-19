@@ -13,7 +13,7 @@ import { getUsername } from "../../utils/jwtDecoder";
 import { getSubmissionStatusColor } from "../../utils/getSubmissionStatusColor"; 
 import { SubmissionStatus } from "../../enums/SubmissionStatus"; 
 import { getSubmissionStatusDisplay } from "../../utils/getSubmissionStatusDisplay";
-import { isFinalStatus, formatTime } from "../../utils/matchUtils";
+import { formatTime } from "../../utils/matchUtils";
 
 export default function MatchStatePage() {
   const { id: matchIdString } = useParams<{ id: string }>();
@@ -36,24 +36,16 @@ export default function MatchStatePage() {
       return;
     }
 
-    const fetchLogs = () => {
+   const fetchLogs = () => {
       getMatchSubmissionLog(numericId)
         .then((data) => {
             if (Array.isArray(data)) {
-                const sortedData = data.map(playerLog => {
-                    const cleanSubmissions = playerLog.submissions.filter(sub => 
-                        isFinalStatus(sub.status)
-                    );
-
-                    cleanSubmissions.sort((a, b) => 
+                const sortedData = data.map(playerLog => ({
+                    ...playerLog,
+                    submissions: playerLog.submissions.sort((a, b) => 
                         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-                    );
-
-                    return {
-                        ...playerLog,
-                        submissions: cleanSubmissions
-                    };
-                });
+                    )
+                }));
                 setLogs(sortedData); 
             }
         })
@@ -64,7 +56,6 @@ export default function MatchStatePage() {
             setLoading(false);
         });
     };
-
     fetchLogs(); 
     const intervalId = setInterval(fetchLogs, 3000); 
     return () => clearInterval(intervalId);
@@ -84,6 +75,28 @@ export default function MatchStatePage() {
     }
     return [logs[0], logs[1]];
   }, [logs, myUsername]);
+
+  const renderSubmissionRow = (submission: SubmissionLogEntryDto, onClick?: () => void) => {
+    const status = submission.status as SubmissionStatus;
+    const statusText = status === SubmissionStatus.RUNNING_ON_TEST
+        ? `Running on Test ${submission.numberOfCurrentTestCase || 0} / ${submission.numberOfTotalTestCases || 0}`
+        : getSubmissionStatusDisplay(status);
+
+    return (
+        <div 
+          key={submission.submissionId} 
+          onClick={onClick}
+          className={`grid grid-cols-[100px_1.5fr_100px] gap-4 px-6 py-3 items-center border-b border-sidebar text-text font-anta transition-colors 
+            ${onClick ? "cursor-pointer hover:bg-white/5" : ""}`} 
+        >
+          <span className="text-sm text-center">{formatTime(submission.submittedAt)}</span>
+          <span className={`text-sm text-center font-bold ${getSubmissionStatusColor(status)}`}>
+            {statusText}
+          </span>
+          <span className="text-sm text-center text-text/80">{submission.numberOfPassedTestCases}/{submission.numberOfTotalTestCases}</span>
+        </div>
+    );
+  };
 
   const PlayerHeader = ({ player, label }: { player?: MatchSubmissionLogDto, label: string }) => {
     if (!player) {
@@ -137,27 +150,7 @@ export default function MatchStatePage() {
       </div>
     </div>
   );
-
-   const renderSubmissionRow = (submission: SubmissionLogEntryDto, onClick?: () => void) => {
-    const status = submission.status as SubmissionStatus;
-    const statusText = getSubmissionStatusDisplay(status);
-
-    return (
-        <div 
-          key={submission.submissionId} 
-          onClick={onClick}
-          className={`grid grid-cols-[100px_1.5fr_100px] gap-4 px-6 py-3 items-center border-b border-sidebar text-text font-anta transition-colors 
-            ${onClick ? "cursor-pointer hover:bg-white/5" : ""}`} 
-        >
-          <span className="text-sm text-center">{formatTime(submission.submittedAt)}</span>
-          <span className={`text-sm text-center font-bold ${getSubmissionStatusColor(status)}`}>
-            {statusText}
-          </span>
-          <span className="text-sm text-center text-text/80">{submission.numberOfPassedTestCases}/{submission.numberOfTotalTestCases}</span>
-        </div>
-    );
-  };
-
+  
   if (loading) return <LogoLoader loadingMessage="Loading Match State" />;
 
   const columns = ["Time", "Verdict", "Passed"];

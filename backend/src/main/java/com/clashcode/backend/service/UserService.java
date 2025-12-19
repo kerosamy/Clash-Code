@@ -71,7 +71,7 @@ public class UserService {
         return friendRepository.countFriendsByUserId(userId, FriendRequestStatus.ACCEPTED);
     }
     
-    private String getRank(int rate) {
+    public String getRank(int rate) {
         int index = rate / RATING_PER_RANK;
         if (index >= Ranks.values().length)
             index = Ranks.values().length - 1;

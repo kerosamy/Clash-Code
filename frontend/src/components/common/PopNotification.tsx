@@ -66,8 +66,7 @@ export default function ToastFeed({ notifications }: ToastFeedProps) {
                                 </span>
                             </div>
 
-                            <p className="text-sm text-text leading-relaxed">
-                                
+                            <p className="text-sm text-text leading-relaxed whitespace-pre-line">
                                 {n.message}
                             </p>
                         </div>

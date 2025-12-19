@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, useParams } from 'react-router-dom';
-import { isFinalStatus } from "../utils/matchUtils";
 import { Client, type IMessage } from "@stomp/stompjs";
 
 import TopNavigator from "../components/common/TopNavigators";
@@ -11,7 +10,7 @@ import ToastFeed from '../components/common/PopNotification';
 import type { ToastNotification } from '../components/common/PopNotification';
 
 import { matchSubRoutes } from '../routes/routes.config';
-import { resignMatch, getMatchDetails, getMatchSubmissionLog } from "../services/MatchService";
+import { resignMatch, getMatchDetails } from "../services/MatchService";
 import { getUsername } from "../utils/jwtDecoder";
 
 
@@ -19,15 +18,6 @@ interface MatchData {
     startAt: string;
     duration: number;
     state: string;
-}
-
-export interface LiveLog {
-    username: string;
-    status: string;
-    passedCases: number;
-    totalCases: number;
-    timestamp: string;
-    rawTime?: number;
 }
 
 interface WebSocketPayload {
@@ -45,7 +35,6 @@ export default function PlayGame() {
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [matchData, setMatchData] = useState<MatchData | null>(null);
-    const [liveLogs, setLiveLogs] = useState<LiveLog[]>([]);
     const [notifications, setNotifications] = useState<ToastNotification[]>([]);
 
     const clientRef = useRef<Client | null>(null);
@@ -61,29 +50,6 @@ export default function PlayGame() {
                     duration: details.duration,
                     state: details.matchState
                 });
-
-                const historyData = await getMatchSubmissionLog(Number(id));
-                const allLogs: LiveLog[] = [];
-
-                historyData.forEach((userRecord) => {
-                    const username = userRecord.username;
-                    
-                    userRecord.submissions.forEach((sub) => {
-                        if (isFinalStatus(sub.status)) {
-                            allLogs.push({
-                                username: username,
-                                status: sub.status,
-                                passedCases: sub.numberOfPassedTestCases,
-                                totalCases: sub.numberOfTotalTestCases,
-                                timestamp: new Date(sub.submittedAt).toLocaleTimeString(),
-                                rawTime: new Date(sub.submittedAt).getTime()
-                            });
-                        }
-                    });
-                });
-
-                allLogs.sort((a, b) => (b.rawTime || 0) - (a.rawTime || 0));
-                setLiveLogs(allLogs);
 
             } catch (error) {
                 console.error("Could not fetch match data", error);
@@ -138,29 +104,15 @@ export default function PlayGame() {
         
         else if (payload.notificationType === 'SUBMISSION_RESULT') {
             const isSuccess = payload.submissionStatus === 'ACCEPTED';
-            const passFilter = isFinalStatus(payload.submissionStatus);
-
-            if (passFilter) {
-                const newLog: LiveLog = {
-                    username: payload.senderUsername,
-                    status: payload.submissionStatus || "UNKNOWN",
-                    passedCases: payload.passedCases || 0,
-                    totalCases: payload.totalCases || 0,
-                    timestamp: new Date().toLocaleTimeString(),
-                    rawTime: Date.now()
-                };
-                setLiveLogs(prev => [newLog, ...prev]);
-
-                newNotification = {
-                    id: notifId,
-                    title: "Submission Result",
-                    message: `${payload.senderUsername} got ${payload.submissionStatus}\n` +
-                   `passed ${payload.passedCases}/${payload.totalCases} test cases.`,
-                    sender: payload.senderUsername,
-                    type: isSuccess ? 'success' : 'error'
-                };
-            }
-        } 
+            newNotification = {
+                id: notifId,
+                title: "Submission Result",
+                message: `${payload.senderUsername} got ${payload.submissionStatus}\n` +
+                    `passed ${payload.passedCases}/${payload.totalCases} test cases.`,
+                sender: payload.senderUsername,
+                type: isSuccess ? 'success' : 'error'
+            };
+        }
 
         if (newNotification) {
             setNotifications((prev) => [...prev, newNotification!]);
@@ -209,7 +161,7 @@ export default function PlayGame() {
             </div>
 
             <div className="flex-1 flex flex-col overflow-y-auto custom-scroll">
-                <Outlet context={{ liveLogs }} />
+                <Outlet />
             </div>
 
             {matchData && (

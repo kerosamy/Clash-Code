@@ -19,7 +19,6 @@ export interface Submission {
     numberOfPassedTestCases: number;
     numberOfTotalTestCases: number;
     numberOfCurrentTestCase: number;
-    matchId?: number | null;
 }
 
 export default function Submissions() {
@@ -98,13 +97,7 @@ useEffect(() => {
                 numberOfCurrentTestCase: item.numberOfCurrentTestCase,
                 problemTitle: item.problemTitle,
                 problemId: item.problemId,
-                matchId: item.matchId,
             }));
-
-            if(matchIdString){
-                const matchIdNum = Number(matchIdString);
-                formattedSubmissions = formattedSubmissions.filter(submission => submission.matchId === matchIdNum);
-            }
             console.log("Fetched submissions:", formattedSubmissions);
             
             setSubmissions(formattedSubmissions);
@@ -146,7 +139,7 @@ useEffect(() => {
         <div className="p-6">
             <div className="mb-6 ">
                 <h1 className="text-3xl font-bold font-anta text-orange text-center p-4">
-                    {matchIdString ? "Match Submissions" : "My Submissions"}
+                    {"My Submissions"}
                 </h1>
                 <p className="text-text mt-2">
                     Total Submissions: {submissions.length}

@@ -135,8 +135,7 @@ export const routes: RouteConfig[] = [
     children: [
       { index: true, component: ProblemDetails }, 
       { path: 'submit', component: Submit },
-      { path: 'match-state', component: MatchState }, 
-      { path: 'My-submissions', component: Submissions }
+      { path: 'match-state', component: MatchState }
     ]
   },
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
@@ -200,6 +199,5 @@ export const SuggestProblemSubRoutes: RouteConfig[] = [
 export const matchSubRoutes: RouteConfig[] = [
   { path: '', name: 'Problem Statment', icon: ProblemDetailsIcon, component: ProblemDetails },
   { path: 'submit', name: 'Submit Solution', icon: SubmitsIcon, component: Submit },
-  { path: 'My-submissions', name: 'My Submissions', icon: ListIcon, component: Submissions },
   { path: 'match-state', name: 'Match State', icon: SwordIcon, component: MatchState },
 ];
