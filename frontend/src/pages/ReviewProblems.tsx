@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Added import
+import { useNavigate } from "react-router-dom"; 
 import Board from "../components/common/Board";
 import PendingProblemRow from "../components/common/PendingProblemRow";
+import RejectionModal from "../components/problem/RejectionModal"; // import modal
 import {
   fetchPendingProblems,
   approveProblem,
   rejectProblem,
 } from "../services/AdminService";
+import { getUsername } from "../utils/jwtDecoder";
 
 interface PendingProblemRowProps {
   id: number;
@@ -20,6 +22,10 @@ export default function ReviewProblems() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProblems, setTotalProblems] = useState(0);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentRejectId, setCurrentRejectId] = useState<number | null>(null);
 
   async function loadPending(pageToLoad = 0) {
     try {
@@ -47,11 +53,18 @@ export default function ReviewProblems() {
     loadPending(page);
   };
 
-  const handleReject = async (id: number) => {
-    const note = prompt("Enter rejection note:");
-    if (!note) return;
-    await rejectProblem(id, note);
-    loadPending(page);
+  const handleReject = (id: number) => {
+    setCurrentRejectId(id);
+    setModalOpen(true);
+  };
+
+  const handleModalSubmit = async (note: string) => {
+    if (currentRejectId !== null) {
+      await rejectProblem(currentRejectId, note);
+      setModalOpen(false);
+      setCurrentRejectId(null);
+      loadPending(page);
+    }
   };
 
   const handlePrevPage = () => {
@@ -64,7 +77,6 @@ export default function ReviewProblems() {
 
   return (
     <div className="flex flex-col h-[90vh] p-8 space-y-6">
-      
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
@@ -95,7 +107,9 @@ export default function ReviewProblems() {
       <div className="flex-1 overflow-hidden rounded-xl border border-white/5 bg-sidebar/10 shadow-xl">
         <div className="h-full overflow-y-auto custom-scroll">
           <Board<PendingProblemRowProps & { onApprove: () => void; onReject: () => void }>
-            data={problems.map((p, index) => ({
+            data={problems
+              .filter(p => p.author !== getUsername()) // filter out own submissions
+              .map((p, index) => ({
               ...p,
               index: index + 1 + page * 20,
               onApprove: () => handleApprove(p.id),
@@ -111,7 +125,6 @@ export default function ReviewProblems() {
                 author={problem.author}
                 onApprove={problem.onApprove}
                 onReject={problem.onReject}
-                // Pass navigation handlers here
                 onRowClick={() => navigate(`/practice/problem/${problem.id}`)}
                 onAuthorClick={() => navigate(`/profile/${problem.author}/overview`)}
               />
@@ -142,6 +155,13 @@ export default function ReviewProblems() {
           Next
         </button>
       </div>
+
+      {/* Rejection Modal */}
+      <RejectionModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleModalSubmit}
+      />
     </div>
   );
 }
