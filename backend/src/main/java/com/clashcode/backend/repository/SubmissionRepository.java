@@ -17,7 +17,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
                 FROM Submission s
                 WHERE s.user.id = :userId
            """)
-    int countDistinctAttemptedProblems(Long userId);
+    int countDistinctAttemptedProblems(@Param("userId") Long userId);
 
     @Query("""
                 SELECT COUNT(DISTINCT s.problem.id)
@@ -25,7 +25,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
                 WHERE s.user.id = :userId
                   AND s.status = :status
            """)
-    int countDistinctSolvedProblems(Long userId, SubmissionStatus status);
+    int countDistinctSolvedProblems(@Param("userId") Long userId, @Param("status") SubmissionStatus status);
 
     @Query("""
             SELECT t AS category, COUNT(DISTINCT s.problem.id) AS count
