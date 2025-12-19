@@ -3,6 +3,7 @@ package com.clashcode.backend.mapper;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.RecoveryQuestion;
 import com.clashcode.backend.enums.Roles;
+import com.clashcode.backend.enums.UserStatus;
 import com.clashcode.backend.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,7 +77,7 @@ class UserMapperTest {
         CategoryDto category1 = new CategoryDto("DP", 20);
         CategoryDto category2 = new CategoryDto("GRAPH", 30);
 
-        ProfileDto profile = userMapper.toUserProfile(user, "DIAMOND", 5, stats, new CategoryDto[]{category1, category2},"");
+        ProfileDto profile = userMapper.toUserProfile(user, "DIAMOND", 5, stats, new CategoryDto[]{category1, category2},"" , UserStatus.ONLINE);
 
         assertEquals("caroline", profile.getUsername());
         assertEquals("DIAMOND", profile.getRank());
@@ -87,6 +88,8 @@ class UserMapperTest {
         assertEquals(2, profile.getCategories().length);
         assertEquals("DP", profile.getCategories()[0].getName());
         assertEquals("GRAPH", profile.getCategories()[1].getName());
+        assertEquals(UserStatus.ONLINE, profile.getUserStatus());
+
     }
 
     @Test
@@ -100,7 +103,7 @@ class UserMapperTest {
 
         StatsDto stats = new StatsDto();
 
-        ProfileDto profile = userMapper.toUserProfile(user, "BRONZE", 0, stats, null,"");
+        ProfileDto profile = userMapper.toUserProfile(user, "BRONZE", 0, stats, null,"" , UserStatus.ONLINE);
 
         assertEquals("alex", profile.getUsername());
         assertEquals("BRONZE", profile.getRank());
@@ -108,6 +111,7 @@ class UserMapperTest {
         assertEquals(600, profile.getMaxRate());
         assertEquals(0, profile.getFriendCount());
         assertEquals(stats, profile.getStats());
+        assertEquals(UserStatus.ONLINE, profile.getUserStatus());
         assertNull(profile.getCategories());
     }
 

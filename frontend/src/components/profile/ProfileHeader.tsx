@@ -12,7 +12,9 @@ import {
 import FriendStatusButton from '../common/FriendStatusButton';
 import ConfirmationModal from '../common/ConfirmationModal';
 import { generateInitialImage } from '../../utils/initialImageGenerator';
-
+import { UserStatus } from '../../enums/UserStatus';
+import { getStatusColor } from '../../utils/getUserStatusColor';
+import { getStatusLabel } from '../../utils/getUserStatusLabel';
 
 interface UserProfile {
     username: string;
@@ -21,6 +23,7 @@ interface UserProfile {
     maxRate: number;
     friendCount: number;
     avatarUrl: string;
+    userStatus: UserStatus;
 }
 
 interface ProfileHeaderProps {
@@ -208,8 +211,17 @@ export default function ProfileHeader({
                                 {profile.maxRate}
                             </span>
                         </div>
-                        <div className="text-text text-xl">
-                            Friend of : <span className="text-text">{profile.friendCount} users</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl text-text">Friend of :</span>
+                            <span className="text-2xl font-semibold" style={{ color }}>
+                                {profile.friendCount} users
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl text-text">Status :</span>
+                                <span className={`text-2xl font-semibold text-${getStatusColor(profile.userStatus)}`}>
+                                    {getStatusLabel(profile.userStatus)}
+                                </span>
                         </div>
                     </div>
                 </div>

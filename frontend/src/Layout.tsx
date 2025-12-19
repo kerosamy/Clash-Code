@@ -1,7 +1,9 @@
 import Sidebar from "./components/Sidebar";
 import { Outlet } from "react-router-dom";
+import { useOnlineStatus } from "./services/UserService";
 
 export default function Layout() {
+  useOnlineStatus(); 
   return (
     <div className="flex min-h-screen">
       <Sidebar />

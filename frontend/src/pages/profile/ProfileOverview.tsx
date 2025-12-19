@@ -34,6 +34,7 @@ export default function ProfileOverview() {
         setProfileBasic(profileBasic);
         setStats(stats);
         setCategories(categories);
+        console.log("here is the data");
         console.log(profileBasic);
 
       } catch (error) {

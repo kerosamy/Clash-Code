@@ -1,3 +1,5 @@
+import type { UserStatus } from "../enums/UserStatus";
+import { useEffect } from "react";
 import { apiRequest } from "./api";
 
 export interface BackendUserResponse {
@@ -7,6 +9,7 @@ export interface BackendUserResponse {
   maxRate: number;
   friendCount: number;
   avatarUrl: string;
+  userStatus: UserStatus;
   stats: {
     solvedProblems: number;
     attemptedProblems: number;
@@ -27,6 +30,7 @@ export interface UserProfileBasic {
   maxRate: number;
   friendCount: number;
   avatarUrl: string;
+  userStatus: UserStatus;
 }
 
 export interface UserStats {
@@ -68,6 +72,7 @@ export const splitUserData = (response: BackendUserResponse) => {
     maxRate: response.maxRate,
     friendCount: response.friendCount,
     avatarUrl: response.avatarUrl,
+    userStatus: response.userStatus,
   };
 
   const stats: UserStats = response.stats;
@@ -200,4 +205,21 @@ export async function getLeaderboard(
     url: "/users/leaderboard", // Assuming this is your endpoint
     params: { page, size },
   });
+}
+export function useOnlineStatus() {
+  useEffect(() => {
+    apiRequest<void>({
+      method: 'POST',
+      url: '/users/status/online',
+    }).catch(console.error);
+
+    const interval = setInterval(() => {
+      apiRequest<void>({
+        method: 'POST',
+        url: '/users/status/online',
+      }).catch(console.error);
+    }, 30000); // 30,000 ms = 30 sec
+
+    return () => clearInterval(interval);
+  }, []);
 }

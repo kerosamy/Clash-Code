@@ -75,4 +75,10 @@ public class UserController {
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(userService.getLeaderboard(page, size));
     }
+    @PostMapping("/status/online")
+    public ResponseEntity<Void> updateOnlineStatus(@AuthenticationPrincipal User user) {
+        System.out.println(user.getId());
+        userService.markOnline(user);
+        return ResponseEntity.noContent().build();
+    }
 }

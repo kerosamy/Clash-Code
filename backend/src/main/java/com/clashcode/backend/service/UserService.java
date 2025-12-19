@@ -15,9 +15,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -30,8 +32,10 @@ public class UserService {
     private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
     private final FriendStatusMapper friendStatusMapper = new FriendStatusMapper();
+    private final RedisTemplate<String, String> redisTemplate;
     private static final int RATING_PER_RANK = 300;
     private static final Ranks[] RANKS = Ranks.values();
+    private static final long ONLINE_TTL_SECONDS = 60;
 
     public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
@@ -39,6 +43,7 @@ public class UserService {
         this.submissionRepository = submissionRepository;
         this.matchParticipantRepository = matchParticipantRepository;
         this.imageFileStorageService = imageFileStorageService;
+        this.redisTemplate = redisTemplate;
     }
 
     public List<UserSearchResponseDto> searchByUsername(String username) {
@@ -98,7 +103,14 @@ public class UserService {
         // Convert stored filename to full URL
         String imageUrl = buildImageUrl(user.getImgUrl());
 
-        return userMapper.toUserProfile(user, rank, friendCount, stats, categories, imageUrl);
+        return userMapper.toUserProfile(user,
+                rank,
+                friendCount,
+                stats,
+                categories,
+                imageUrl,
+                getUserStatus(user.getId())
+        );
     }
 
     public ProfileDto getUserProfile(String username) {
@@ -179,5 +191,32 @@ public class UserService {
         PageRequest pageRequest = PageRequest.of(page, size);
         return userRepository.findAllByOrderByCurrentRateDesc(pageRequest)
                 .map(userMapper::toLeaderboardDto);
+    }
+
+    private UserStatus getUserStatus(Long userId){
+        if(!isOnline(userId)){
+            return UserStatus.OFFLINE;
+        }
+        return UserStatus.ONLINE;
+        //to do check if in match
+    }
+
+    public void markOnline(User user) {
+        try {
+            String key = "online:user:" + user.getId();
+            redisTemplate.opsForValue()
+                    .set(key, "1", Duration.ofSeconds(ONLINE_TTL_SECONDS));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isOnline(Long userId) {
+        try {
+            String key = "online:user:" + userId;
+            return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

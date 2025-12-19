@@ -85,7 +85,7 @@ class UserServiceTest {
                 .avatarUrl("http://localhost/images/avatar.png")
                 .build();
 
-        lenient().when(userMapper.toUserProfile(any(), any(), anyInt(), any(), any(), any()))
+        lenient().when(userMapper.toUserProfile(any(), any(), anyInt(), any(), any(), any(), any()))
                 .thenReturn(expected);
 
         ProfileDto result = userService.getProfile(user);
@@ -117,7 +117,7 @@ class UserServiceTest {
         when(submissionRepository.countProblemsByCategory(anyLong(), any()))
                 .thenReturn(List.of());
 
-        lenient().when(userMapper.toUserProfile(any(), any(), anyInt(), any(), any(), any()))
+        lenient().when(userMapper.toUserProfile(any(), any(), anyInt(), any(), any(), any(), any()))
                 .thenAnswer(invocation ->
                         ProfileDto.builder()
                                 .rank(invocation.getArgument(1))
