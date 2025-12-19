@@ -18,7 +18,7 @@ export default function Categories({ categories, color }: CategoryDistributionPr
 
             <div className="w-px h-56 bg-gray-400"></div>
 
-            <div className="flex-1 max-h-56 overflow-y-auto space-y-3">
+            <div className="flex-1 max-h-56 overflow-y-auto custom-scroll space-y-3">
                 {categories.map((category, index) => (
                     <div key={index} className="flex items-center gap-3">
                         <div
@@ -30,5 +30,5 @@ export default function Categories({ categories, color }: CategoryDistributionPr
                 ))}
             </div>
         </div>
-    );
+    ); 
 }

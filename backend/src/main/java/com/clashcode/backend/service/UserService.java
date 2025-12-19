@@ -1,12 +1,13 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.*;
-import com.clashcode.backend.enums.ProblemTags;
-import com.clashcode.backend.enums.Ranks;
-import com.clashcode.backend.enums.Roles;
+import com.clashcode.backend.enums.*;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.User;
+import com.clashcode.backend.repository.FriendRepository;
+import com.clashcode.backend.repository.MatchParticipantRepository;
+import com.clashcode.backend.repository.SubmissionRepository;
 import com.clashcode.backend.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,14 +22,22 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final FriendRepository friendRepository;
+    private final SubmissionRepository submissionRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
     private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
+    private static final int RATING_PER_RANK = 300;
+    private static final Ranks[] RANKS = Ranks.values();
 
     @Value("${server.url:http://localhost:8080}")
     private String serverUrl;
 
-    public UserService(UserRepository userRepository, ImageFileStorageService imageFileStorageService) {
+    public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
+        this.friendRepository = friendRepository;
+        this.submissionRepository = submissionRepository;
+        this.matchParticipantRepository = matchParticipantRepository;
         this.imageFileStorageService = imageFileStorageService;
     }
 
@@ -41,43 +50,39 @@ public class UserService {
                 )).toList();
     }
 
-    private StatsDto getStats(User user) {
-        //TODO
-        int solvedProblems = 750;
-        int attemptedProblems = 525;
-        int matchesPlayed = 330;
-        int matchesWon = 230;
+    private StatsDto getStats(long userId) {
+        int solvedProblems = submissionRepository.countDistinctSolvedProblems(userId, SubmissionStatus.ACCEPTED);
+        int attemptedProblems = submissionRepository.countDistinctAttemptedProblems(userId);
+        int matchesPlayed = matchParticipantRepository.countMatches(userId);
+        int matchesWon = matchParticipantRepository.countWonMatches(userId);
 
         return new StatsDto(solvedProblems, attemptedProblems, matchesPlayed, matchesWon);
     }
 
-    private CategoryDto[] getCategories(User user) {
-        //TODO
-        return new CategoryDto[]{
-                new CategoryDto(ProblemTags.DP.name(), 20),
-                new CategoryDto(ProblemTags.TWO_POINTERS.name(), 40),
-                new CategoryDto(ProblemTags.BRUTE_FORCE.name(), 30),
-                new CategoryDto(ProblemTags.BFS.name(), 15),
-        };
+    private CategoryDto[] getCategories(long userId) {
+        List<Object[]> results = submissionRepository.countProblemsByCategory(userId, SubmissionStatus.ACCEPTED);
+
+        return results.stream()
+                .map(r -> new CategoryDto(r[0].toString(), ((Number) r[1]).intValue()))
+                .toArray(CategoryDto[]::new);
     }
 
-    private int getFriendCount(User user) {
-        //TODO
-        return 20;
+    private int getFriendCount(long userId) {
+        return friendRepository.countFriendsByUserId(userId, FriendRequestStatus.ACCEPTED);
     }
 
     private String getRank(int rate) {
-        int index = rate / 300;
+        int index = rate / RATING_PER_RANK;
         if (index >= Ranks.values().length)
             index = Ranks.values().length - 1;
-        return Ranks.values()[index].name();
+        return RANKS[index].name();
     }
 
     public ProfileDto getProfile(User user) {
         String rank = getRank(user.getCurrentRate());
-        int friendCount = getFriendCount(user);
-        StatsDto stats = getStats(user);
-        CategoryDto[] categories = getCategories(user);
+        int friendCount = getFriendCount(user.getId());
+        StatsDto stats = getStats(user.getId());
+        CategoryDto[] categories = getCategories(user.getId());
 
         // Convert stored filename to full URL
         String imageUrl = buildImageUrl(user.getImgUrl());
