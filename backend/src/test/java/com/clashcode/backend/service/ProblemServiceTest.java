@@ -33,7 +33,7 @@ class ProblemServiceTest {
         problemRepository = mock(ProblemRepository.class);
         testCaseService = mock(TestCaseService.class);
         problemMapper = mock(ProblemMapper.class);
-        problemService = new ProblemService(problemRepository, testCaseService, problemMapper);
+        problemService = new ProblemService(problemRepository, testCaseService, problemMapper,any());
     }
 
     // ---------------- Test: getProblemById ----------------
@@ -41,14 +41,14 @@ class ProblemServiceTest {
     void testGetProblemById_Success() {
         Problem problem = new Problem();
         problem.setId(1L);
-        ProblemResponseDto responseDto = new ProblemResponseDto();
+        PracticeProblemResponseDto responseDto = new PracticeProblemResponseDto();
         responseDto.setId(1L);
 
         when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
         when(testCaseService.getVisibleTestCasesForProblem(problem)).thenReturn(List.of());
         when(problemMapper.toResponseDto(problem, List.of())).thenReturn(responseDto);
 
-        ProblemResponseDto result = problemService.getProblemById(1L);
+        PracticeProblemResponseDto result = problemService.getProblemById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());

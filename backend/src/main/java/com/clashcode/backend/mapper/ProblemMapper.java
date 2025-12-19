@@ -1,9 +1,6 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
-import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.Solution;
@@ -34,9 +31,29 @@ public class ProblemMapper {
                 .build();
     }
 
-    public ProblemResponseDto toResponseDto (Problem problem , List<TestCaseResponseDto> visibleTestCases) {
+    public PracticeProblemResponseDto toResponseDto (Problem problem , List<TestCaseResponseDto> visibleTestCases) {
         Solution solution = problem.getSolution();
-        return ProblemResponseDto
+        return PracticeProblemResponseDto
+                .builder()
+                .id(problem.getId())
+                .submissionsCount(problem.getSubmissionsCount())
+                .title(problem.getTitle())
+                .inputFormat(problem.getInputFormat())
+                .outputFormat(problem.getOutputFormat())
+                .statement(problem.getStatement())
+                .notes(problem.getNotes())
+                .memoryLimit(problem.getMemoryLimit())
+                .timeLimit(problem.getTimeLimit())
+                .rate(problem.getRate())
+                .tags(problem.getTags())
+                .visibleTestCases(visibleTestCases)
+                .author(problem.getAuthor())
+                .build();
+    }
+
+    public FullProblemResponseDto toFullResponseDto (Problem problem , List<TestCaseResponseDto> visibleTestCases) {
+        Solution solution = problem.getSolution();
+        return FullProblemResponseDto
                 .builder()
                 .id(problem.getId())
                 .submissionsCount(problem.getSubmissionsCount())
@@ -57,6 +74,11 @@ public class ProblemMapper {
     }
 
     public ProblemListDto toListDto(Problem problem) {
+        return toListDto(problem, null);
+    }
+
+    // Call this when you have a rejection note
+    public ProblemListDto toListDto(Problem problem, String rejectionNote) {
         return ProblemListDto.builder()
                 .id(problem.getId())
                 .title(problem.getTitle())
@@ -65,6 +87,7 @@ public class ProblemMapper {
                 .rate(problem.getRate())
                 .attempted("unsolved")   // placeholder
                 .author(problem.getAuthor())
+                .rejectionNote(rejectionNote) // nullable
                 .build();
     }
 

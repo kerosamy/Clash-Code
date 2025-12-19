@@ -1,7 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.PracticeProblemResponseDto;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
 import com.clashcode.backend.service.UserService;
@@ -88,7 +88,7 @@ class AdminControllerTest {
     @Test
     @DisplayName("GET /admin/problems/{id} - success")
     void getProblemDetails_success() throws Exception {
-        ProblemResponseDto responseDto = ProblemResponseDto.builder()
+        PracticeProblemResponseDto responseDto = PracticeProblemResponseDto.builder()
                 .id(1L)
                 .title("Problem 1")
                 .rate(1200)

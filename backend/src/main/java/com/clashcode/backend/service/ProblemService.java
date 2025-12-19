@@ -1,23 +1,21 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
-import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
+import com.clashcode.backend.model.ProblemReview;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.ProblemRepository;
+import com.clashcode.backend.repository.ProblemReviewRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,14 +24,17 @@ public class ProblemService {
     private final ProblemRepository problemRepository;
     private final TestCaseService testCaseService;
     private final ProblemMapper problemMapper;
+    private final ProblemReviewRepository problemReviewRepository;
 
     public ProblemService(ProblemRepository problemRepository,
                           TestCaseService testCaseService,
-                          ProblemMapper problemMapper) {
+                          ProblemMapper problemMapper,
+                          ProblemReviewRepository problemReviewRepository) {
 
         this.problemMapper = problemMapper;
         this.problemRepository = problemRepository;
         this.testCaseService = testCaseService;
+        this.problemReviewRepository = problemReviewRepository;
     }
 
     public void addProblem(
@@ -41,44 +42,61 @@ public class ProblemService {
             List<MultipartFile> files,
             String username
     ) {
-        long id = dto.getId();
-        Problem problem;
+        Problem problem = createOrUpdateProblem(dto, username);
 
-        // CREATE
-        if (id == present) {
-            problem = problemMapper.toProblem(dto);
-            problem.setAuthor(username);
-            problemRepository.save(problem);
-        }
-        // UPDATE
-        else {
-            problem = problemRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Problem not found"));
-
-            problemMapper.updateProblem(problem, dto);
-            problem.setProblemStatus(ProblemStatus.PENDING_APPROVAL);
-            problemRepository.save(problem);
-
-            testCaseService.deleteByProblem(problem);
-            problem.getTestCases().clear();
-            problemRepository.saveAndFlush(problem);
-        }
-
-        // COMMON: add test cases
-        List<TestCase> testCases =
-                testCaseService.addTestCases(files, problem, dto.getVisibleFlags());
-
+        List<TestCase> testCases = handleTestCases(problem, files, dto.getVisibleFlags());
         problem.setTestCases(testCases);
+
         problemRepository.save(problem);
     }
 
+    private Problem createOrUpdateProblem(ProblemRequestDto dto, String username) {
+        long id = dto.getId();
 
-    public ProblemResponseDto getProblemById (Long id) {
+        if (id == present) {
+            return createProblem(dto, username);
+        } else {
+            return updateProblem(dto);
+        }
+    }
+
+    private Problem createProblem(ProblemRequestDto dto, String username) {
+        Problem problem = problemMapper.toProblem(dto);
+        problem.setAuthor(username);
+        problemRepository.save(problem);
+        return problem;
+    }
+
+    private Problem updateProblem(ProblemRequestDto dto) {
+        Problem problem = problemRepository.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Problem not found"));
+
+        problemMapper.updateProblem(problem, dto);
+        problem.setProblemStatus(ProblemStatus.PENDING_APPROVAL);
+
+        testCaseService.deleteByProblem(problem);
+        problem.getTestCases().clear();
+
+        problemRepository.saveAndFlush(problem);
+        return problem;
+    }
+
+    private List<TestCase> handleTestCases(
+            Problem problem,
+            List<MultipartFile> files,
+            List<Boolean> visibleFlags
+    ) {
+        return testCaseService.addTestCases(files, problem, visibleFlags);
+    }
+
+
+
+    public FullProblemResponseDto getProblemById (Long id) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Problem not found"));
 
         List<TestCaseResponseDto> visibleTestCases = testCaseService.getVisibleTestCasesForProblem(problem);
-        return problemMapper.toResponseDto(problem, visibleTestCases);
+        return problemMapper.toFullResponseDto(problem, visibleTestCases);
     }
 
 
@@ -95,15 +113,33 @@ public class ProblemService {
 
         p.setProblemStatus(ProblemStatus.APPROVED);
         problemRepository.save(p);
+
+        problemReviewRepository.findByProblemId(id)
+                .ifPresent(problemReviewRepository::delete);
     }
 
+    @Transactional
     public void rejectProblem(Long id, String note) {
+
         Problem p = problemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Problem not found"));
 
+        // update problem status
         p.setProblemStatus(ProblemStatus.REJECTED);
-        problemRepository.save(p);
+
+        // insert or update review row
+        ProblemReview review = problemReviewRepository
+                .findByProblemId(id)
+                .orElse(new ProblemReview());
+
+        review.setProblemId(id);
+        review.setNote(note);
+        review.setReviewedAt(LocalDateTime.now());
+
+        problemReviewRepository.save(review);
     }
+
+
 
     public Page<ProblemListDto> getApprovedProblems(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
@@ -167,7 +203,14 @@ public class ProblemService {
                 ProblemStatus.REJECTED,
                 username,
                 pageRequest
-        ).map(problemMapper::toListDto);
+        ).map(problem -> {
+            String rejectionNote = problemReviewRepository
+                    .findByProblemId(problem.getId())
+                    .map(ProblemReview::getNote)
+                    .orElse(null);
+
+            return problemMapper.toListDto(problem, rejectionNote);
+        });
     }
 
 }

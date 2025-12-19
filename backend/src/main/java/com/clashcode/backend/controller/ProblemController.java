@@ -1,9 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.ProblemFilterDto;
-import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.ProblemService;
 import org.springframework.data.domain.Page;
@@ -30,8 +27,8 @@ public class ProblemController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProblemResponseDto> getProblem(@PathVariable Long id) {
-        ProblemResponseDto problem = problemService.getProblemById(id);
+    public ResponseEntity<FullProblemResponseDto> getProblem(@PathVariable Long id) {
+        FullProblemResponseDto problem = problemService.getProblemById(id);
         return ResponseEntity.ok(problem);
     }
 

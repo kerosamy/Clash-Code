@@ -22,15 +22,10 @@ interface ProblemListDto {
   title: string;
   rate: number;
   tags: ProblemTags[];
+  rejectionNote: string;
 }
 
-interface ProblemDto {
-  id: number;
-  title: string;
-  description: string;
-  rate: number;
-  tags: ProblemTags[];
-}
+
 
 interface VisibleTestCase {
   id: string ;
@@ -38,7 +33,7 @@ interface VisibleTestCase {
   output: string;
 }
 
-export interface RejectedProblemDto {
+export interface ProblemDto {
   id: number;
   author: string;
   title: string;
@@ -110,8 +105,8 @@ export async function searchProblemsByTitle(
   });
 }
 
-export async function fetchProblemById(id: number): Promise<RejectedProblemDto> {
-  return apiRequest<RejectedProblemDto>({
+export async function fetchProblemById(id: number): Promise<ProblemDto> {
+  return apiRequest<ProblemDto>({
     method: "GET",
     url: `/problem/${id}`,
   });

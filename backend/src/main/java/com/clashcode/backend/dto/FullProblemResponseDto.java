@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProblemResponseDto {
+public class FullProblemResponseDto {
     private Long id;
     private Long submissionsCount;
     private String title;
