@@ -70,8 +70,8 @@ public class UserService {
     private int getFriendCount(long userId) {
         return friendRepository.countFriendsByUserId(userId, FriendRequestStatus.ACCEPTED);
     }
-
-    private String getRank(int rate) {
+    
+    public String getRank(int rate) {
         int index = rate / RATING_PER_RANK;
         if (index >= Ranks.values().length)
             index = Ranks.values().length - 1;
@@ -157,7 +157,7 @@ public class UserService {
         }
     }
 
-    private String buildImageUrl(String fileName) {
+    public String buildImageUrl(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }

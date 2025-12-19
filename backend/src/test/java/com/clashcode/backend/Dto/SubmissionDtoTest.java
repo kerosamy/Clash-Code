@@ -66,13 +66,13 @@ class SubmissionDtoTest {
     void submissionLogEntryDto_builderAndGetters() {
         SubmissionLogEntryDto dto = SubmissionLogEntryDto.builder()
                 .submittedAt("2025-12-11T12:00:00")
-                .submissionStatus("REJECTED")
+                .status("REJECTED")
                 .numberOfPassedTestCases(2)
                 .numberOfTotalTestCases(10)
                 .build();
 
         assertEquals("2025-12-11T12:00:00", dto.getSubmittedAt());
-        assertEquals("REJECTED", dto.getSubmissionStatus());
+        assertEquals("REJECTED", dto.getStatus());
         assertEquals(2, dto.getNumberOfPassedTestCases());
         assertEquals(10, dto.getNumberOfTotalTestCases());
     }

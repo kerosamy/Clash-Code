@@ -1,13 +1,14 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.GameMode;
-import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.mapper.MatchMapper;
+import com.clashcode.backend.mapper.MatchNotificationMapper;
 import com.clashcode.backend.mapper.RankMapper;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
@@ -36,13 +37,14 @@ class MatchServiceTest {
     @Mock private ProblemRepository problemRepository;
     @Mock private NotificationRepository notificationRepository;
     @Mock private SubmissionService submissionService;
+    @Mock private MatchNotificationMapper matchNotificationMapper;
 
 
     @InjectMocks
     private MatchService matchService;
 
     @Test
-    void createMatch_withEntities_success() {
+    void test_createMatch_success() {
         // Arrange
         Long matchId = 100L;
         int duration = 30;
@@ -98,7 +100,7 @@ class MatchServiceTest {
     }
 
     @Test
-    void validateMatch_success() {
+    void test_validateMatch_success() {
         User user = User.builder().id(1L).username("caroline").build();
         MatchParticipant participant = MatchParticipant.builder().user(user).build();
         Match match = Match.builder()
@@ -115,7 +117,7 @@ class MatchServiceTest {
     }
 
     @Test
-    void validateMatch_notOngoingThrows() {
+    void test_validateMatch_notOngoingThrows() {
         User user = User.builder().id(1L).build();
         Match match = Match.builder()
                 .id(123L)
@@ -131,7 +133,7 @@ class MatchServiceTest {
     }
 
     @Test
-    void validateMatch_notParticipantThrows() {
+    void test_validateMatch_notParticipantThrows() {
         User user = User.builder().id(1L).username("caroline").build();
         User other = User.builder().id(2L).build();
         Match match = Match.builder()
@@ -148,7 +150,7 @@ class MatchServiceTest {
     }
 
     @Test
-    void completeMatch_setsWinnerLoserRanksCorrectly() {
+    void test_completeMatch_setsWinnerLoserRanksCorrectly() {
         // Arrange
         User winner = new User();
         winner.setId(1L);
@@ -166,8 +168,8 @@ class MatchServiceTest {
         match.setMatchState(MatchState.ONGOING);
         match.setParticipants(List.of(winnerParticipant, loserParticipant));
 
-        when(rankMapper.toRank("winner")).thenReturn(2);
-        when(rankMapper.toRank("loser")).thenReturn(1);
+        when(rankMapper.toRank("winner")).thenReturn(1);
+        when(rankMapper.toRank("loser")).thenReturn(2);
 
         matchService.completeMatch(match, winner);
 
@@ -175,8 +177,8 @@ class MatchServiceTest {
         assertEquals(MatchState.COMPLETED, match.getMatchState());
 
         // Assert ranks
-        assertEquals(2, winnerParticipant.getRank());
-        assertEquals(1, loserParticipant.getRank());
+        assertEquals(1, winnerParticipant.getRank());
+        assertEquals(2, loserParticipant.getRank());
 
         // Verify saving interactions
         verify(matchRepository).save(match);
@@ -184,22 +186,27 @@ class MatchServiceTest {
     }
 
     @Test
-    void sendMatchInvite_success() {
-        User sender = User.builder().id(1L).username("A").build();
-        User recipient = User.builder().id(2L).username("B").build();
+    void test_sendMatchInvite_success() {
+        User sender = User.builder().id(1L).username("caro").build();
+        User recipient = User.builder().id(2L).username("mina").build();
 
-        when(userRepository.findByUsername("B")).thenReturn(java.util.Optional.of(recipient));
+        when(userRepository.findByUsername("mina")).thenReturn(java.util.Optional.of(recipient));
+        when(matchNotificationMapper.mapMatchInvite(sender))
+                .thenReturn(new MatchNotificationDto());
 
-        matchService.sendMatchInvite(sender, "B");
+        matchService.sendMatchInvite(sender, "mina");
 
-        verify(notificationService).send(sender.getId(), recipient.getId(),
-                NotificationType.MATCH_INVITATION,
-                "Match Invitation",
-                "A invites you to a match");
+        verify(notificationService).send(
+                eq(sender.getId()),
+                eq(recipient.getId()),
+                eq(recipient.getUsername()),
+                any(MatchNotificationDto.class)
+        );
     }
 
+
     @Test
-    void acceptMatchInvite_success() {
+    void test_acceptMatchInvite_success() {
         User player1 = User.builder().id(1L).build();
         User player2 = User.builder().id(2L).build();
 
@@ -224,7 +231,7 @@ class MatchServiceTest {
     }
 
     @Test
-    void getMatchSubmissionLog_returnsLogs() {
+    void test_getMatchSubmissionLog_returnsLogs() {
         User user = User.builder().id(1L).build();
         MatchParticipant participant = MatchParticipant.builder().user(user).build();
         Match match = Match.builder().id(100L).participants(List.of(participant)).build();
@@ -241,12 +248,14 @@ class MatchServiceTest {
     }
 
     @Test
-    void submitCode_callsNotificationsAndCompleteIfAccepted() {
+    void test_submitCode_callsNotificationsAndCompleteIfAccepted() {
+        // Arrange
         User player = User.builder().id(1L).username("player").build();
+        MatchParticipant participant = MatchParticipant.builder().user(player).build();
         Match match = Match.builder()
                 .id(10L)
                 .matchState(MatchState.ONGOING)
-                .participants(List.of(MatchParticipant.builder().user(player).build()))
+                .participants(List.of(participant))
                 .build();
 
         SubmissionRequestDto dto = new SubmissionRequestDto();
@@ -256,18 +265,31 @@ class MatchServiceTest {
         submission.setStatus(SubmissionStatus.ACCEPTED);
         submission.setNumberOfPassedTestCases(5);
 
+        // Spy on service to mock validateMatch and submissionService
         MatchService spyService = Mockito.spy(matchService);
         doReturn(match).when(spyService).validateMatch(dto.getMatchId(), player);
         doReturn(submission).when(submissionService).submitCode(dto, player);
 
+        // Mock MatchNotificationMapper to return dummy DTOs
+        MatchNotificationDto receivedDto = new MatchNotificationDto();
+        MatchNotificationDto resultDto = new MatchNotificationDto();
+        doReturn(receivedDto).when(matchNotificationMapper).mapSubmissionReceived(eq(match), eq(player));
+        doReturn(resultDto).when(matchNotificationMapper).mapSubmissionResult(eq(match), eq(submission));
+
+        // Act
         spyService.submitCode(dto, player);
 
-        verify(notificationService, times(2)).sendMatchPop(any(), any(), any(), any());
+        // Assert: verify both notifications separately
+        verify(notificationService).send(eq(player.getId()), eq(player.getId()), eq(player.getUsername()), eq(receivedDto)); // submission received
+        verify(notificationService).send(eq(player.getId()), eq(player.getId()), eq(player.getUsername()), eq(resultDto));   // submission result
+
+        // Verify match completion
         verify(spyService).completeMatch(match, player);
     }
 
+
     @Test
-    void resignMatch_completesMatchWithOtherParticipant() {
+    void test_resignMatch_completesMatchWithOtherParticipant() {
         User resigning = User.builder().id(1L).build();
         User other = User.builder().id(2L).build();
 

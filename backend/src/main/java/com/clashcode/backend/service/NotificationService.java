@@ -1,11 +1,8 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.MatchNotificationDto;
-import com.clashcode.backend.dto.MatchStartNotificationDto;
-import com.clashcode.backend.enums.NotificationType;
+import com.clashcode.backend.Notification.NotificationPayload;
+import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.model.Notification;
-import com.clashcode.backend.model.Match;
-import com.clashcode.backend.model.MatchParticipant;
 import com.clashcode.backend.repository.NotificationRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -23,51 +20,27 @@ public class NotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void send(Long senderId, Long recipientId, NotificationType type, String title, String message) {
-        Notification notification = Notification.builder()
-                .senderId(senderId)
-                .recipientId(recipientId)
-                .type(type)
-                .title(title)
-                .message(message)
-                .read(false)
-                .build();
-
-        Notification saved = repository.save(notification);
-
-        messagingTemplate.convertAndSend(
-                "/topic/notifications/" + recipientId,
-                saved
-        );
-    }
-
-    public void sendMatchStart(Match match, String title, String message, long recipientId) {
-        MatchStartNotificationDto notification = new MatchStartNotificationDto(
-                match.getId(),
-                title,
-                message
-        );
-        messagingTemplate.convertAndSend(
-                "/topic/match-pop/" + recipientId,
-                notification
-        );
-    }
-
-    public void sendMatchPop(Match match, String title, String message, String senderUsername) {
-        for (MatchParticipant participant : match.getParticipants()) {
-            Long recipientId = participant.getUser().getId();
-
-            MatchNotificationDto notification = new MatchNotificationDto(
-                    match.getId(),
-                    senderUsername,
-                    title,
-                    message
-            );
-            messagingTemplate.convertAndSend(
-                    "/topic/match-pop/" + recipientId,
-                    notification
-            );
+    public void send(
+            Long senderId,
+            Long recipientId,
+            String recipientUsername,
+            NotificationPayload payload
+    ) {
+        if (payload.getMode() == NotificationMode.PERSISTENT) {
+            Notification notification = Notification.builder()
+                    .senderId(senderId)
+                    .recipientId(recipientId)
+                    .type(payload.getNotificationType())
+                    .title(payload.getTitle())
+                    .message(payload.getMessage())
+                    .build();
+            repository.save(notification);
         }
+
+        messagingTemplate.convertAndSend(
+                payload.getDestination(recipientUsername),
+                payload
+        );
     }
 
     public List<Notification> getUserNotifications(Long userId) {

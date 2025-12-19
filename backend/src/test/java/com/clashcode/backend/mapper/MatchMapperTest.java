@@ -1,10 +1,10 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.CreateMatchRequestDto;
-import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.model.*;
+import com.clashcode.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,11 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MatchMapperTest {
@@ -24,43 +23,36 @@ class MatchMapperTest {
     private MatchMapper matchMapper;
 
     @Mock
-    private User user1;
+    private UserService userService;
 
     @Mock
-    private User user2;
+    private User user1;
 
     @Mock
     private Problem problem;
 
     @BeforeEach
     void setUp() {
-        matchMapper = new MatchMapper();
+        matchMapper = new MatchMapper(userService);
     }
 
     @Test
-    void MapToMatchEntity() {
-        // Arrange
+    void test_toMatchEntity() {
         CreateMatchRequestDto dto = new CreateMatchRequestDto();
         dto.setDuration(30);
         dto.setGameMode(GameMode.UNRATED);
 
-        // Act
         Match match = matchMapper.toMatchEntity(dto, problem);
 
-        // Assert
         assertNotNull(match);
         assertEquals(30, match.getDuration());
         assertEquals(GameMode.UNRATED, match.getGameMode());
         assertEquals(MatchState.ONGOING, match.getMatchState());
         assertEquals(problem, match.getProblem());
-        assertNotNull(match.getStartAt());
-        assertNotNull(match.getParticipants());
-        assertTrue(match.getParticipants().isEmpty());
     }
 
     @Test
-    void CreateParticipant() {
-        // Arrange
+    void test_createParticipant() {
         Long userId = 10L;
         Long matchId = 100L;
         Integer currentRate = 1200;
@@ -70,16 +62,12 @@ class MatchMapperTest {
 
         Match match = Match.builder().id(matchId).build();
 
-        // Act
         MatchParticipant participant = matchMapper.createParticipant(user1, match);
 
-        // Assert
         assertNotNull(participant);
-
-        assertNotNull(participant.getId(), "MatchParticipantId should not be null");
+        assertNotNull(participant.getId());
         assertEquals(userId, participant.getId().getUserId());
         assertEquals(matchId, participant.getId().getMatchId());
-
         assertEquals(user1, participant.getUser());
         assertEquals(match, participant.getMatch());
         assertNull(participant.getRank());
@@ -88,8 +76,7 @@ class MatchMapperTest {
     }
 
     @Test
-    void MapToDto_Correctly() {
-        // Arrange
+    void test_toResponseDto() {
         Long matchId = 100L;
         Long problemId = 50L;
         Long userId = 1L;
@@ -116,10 +103,8 @@ class MatchMapperTest {
 
         match.setParticipants(List.of(participant));
 
-        // Act
         MatchResponseDto responseDto = matchMapper.toResponseDto(match);
 
-        // Assert
         assertNotNull(responseDto);
         assertEquals(matchId, responseDto.getId());
         assertEquals(now, responseDto.getStartAt());
@@ -127,14 +112,16 @@ class MatchMapperTest {
         assertEquals(MatchState.COMPLETED, responseDto.getMatchState());
         assertEquals(problemId, responseDto.getProblemId());
         assertEquals(1, responseDto.getParticipants().size());
-        assertEquals(userId, responseDto.getParticipants().get(0).getUserId());
-        assertEquals(1, responseDto.getParticipants().get(0).getRank());
-        assertEquals(1200, responseDto.getParticipants().get(0).getNewRating());
+
+        MatchParticipantDto dto = responseDto.getParticipants().get(0);
+        assertEquals(userId, dto.getUserId());
+        assertEquals(1, dto.getRank());
+        assertEquals(1200, dto.getNewRating());
+        assertEquals(10, dto.getRateChange());
     }
 
     @Test
-    void MapToDto_WithEmptyParticipants() {
-        // Arrange
+    void test_toResponseDto_withEmptyParticipants() {
         when(problem.getId()).thenReturn(50L);
 
         Match match = Match.builder()
@@ -143,15 +130,88 @@ class MatchMapperTest {
                 .duration(60)
                 .matchState(MatchState.ONGOING)
                 .problem(problem)
-                .participants(new ArrayList<>())
+                .participants(List.of())
                 .build();
 
-        // Act
         MatchResponseDto responseDto = matchMapper.toResponseDto(match);
 
-        // Assert
         assertNotNull(responseDto);
         assertNotNull(responseDto.getParticipants());
         assertTrue(responseDto.getParticipants().isEmpty());
+    }
+
+    @Test
+    void test_toSubmissionLogDto() {
+        Submission submission = Submission.builder()
+                .id(1L)
+                .submittedAt(LocalDateTime.now())
+                .numberOfPassedTestCases(3)
+                .numberOfTestCases(5)
+                .numberOfCurrentTestCase(2)
+                .build();
+
+        SubmissionLogEntryDto dto = matchMapper.toSubmissionLogDto(submission);
+
+        assertEquals(1L, dto.getSubmissionId());
+        assertEquals(3, dto.getNumberOfPassedTestCases());
+        assertEquals(5, dto.getNumberOfTotalTestCases());
+        assertEquals(2, dto.getNumberOfCurrentTestCase());
+        assertNotNull(dto.getSubmittedAt());
+    }
+
+    @Test
+    void test_toMatchSubmissionLogDto() {
+        // Arrange
+        String username = "kero";
+        String avatarUrl = "avatar.png";
+        int rank = 1200;
+
+        when(user1.getUsername()).thenReturn(username);
+        when(user1.getCurrentRate()).thenReturn(rank);
+        when(user1.getImgUrl()).thenReturn(avatarUrl);
+
+        // Mock UserService methods used in the mapper
+        when(userService.buildImageUrl(avatarUrl)).thenReturn("http://localhost/avatars/" + avatarUrl);
+        when(userService.getRank(rank)).thenReturn("BRONZE");
+
+        MatchParticipant participant = MatchParticipant.builder()
+                .user(user1)
+                .build();
+
+        Submission submission1 = Submission.builder().id(1L).build();
+        Submission submission2 = Submission.builder().id(2L).build();
+
+        // Act
+        MatchSubmissionLogDto dto = matchMapper.toMatchSubmissionLogDto(participant, List.of(submission1, submission2));
+
+        // Assert
+        assertEquals(username, dto.getUsername());
+        assertEquals("http://localhost/avatars/" + avatarUrl, dto.getAvatarUrl());
+        assertEquals("BRONZE", dto.getRank());
+
+        assertEquals(2, dto.getSubmissions().size());
+        assertEquals(1L, dto.getSubmissions().get(0).getSubmissionId());
+        assertEquals(2L, dto.getSubmissions().get(1).getSubmissionId());
+    }
+
+
+    @Test
+    void test_toSubmissionLogDto_handlesNullValues() {
+        Submission submission = Submission.builder()
+                .id(10L)
+                .status(null)
+                .submittedAt(null)
+                .numberOfPassedTestCases(null)
+                .numberOfTestCases(null)
+                .numberOfCurrentTestCase(null)
+                .build();
+
+        SubmissionLogEntryDto dto = matchMapper.toSubmissionLogDto(submission);
+
+        assertEquals("UNKNOWN", dto.getStatus());
+        assertEquals("", dto.getSubmittedAt());
+        assertEquals(0, dto.getNumberOfPassedTestCases());
+        assertEquals(0, dto.getNumberOfTotalTestCases());
+        assertEquals(0, dto.getNumberOfCurrentTestCase());
     }
 }

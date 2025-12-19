@@ -1,5 +1,5 @@
-// pages/Submissions.tsx
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Board from "../../components/common/Board";
 import SubmissionRow from "../../components/common/SubmissionRow";
 import { getUserSubmissions  , getSubmissionStatus} from "../../services/SubmissionsService";
@@ -22,6 +22,8 @@ export interface Submission {
 }
 
 export default function Submissions() {
+    const params = useParams();
+    const matchIdString = params.matchId || params.id;
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>("");
@@ -30,7 +32,7 @@ export default function Submissions() {
 
 useEffect(() => {
     fetchSubmissions();
-}, []);
+}, [matchIdString]);
 
 useEffect(() => {
    
@@ -84,7 +86,7 @@ useEffect(() => {
             const data = await getUserSubmissions();
             await waitForLoader(startTime);
             
-            const formattedSubmissions: Submission[] = data.map((item: any) => ({
+            let formattedSubmissions: Submission[] = data.map((item: any) => ({
                 submissionId: item.submissionId,
                 submissionStatus:  SubmissionStatus[item.submissionStatus as keyof typeof SubmissionStatus] ,
                 timeTaken: item.timeTaken,
@@ -137,7 +139,7 @@ useEffect(() => {
         <div className="p-6">
             <div className="mb-6 ">
                 <h1 className="text-3xl font-bold font-anta text-orange text-center p-4">
-                    My Submissions
+                    {"My Submissions"}
                 </h1>
                 <p className="text-text mt-2">
                     Total Submissions: {submissions.length}

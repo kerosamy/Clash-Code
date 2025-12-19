@@ -94,6 +94,7 @@ public class SubmissionMapper {
                         .numberOfPassedTestCases(submission.getNumberOfPassedTestCases() !=null ? submission.getNumberOfPassedTestCases() : 0)
                         .numberOfTotalTestCases(submission.getNumberOfTestCases() !=null ? submission.getNumberOfTestCases() : 0)
                         .numberOfCurrentTestCase(submission.getNumberOfCurrentTestCase() !=null ? submission.getNumberOfCurrentTestCase() : 0)
+                .matchId(submission.getMatch() != null ? submission.getMatch().getId() : null)
                 .problemTitle(submission.getProblem().getTitle())
                 .problemId(submission.getProblem().getId())
                 .build();

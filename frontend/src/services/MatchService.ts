@@ -1,5 +1,6 @@
 import { apiRequest } from "./api";
 import type { ProblemTags } from "../enums/ProblemTags";
+
 export interface ProblemRequestDto {
   title: string;
   inputFormat: string;
@@ -52,13 +53,15 @@ export interface SubmissionLogEntryDto {
   submittedAt: string;
   numberOfPassedTestCases: number;
   numberOfTotalTestCases: number;
+  numberOfCurrentTestCase?: number;
 }
 
 export interface MatchSubmissionLogDto {
-  playerId: number;
+  username: string;
+  avatarUrl: string;
+  rank: string;
   submissions: SubmissionLogEntryDto[];
 }
-
 
 export async function createMatch(
   body: CreateMatchRequestDto
@@ -74,6 +77,7 @@ export async function submitMatchCode(
   matchId: number,
   body: SubmissionRequestDto
 ): Promise<void> {
+
   return apiRequest<void>({
     method: "POST",
     url: `/matches/${matchId}/submit`,
@@ -101,5 +105,12 @@ export async function getProblemForMatch(matchId: number): Promise<ProblemReques
   return apiRequest<ProblemRequestDto>({
     method: "GET",
     url: `/matches/${matchId}/problem`,
+  });
+}
+
+export async function getMatchDetails(matchId: number): Promise<MatchResponseDto> {
+  return apiRequest<MatchResponseDto>({
+    method: "GET",
+    url: `/matches/${matchId}`,
   });
 }

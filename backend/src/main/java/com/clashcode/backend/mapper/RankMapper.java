@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 public class RankMapper {
     public int toRank(String outcome) {
         return switch (outcome.toLowerCase()) {
-            case "winner" -> 2;
-            case "loser" -> 1;
+            case "winner" -> 1;
+            case "loser" -> 2;
             case "draw" -> 0;
             default -> throw new IllegalArgumentException("Unknown outcome: " + outcome);
         };
