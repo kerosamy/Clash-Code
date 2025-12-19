@@ -38,6 +38,7 @@ public class Notification {
     private Instant createdAt;
 
     @Column(name = "is_read", nullable = false)
+    @Builder.Default
     private boolean read = false;
 
     @PrePersist

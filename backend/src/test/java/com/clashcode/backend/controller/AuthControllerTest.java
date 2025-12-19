@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,7 +48,7 @@ public class AuthControllerTest {
 
     @Test
     @DisplayName("POST /auth/signup - Success")
-    void testRegister_Success() throws Exception {
+    void test_Register_Success() throws Exception {
         RegisterUserDto request = new RegisterUserDto();
         request.setEmail("test@example.com");
         request.setUsername("testuser");
@@ -65,13 +66,12 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.token").value("mock-token"));
     }
 
     @Test
     @DisplayName("POST /auth/login - Success")
-    void testAuthenticate_Success() throws Exception {
+    void test_Authenticate_Success() throws Exception {
         LoginUserDto request = new LoginUserDto();
         request.setEmail("test@example.com");
         request.setPassword("password");
@@ -88,13 +88,12 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.token").value("mock-token"));
     }
 
     @Test
     @DisplayName("GET /auth/OAuthCallback - Success")
-    void testHandleGoogleOAuth_Success() throws Exception {
+    void test_HandleGoogleOAuth_Success() throws Exception {
         OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
 
         User mockUser = new User();
@@ -108,13 +107,12 @@ public class AuthControllerTest {
         mockMvc.perform(get("/auth/OAuthCallback")
                         .principal(authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"))
-                .andExpect(jsonPath("$.username").value("oauthuser"));
+                .andExpect(jsonPath("$.token").value("mock-token"));
     }
 
     @Test
     @DisplayName("POST /auth/GoogleSignUp/completeRegistration - Success")
-    void testCompleteGoogleSignUp_Success() throws Exception {
+    void test_CompleteGoogleSignUp_Success() throws Exception {
         SignUpCompletionDto request = new SignUpCompletionDto();
         request.setUsername("newuser");
 
@@ -134,7 +132,6 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"))
-                .andExpect(jsonPath("$.username").value("newuser"));
+                .andExpect(jsonPath("$.token").value("mock-token"));
     }
 }

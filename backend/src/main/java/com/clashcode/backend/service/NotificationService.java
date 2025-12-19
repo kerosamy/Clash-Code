@@ -1,6 +1,6 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.NotificationPayload;
+import com.clashcode.backend.Notification.NotificationPayload;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.repository.NotificationRepository;
@@ -33,7 +33,6 @@ public class NotificationService {
                     .type(payload.getNotificationType())
                     .title(payload.getTitle())
                     .message(payload.getMessage())
-                    .read(false)
                     .build();
             repository.save(notification);
         }
@@ -42,7 +41,6 @@ public class NotificationService {
                 payload.getDestination(recipientUsername),
                 payload
         );
-        System.out.println("📤 WS SEND TO: " + payload.getDestination(recipientUsername));
     }
 
     public List<Notification> getUserNotifications(Long userId) {

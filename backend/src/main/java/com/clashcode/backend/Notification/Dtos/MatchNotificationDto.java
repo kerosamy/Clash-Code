@@ -1,5 +1,6 @@
-package com.clashcode.backend.dto;
+package com.clashcode.backend.Notification.Dtos;
 
+import com.clashcode.backend.Notification.NotificationPayload;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
 import lombok.*;

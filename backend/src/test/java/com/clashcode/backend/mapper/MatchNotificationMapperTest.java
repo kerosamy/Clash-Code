@@ -1,6 +1,6 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.MatchNotificationDto;
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.model.Match;
@@ -29,7 +29,7 @@ class MatchNotificationMapperTest {
         when(sender.getUsername()).thenReturn("Caro");
         when(recipient.getUsername()).thenReturn("John");
 
-        MatchNotificationDto dto = mapper.mapMatchInvite(sender, recipient);
+        MatchNotificationDto dto = mapper.mapMatchInvite(sender);
 
         assertEquals(NotificationType.MATCH_INVITATION, dto.getNotificationType());
         assertEquals("Match Invitation", dto.getTitle());
@@ -67,7 +67,7 @@ class MatchNotificationMapperTest {
         when(sender.getUsername()).thenReturn("Kero");
         when(recipient.getUsername()).thenReturn("Mina");
 
-        MatchNotificationDto dto = mapper.mapSubmissionReceived(match, sender, recipient);
+        MatchNotificationDto dto = mapper.mapSubmissionReceived(match, sender);
 
         assertEquals(NotificationType.SUBMISSION_RECEIVED, dto.getNotificationType());
         assertEquals("Code Submitted", dto.getTitle());
@@ -92,7 +92,7 @@ class MatchNotificationMapperTest {
         when(submission.getNumberOfPassedTestCases()).thenReturn(5);
         when(submission.getNumberOfTestCases()).thenReturn(5);
 
-        MatchNotificationDto dto = mapper.mapSubmissionResult(match, submission, recipient);
+        MatchNotificationDto dto = mapper.mapSubmissionResult(match, submission);
 
         assertEquals(NotificationType.SUBMISSION_RESULT, dto.getNotificationType());
         assertEquals("Submission Graded", dto.getTitle());

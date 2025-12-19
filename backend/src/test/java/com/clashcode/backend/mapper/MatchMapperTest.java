@@ -31,9 +31,6 @@ class MatchMapperTest {
     @Mock
     private Problem problem;
 
-    @Mock
-    private ProfileDto profileDto;
-
     @BeforeEach
     void setUp() {
         matchMapper = new MatchMapper(userService);
@@ -164,7 +161,18 @@ class MatchMapperTest {
 
     @Test
     void test_toMatchSubmissionLogDto() {
-        when(userService.getUserProfile(user1.getUsername())).thenReturn(profileDto);
+        // Arrange
+        String username = "kero";
+        String avatarUrl = "avatar.png";
+        int rank = 1200;
+
+        when(user1.getUsername()).thenReturn(username);
+        when(user1.getCurrentRate()).thenReturn(rank);
+        when(user1.getImgUrl()).thenReturn(avatarUrl);
+
+        // Mock UserService methods used in the mapper
+        when(userService.buildImageUrl(avatarUrl)).thenReturn("http://localhost/avatars/" + avatarUrl);
+        when(userService.getRank(rank)).thenReturn("BRONZE");
 
         MatchParticipant participant = MatchParticipant.builder()
                 .user(user1)
@@ -173,13 +181,19 @@ class MatchMapperTest {
         Submission submission1 = Submission.builder().id(1L).build();
         Submission submission2 = Submission.builder().id(2L).build();
 
+        // Act
         MatchSubmissionLogDto dto = matchMapper.toMatchSubmissionLogDto(participant, List.of(submission1, submission2));
 
-        assertEquals(profileDto, dto.getProfile());
+        // Assert
+        assertEquals(username, dto.getUsername());
+        assertEquals("http://localhost/avatars/" + avatarUrl, dto.getAvatarUrl());
+        assertEquals("BRONZE", dto.getRank());
+
         assertEquals(2, dto.getSubmissions().size());
         assertEquals(1L, dto.getSubmissions().get(0).getSubmissionId());
         assertEquals(2L, dto.getSubmissions().get(1).getSubmissionId());
     }
+
 
     @Test
     void test_toSubmissionLogDto_handlesNullValues() {

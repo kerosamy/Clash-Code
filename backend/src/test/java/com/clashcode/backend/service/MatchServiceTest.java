@@ -1,12 +1,11 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.MatchNotificationDto;
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.GameMode;
-import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.MatchNotificationMapper;
@@ -169,8 +168,8 @@ class MatchServiceTest {
         match.setMatchState(MatchState.ONGOING);
         match.setParticipants(List.of(winnerParticipant, loserParticipant));
 
-        when(rankMapper.toRank("winner")).thenReturn(2);
-        when(rankMapper.toRank("loser")).thenReturn(1);
+        when(rankMapper.toRank("winner")).thenReturn(1);
+        when(rankMapper.toRank("loser")).thenReturn(2);
 
         matchService.completeMatch(match, winner);
 
@@ -178,8 +177,8 @@ class MatchServiceTest {
         assertEquals(MatchState.COMPLETED, match.getMatchState());
 
         // Assert ranks
-        assertEquals(2, winnerParticipant.getRank());
-        assertEquals(1, loserParticipant.getRank());
+        assertEquals(1, winnerParticipant.getRank());
+        assertEquals(2, loserParticipant.getRank());
 
         // Verify saving interactions
         verify(matchRepository).save(match);
@@ -192,7 +191,7 @@ class MatchServiceTest {
         User recipient = User.builder().id(2L).username("mina").build();
 
         when(userRepository.findByUsername("mina")).thenReturn(java.util.Optional.of(recipient));
-        when(matchNotificationMapper.mapMatchInvite(sender, recipient))
+        when(matchNotificationMapper.mapMatchInvite(sender))
                 .thenReturn(new MatchNotificationDto());
 
         matchService.sendMatchInvite(sender, "mina");
@@ -274,8 +273,8 @@ class MatchServiceTest {
         // Mock MatchNotificationMapper to return dummy DTOs
         MatchNotificationDto receivedDto = new MatchNotificationDto();
         MatchNotificationDto resultDto = new MatchNotificationDto();
-        doReturn(receivedDto).when(matchNotificationMapper).mapSubmissionReceived(eq(match), eq(player), any(User.class));
-        doReturn(resultDto).when(matchNotificationMapper).mapSubmissionResult(eq(match), eq(submission), any(User.class));
+        doReturn(receivedDto).when(matchNotificationMapper).mapSubmissionReceived(eq(match), eq(player));
+        doReturn(resultDto).when(matchNotificationMapper).mapSubmissionResult(eq(match), eq(submission));
 
         // Act
         spyService.submitCode(dto, player);

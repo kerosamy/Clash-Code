@@ -7,7 +7,6 @@ import SubmissionDetails from "../../components/common/SubmissionDetails";
 
 import { getMatchSubmissionLog } from "../../services/MatchService";
 import type { MatchSubmissionLogDto, SubmissionLogEntryDto } from "../../services/MatchService";
-import type { UserProfileBasic } from "../../services/UserService";
 
 import { rankColors } from "../../utils/colorMapper";
 import { getUsername } from "../../utils/jwtDecoder"; 
@@ -76,8 +75,8 @@ export default function MatchStatePage() {
 
     if (myUsername) {
       const cleanMe = myUsername.trim().toLowerCase();
-      const myLog = logs.find(log => log.profile?.username?.trim().toLowerCase() === cleanMe);
-      const opponentLog = logs.find(log => log.profile?.username?.trim().toLowerCase() !== cleanMe);
+      const myLog = logs.find(log => log.username?.trim().toLowerCase() === cleanMe);
+      const opponentLog = logs.find(log => log.username?.trim().toLowerCase() !== cleanMe);
 
       if (myLog) {
         return [myLog, opponentLog];
@@ -86,8 +85,9 @@ export default function MatchStatePage() {
     return [logs[0], logs[1]];
   }, [logs, myUsername]);
 
-  const PlayerHeader = ({ player, label }: { player: UserProfileBasic | undefined, label: string }) => {
+  const PlayerHeader = ({ player, label }: { player?: MatchSubmissionLogDto, label: string }) => {
     if (!player) {
+      
         return (
             <div className="flex flex-col items-center gap-4 opacity-50">
                 <div className="w-40 h-40 rounded-full bg-sidebar border-4 border-dashed border-text/20 flex items-center justify-center">
@@ -166,9 +166,9 @@ export default function MatchStatePage() {
   return (
     <div className="w-full min-h-full flex flex-col gap-6 p-6 bg-background">
       <div className="flex flex-col md:flex-row items-center justify-between w-full max-w-[950px] mx-auto mb-4 px-8 md:px-12">
-        <PlayerHeader player={leftPlayer?.profile} label={leftPlayer?.profile?.username || "Player 1"} />
+        <PlayerHeader player={leftPlayer} label={leftPlayer?.username || "Player 1"} />
         <VersusBadge />
-        <PlayerHeader player={rightPlayer?.profile} label={rightPlayer?.profile?.username || "Player 2"} />
+        <PlayerHeader player={rightPlayer} label={rightPlayer?.username || "Player 2"} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-[1400px] mx-auto">

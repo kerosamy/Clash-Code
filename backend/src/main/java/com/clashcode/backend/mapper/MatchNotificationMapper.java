@@ -1,6 +1,6 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.MatchNotificationDto;
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.model.Match;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MatchNotificationMapper {
 
-    public MatchNotificationDto mapMatchInvite(User sender, User recipient) {
+    public MatchNotificationDto mapMatchInvite(User sender) {
         return MatchNotificationDto.builder()
                 .notificationType(NotificationType.MATCH_INVITATION)
                 .title("Match Invitation")
@@ -32,7 +32,7 @@ public class MatchNotificationMapper {
                 .build();
     }
 
-    public MatchNotificationDto mapSubmissionReceived(Match match, User sender, User recipient) {
+    public MatchNotificationDto mapSubmissionReceived(Match match, User sender) {
         return MatchNotificationDto.builder()
                 .matchId(match.getId())
                 .senderUsername(sender.getUsername())
@@ -43,7 +43,7 @@ public class MatchNotificationMapper {
                 .build();
     }
 
-    public MatchNotificationDto mapSubmissionResult(Match match, Submission submission, User recipient) {
+    public MatchNotificationDto mapSubmissionResult(Match match, Submission submission) {
         return MatchNotificationDto.builder()
                 .matchId(match.getId())
                 .senderUsername(submission.getUser().getUsername())
@@ -61,7 +61,7 @@ public class MatchNotificationMapper {
                 .build();
     }
 
-    public MatchNotificationDto mapMatchEnded(Match match, User recipient) {
+    public MatchNotificationDto mapMatchEnded(Match match) {
         return MatchNotificationDto.builder()
                 .matchId(match.getId())
                 .senderUsername("system")

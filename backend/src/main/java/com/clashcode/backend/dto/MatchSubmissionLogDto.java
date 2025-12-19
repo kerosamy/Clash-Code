@@ -9,7 +9,9 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class MatchSubmissionLogDto {
-    private ProfileDto profile;
+    private String username;
+    private String avatarUrl;
+    private String rank;
     private List<SubmissionLogEntryDto> submissions;
 }
 

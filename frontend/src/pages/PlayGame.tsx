@@ -66,7 +66,7 @@ export default function PlayGame() {
                 const allLogs: LiveLog[] = [];
 
                 historyData.forEach((userRecord) => {
-                    const username = userRecord.profile.username;
+                    const username = userRecord.username;
                     
                     userRecord.submissions.forEach((sub) => {
                         if (isFinalStatus(sub.status)) {

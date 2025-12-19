@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 @Component
 public class MatchMapper {
     private final UserService userService;
-
     public MatchMapper(UserService userService) {
         this.userService = userService;
     }
@@ -80,10 +79,10 @@ public class MatchMapper {
                 .map(this::toSubmissionLogDto)
                 .toList();
 
-        ProfileDto profile = userService.getUserProfile(participant.getUser().getUsername());
-
         return MatchSubmissionLogDto.builder()
-                .profile(profile)
+                .username(participant.getUser().getUsername())
+                .avatarUrl(userService.buildImageUrl(participant.getUser().getImgUrl()))
+                .rank(userService.getRank(participant.getUser().getCurrentRate()))
                 .submissions(submissionsLog)
                 .build();
     }

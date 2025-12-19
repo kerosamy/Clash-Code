@@ -1,4 +1,4 @@
-package com.clashcode.backend.dto;
+package com.clashcode.backend.Notification;
 
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;

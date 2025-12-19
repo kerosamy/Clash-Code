@@ -1,12 +1,12 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.MatchNotificationMapper;
-import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.mapper.RankMapper;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
@@ -33,9 +33,8 @@ public class MatchService {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
     private final SubmissionService submissionService;
-    private final ProblemMapper problemMapper;
-    private final TestCaseService testCaseService;
     private final MatchNotificationMapper matchNotificationMapper;
+    private final ProblemService problemService;
 
     public MatchService(
             UserRepository userRepository,
@@ -49,9 +48,8 @@ public class MatchService {
             NotificationService notificationService,
             NotificationRepository notificationRepository,
             SubmissionService submissionService,
-            ProblemMapper problemMapper,
-            TestCaseService testCaseService,
-            MatchNotificationMapper matchNotificationMapper
+            MatchNotificationMapper matchNotificationMapper,
+            ProblemService problemService
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -64,9 +62,8 @@ public class MatchService {
         this.notificationService = notificationService;
         this.notificationRepository = notificationRepository;
         this.submissionService = submissionService;
-        this.problemMapper = problemMapper;
-        this.testCaseService = testCaseService;
         this.matchNotificationMapper = matchNotificationMapper;
+        this.problemService = problemService;
     }
 
     public Problem selectProblem(User userA, User userB) {
@@ -99,7 +96,7 @@ public class MatchService {
         User recipient = userRepository.findByUsername(recipientUsername)
                 .orElseThrow(() -> new UserNotFoundException("User not found with username " + recipientUsername));
 
-        MatchNotificationDto dto = matchNotificationMapper.mapMatchInvite(sender, recipient);
+        MatchNotificationDto dto = matchNotificationMapper.mapMatchInvite(sender);
 
         notificationService.send(
                 sender.getId(),
@@ -198,7 +195,7 @@ public class MatchService {
         Match match = validateMatch(submissionRequestDto.getMatchId(),  player);
 
         match.getParticipants().forEach(mp -> {
-            MatchNotificationDto dto = matchNotificationMapper.mapSubmissionReceived(match, player, mp.getUser());
+            MatchNotificationDto dto = matchNotificationMapper.mapSubmissionReceived(match, player);
             notificationService.send(
                     player.getId(),
                     mp.getUser().getId(),
@@ -210,7 +207,7 @@ public class MatchService {
         Submission submission = submissionService.submitCode(submissionRequestDto, player);
 
         match.getParticipants().forEach(mp -> {
-            MatchNotificationDto resultDto = matchNotificationMapper.mapSubmissionResult(match, submission, mp.getUser());
+            MatchNotificationDto resultDto = matchNotificationMapper.mapSubmissionResult(match, submission);
             notificationService.send(
                     player.getId(),
                     mp.getUser().getId(),
@@ -218,7 +215,6 @@ public class MatchService {
                     resultDto
             );
         });
-
         if (submission.getStatus() == SubmissionStatus.ACCEPTED) {
             completeMatch(match, player);
         }
@@ -249,7 +245,7 @@ public class MatchService {
 
 
         for (MatchParticipant participant : match.getParticipants()) {
-            MatchNotificationDto dto = matchNotificationMapper.mapMatchEnded(match, participant.getUser());
+            MatchNotificationDto dto = matchNotificationMapper.mapMatchEnded(match);
             notificationService.send(
                     match.getId(),
                     participant.getUser().getId(),
@@ -257,7 +253,6 @@ public class MatchService {
                     dto
             );
         }
-
         //TODO calculate new ratings
     }
 
@@ -278,17 +273,12 @@ public class MatchService {
         completeMatch(match, winnerParticipant.getUser());
     }
 
-
     public ProblemResponseDto getMatchProblem(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Match not found"));
         Problem problem = match.getProblem();
-        if (problem == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Match has no problem assigned");
-        }
-        return problemMapper.toResponseDto(problem, testCaseService.getVisibleTestCasesForProblem(problem));
+        return problemService.getProblemById(problem.getId());
     }
 
     public MatchResponseDto getMatchDetails(Long matchId) {

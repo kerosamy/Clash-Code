@@ -1,6 +1,5 @@
 import { apiRequest } from "./api";
 import type { ProblemTags } from "../enums/ProblemTags";
-import type { UserProfileBasic } from "./UserService"
 
 export interface ProblemRequestDto {
   title: string;
@@ -58,7 +57,9 @@ export interface SubmissionLogEntryDto {
 }
 
 export interface MatchSubmissionLogDto {
-  profile: UserProfileBasic;
+  username: string;
+  avatarUrl: string;
+  rank: string;
   submissions: SubmissionLogEntryDto[];
 }
 

@@ -1,6 +1,6 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.NotificationPayload;
+import com.clashcode.backend.Notification.NotificationPayload;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.model.Notification;
