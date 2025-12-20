@@ -17,9 +17,9 @@ public class FriendStatusMapper {
 
         if (status == FriendRequestStatus.ACCEPTED)
             return FriendStatus.FRIENDS;
-        else if(requester.equals(friendship.getSender()))
+        else if(requester.getId().equals(friendship.getSender().getId()))
             return FriendStatus.PENDING_SENT;
-        else if(requester.equals(friendship.getReceiver()))
+        else if(requester.getId().equals(friendship.getReceiver().getId()))
             return FriendStatus.PENDING_RECEIVED;
         else
             return FriendStatus.NONE;
