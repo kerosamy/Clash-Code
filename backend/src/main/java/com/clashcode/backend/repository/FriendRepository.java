@@ -3,11 +3,11 @@ package com.clashcode.backend.repository;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.model.Friend;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
