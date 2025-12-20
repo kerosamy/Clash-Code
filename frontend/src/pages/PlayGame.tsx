@@ -5,14 +5,15 @@ import { Client, type IMessage } from "@stomp/stompjs";
 import TopNavigator from "../components/common/TopNavigators";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 import DraggableTimer from "../components/match/Timer";
+import MatchResults from "../components/match/MatchResults";
 
 import ToastFeed from '../components/common/PopNotification';
 import type { ToastNotification } from '../components/common/PopNotification';
 
 import { matchSubRoutes } from '../routes/routes.config';
-import { resignMatch, getMatchDetails } from "../services/MatchService";
+import { resignMatch, getMatchDetails, getMatchResults } from "../services/MatchService"; 
+import type { MatchResultDto } from "../services/MatchService";
 import { getUsername } from "../utils/jwtDecoder";
-
 
 interface MatchData {
     startAt: string;
@@ -21,7 +22,7 @@ interface MatchData {
 }
 
 interface WebSocketPayload {
-    notificationType: 'SUBMISSION_RECEIVED' | 'SUBMISSION_RESULT' | 'MATCH_COMPLETED'; 
+    notificationType: 'SUBMISSION_RECEIVED' | 'SUBMISSION_RESULT' | 'MATCH_COMPLETED' | 'USER_RESIGNED'; 
     senderUsername: string;
     submissionStatus?: string;
     passedCases?: number;
@@ -36,13 +37,28 @@ export default function PlayGame() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [matchData, setMatchData] = useState<MatchData | null>(null);
     const [notifications, setNotifications] = useState<ToastNotification[]>([]);
+    
+    const [matchResults, setMatchResults] = useState<MatchResultDto | null>(null);
+    const [showResultOverlay, setShowResultOverlay] = useState(false);
 
     const clientRef = useRef<Client | null>(null);
+
+    const fetchAndShowResults = async () => {
+        if (!id) return;
+        try {
+            const results = await getMatchResults(Number(id));
+            setMatchResults(results);
+            setShowResultOverlay(true);
+            setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+        } catch (error) {
+            console.error("Failed to load match results", error);
+        }
+    };
 
     useEffect(() => {
         if (!id) return;
 
-        const fetchData = async () => {
+        const fetchInitialData = async () => {
             try {
                 const details = await getMatchDetails(Number(id));
                 setMatchData({
@@ -51,14 +67,17 @@ export default function PlayGame() {
                     state: details.matchState
                 });
 
+                if (details.matchState === "COMPLETED" || details.matchState === "RESIGNED") {
+                    fetchAndShowResults();
+                }
+
             } catch (error) {
                 console.error("Could not fetch match data", error);
             }
         };
 
-        fetchData();
-        
-    }, [id]);
+        fetchInitialData();
+    }, [id]); 
 
     useEffect(() => {
         const currentUser = getUsername();
@@ -75,6 +94,7 @@ export default function PlayGame() {
                     const payload: WebSocketPayload = JSON.parse(message.body);
                     handleWebSocketMessage(payload);
                 } catch (err) {
+                    console.error("WS Parse Error", err);
                 }
             });
         };
@@ -84,13 +104,32 @@ export default function PlayGame() {
         return () => { client.deactivate(); };
     }, []);
 
+
     const handleWebSocketMessage = (payload: WebSocketPayload) => {
         const notifId = Date.now();
         let newNotification: ToastNotification | null = null;
 
         if(payload.notificationType === 'MATCH_COMPLETED'){
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
-            //navigate to Match Results page 
+            
+            setTimeout(() => {
+                fetchAndShowResults();
+            }, 1500); 
+        }
+        else if (payload.notificationType === 'USER_RESIGNED') {
+            newNotification = {
+                id: notifId,
+                title: payload.title ?? "Opponent Resigned",
+                message: payload.message ?? `${payload.senderUsername} resigned. You win!`,
+                sender: payload.senderUsername,
+                type: 'success'
+            };
+
+            setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+        
+            setTimeout(() => {
+                fetchAndShowResults();
+            }, 1500);
         }
         else if (payload.notificationType === 'SUBMISSION_RECEIVED') {
             newNotification = {
@@ -101,7 +140,6 @@ export default function PlayGame() {
                 type: 'info'
             };
         } 
-        
         else if (payload.notificationType === 'SUBMISSION_RESULT') {
             const isSuccess = payload.submissionStatus === 'ACCEPTED';
             newNotification = {
@@ -123,6 +161,7 @@ export default function PlayGame() {
     };
 
     const handleResignClick = () => setIsResignModalOpen(true);
+    
     const handleConfirmResign = async () => {
         if (!id) return;
         setIsProcessing(true);
@@ -130,7 +169,11 @@ export default function PlayGame() {
             await resignMatch(Number(id));
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
             setIsResignModalOpen(false);
-            //todo navigate to Match Results page
+            
+            setTimeout(() => {
+                fetchAndShowResults(); 
+            }, 1500);
+
         } catch (error) {
             console.error("Resignation failed", error);
             alert("Failed to resign.");
@@ -169,6 +212,12 @@ export default function PlayGame() {
                     startAt={matchData.startAt} 
                     durationMinutes={matchData.duration} 
                     isMatchOver={!isMatchOngoing} 
+                />
+            )}
+
+            {showResultOverlay && matchResults && (
+                <MatchResults
+                    result={matchResults} 
                 />
             )}
 

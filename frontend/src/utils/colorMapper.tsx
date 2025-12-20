@@ -1,12 +1,35 @@
-export const rankColors: Record<string, string> = {
-  BRONZE: "#CD7F32",
-  SILVER: "#C0C0C0",
-  GOLD: "#FFD700",
-  DIAMOND: "#00FFFF",
-  MASTER: "#8A2BE2",
-  CHAMPION: "#4169E1",
-  LEGEND: "#80FFA1",
+const RANK_CONFIG = [
+  { name: "BRONZE", color: "#CD7F32" },
+  { name: "SILVER", color: "#C0C0C0" },
+  { name: "GOLD", color: "#FFD700" },
+  { name: "DIAMOND", color: "#00FFFF" },
+  { name: "MASTER", color: "#8A2BE2" },
+  { name: "CHAMPION", color: "#4169E1" },
+  { name: "LEGEND", color: "#80FFA1" },
+] as const;
+
+const RATING_PER_RANK = 300;
+
+export const getRankName = (rating: number): string => {
+  let index = Math.floor(rating / RATING_PER_RANK);
+  if (index >= RANK_CONFIG.length) {
+    index = RANK_CONFIG.length - 1;
+  }
+  if (index < 0) index = 0;
+  return RANK_CONFIG[index].name;
 };
+
+export const getRankColor = (rating: number): string => {
+  const index = Math.min(
+    Math.floor(Math.max(0, rating) / RATING_PER_RANK),
+    RANK_CONFIG.length - 1
+  );
+  return RANK_CONFIG[index].color;
+};
+
+export const rankColors = Object.fromEntries(
+  RANK_CONFIG.map(r => [r.name, r.color])
+);
 
 export const enumColors: Record<string, string> = {
   IMPLEMENTATION: "#6B7280",

@@ -71,4 +71,15 @@ public class MatchNotificationMapper {
                 .mode(NotificationMode.EPHEMERAL)
                 .build();
     }
+
+    public MatchNotificationDto mapOpponentResigned(Match match, User resigningUser) {
+        return MatchNotificationDto.builder()
+                .matchId(match.getId())
+                .senderUsername(resigningUser.getUsername())
+                .notificationType(NotificationType.USER_RESIGNED)
+                .title("Opponent Resigned")
+                .message(resigningUser.getUsername() + " has resigned. You win the match!")
+                .mode(NotificationMode.EPHEMERAL)
+                .build();
+    }
 }

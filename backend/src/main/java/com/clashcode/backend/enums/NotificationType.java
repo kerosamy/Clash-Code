@@ -8,4 +8,5 @@ public enum NotificationType {
     SUBMISSION_RECEIVED,
     SUBMISSION_RESULT,
     MATCH_COMPLETED,
+    USER_RESIGNED,
 }

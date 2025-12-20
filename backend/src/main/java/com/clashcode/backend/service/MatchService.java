@@ -278,6 +278,14 @@ public class MatchService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Other participant not found"));
 
+        MatchNotificationDto dto = matchNotificationMapper.mapOpponentResigned(match, resigningUser);
+        notificationService.send(
+                resigningUser.getId(),
+                winnerParticipant.getUser().getId(),
+                winnerParticipant.getUser().getUsername(),
+                dto
+        );
+
         completeMatch(match, winnerParticipant.getUser());
     }
 
@@ -294,6 +302,19 @@ public class MatchService {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
         return matchMapper.toResponseDto(match);
+    }
+
+    public MatchResultDto getMatchResults(Long matchId, User user) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+
+        MatchParticipant participant = match.getParticipants().stream()
+                .filter(mp -> mp.getUser().getId().equals(user.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("User is not a participant in this match"));
+
+        boolean isRated = match.getGameMode() == GameMode.RATED;
+        return matchMapper.toMatchResultDto(isRated, participant);
     }
 }
 
