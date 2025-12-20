@@ -3,6 +3,7 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.LoginUserDto;
 import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.AuthService;
 import com.clashcode.backend.service.JwtService;
@@ -89,5 +90,72 @@ public class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @DisplayName("GET /auth/OAuthCallback - Success")
+    void test_HandleGoogleOAuth_Success() throws Exception {
+        OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
+
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setEmail("oauthuser@example.com");
+        mockUser.setUsername("oauthuser");
+
+        when(authService.handleGoogleOAuth(any(OAuth2AuthenticationToken.class))).thenReturn(mockUser);
+        when(jwtService.generateToken(any(User.class))).thenReturn("mock-token");
+
+        mockMvc.perform(get("/auth/OAuthCallback")
+                        .principal(authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @DisplayName("POST /auth/GoogleSignUp/completeRegistration - Success")
+    void test_CompleteGoogleSignUp_Success() throws Exception {
+        SignUpCompletionDto request = new SignUpCompletionDto();
+        request.setUsername("newuser");
+
+        OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
+
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setEmail("newuser@example.com");
+        mockUser.setUsername("newuser");
+
+        when(authService.completeGoogleSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
+                .thenReturn(mockUser);
+        when(jwtService.generateToken(any(User.class))).thenReturn("mock-token");
+
+        mockMvc.perform(post("/auth/GoogleSignUp/completeRegistration")
+                        .principal(authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @DisplayName("GET /auth/me - Unauthorized")
+    void testGetMe_Unauthorized() throws Exception {
+        mockMvc.perform(get("/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Direct buildAuthResponse - returns token")
+    void testBuildAuthResponse() {
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setEmail("direct@example.com");
+        mockUser.setUsername("directuser");
+
+        when(jwtService.generateToken(any(User.class))).thenReturn("direct-token");
+
+        AuthController controller = new AuthController(jwtService, authService);
+        var response = controller.buildAuthResponse(mockUser);
+
+        assert response.getBody().getToken().equals("direct-token");
     }
 }

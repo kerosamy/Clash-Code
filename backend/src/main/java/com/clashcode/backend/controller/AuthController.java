@@ -102,9 +102,9 @@ public class AuthController {
         return ResponseEntity.ok(user); // returns minimal user info (id, email, username)
     }
 
-    private ResponseEntity<AuthResponseDto> buildAuthResponse(User user) {
+    ResponseEntity<AuthResponseDto> buildAuthResponse(User user) {
         String jwtToken = jwtService.generateToken(user);
-        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken, jwtService.getExpirationTime());
+        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken);
         return ResponseEntity.ok(authResponseDto);
     }
 }

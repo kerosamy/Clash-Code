@@ -9,6 +9,7 @@ import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
+import com.clashcode.backend.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +41,9 @@ class UserServiceTest {
     @Mock private UserMapper userMapper;
     @Mock private FriendStatusMapper friendStatusMapper;
     @Mock private RedisService redisService;
+
+    @Mock
+    private ImageFileStorageService imageFileStorageService;
 
     @InjectMocks
     private UserService userService;
@@ -132,8 +137,46 @@ class UserServiceTest {
 
     @Test
     void test_getUserProfile_success() {
+    @DisplayName("searchByUsername returns mapped results")
+    void searchByUsername_found() {
         User user = new User();
-        user.setId(2L);
+        user.setUsername("mina");
+        user.setCurrentRate(1200);
+
+        when(userRepository.findByUsernameContainingIgnoreCase("min"))
+                .thenReturn(List.of(user));
+
+        List<UserSearchResponseDto> results = userService.searchByUsername("min");
+
+        assertEquals(1, results.size());
+        assertEquals("mina", results.get(0).getUsername());
+        assertEquals("MASTER", results.get(0).getRank());
+    }
+
+    @Test
+    @DisplayName("getProfile assembles correct profile")
+    void getProfile_success() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("mina");
+        user.setCurrentRate(1140);
+        user.setMaxRate(1200);
+        user.setImgUrl("avatar.png");
+
+        ProfileDto profile = userService.getProfile(user);
+
+        assertEquals("mina", profile.getUsername());
+        assertEquals("DIAMOND", profile.getRank());
+        assertTrue(profile.getFriendCount() > 0);
+        assertNotNull(profile.getStats());
+        assertNotNull(profile.getCategories());
+        assertTrue(profile.getAvatarUrl().contains("avatar.png"));
+    }
+
+    @Test
+    @DisplayName("getUserProfile success")
+    void getUserProfile_success() {
+        User user = new User();
         user.setUsername("caro");
         user.setCurrentRate(1400);
         user.setMaxRate(1500);
@@ -186,6 +229,19 @@ class UserServiceTest {
 
     @Test
     void test_updateUserRole_success() {
+        assertEquals(1400, profile.getCurrentRate());
+    }
+
+    @Test
+    @DisplayName("getUserProfile throws when not found")
+    void getUserProfile_notFound() {
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () -> userService.getUserProfile("unknown"));
+    }
+
+    @Test
+    @DisplayName("updateUserRole changes role")
+    void updateUserRole_success() {
         User user = new User();
         user.setId(1L);
         user.setRole(Roles.USER);
@@ -204,6 +260,14 @@ class UserServiceTest {
     void test_updateUserRole_cannotModifySuperAdmin() {
         User superAdmin = new User();
         superAdmin.setId(99L);
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("updateUserRole throws for SUPER_ADMIN")
+    void updateUserRole_superAdmin() {
+        User superAdmin = new User();
+        superAdmin.setId(1L);
         superAdmin.setRole(Roles.SUPER_ADMIN);
 
         when(userRepository.findById(99L))
@@ -525,5 +589,185 @@ class UserServiceTest {
         verify(redisService).addUserToRedis(300L, "online");
         verify(redisService).addUserToRedis(300L, "in-match");
         verify(redisService, atLeast(3)).searchUserFromRedis(300L);
+    }
+    
+
+    @Test
+    @DisplayName("updateUserRole throws when user not found")
+    void updateUserRole_notFound() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () -> userService.updateUserRole(99L, Roles.ADMIN));
+    }
+
+    @Test
+    @DisplayName("getAllUsers returns mapped page")
+    void getAllUsers_success() {
+        User user = new User();
+        user.setUsername("mina");
+        user.setCurrentRate(1200);
+
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<User> page = new PageImpl<>(List.of(user), pageRequest, 1);
+
+        when(userRepository.findAllByRoleNot(Roles.SUPER_ADMIN, pageRequest)).thenReturn(page);
+
+        Page<UserManagementDto> result = userService.getAllUsers(0, 10);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("mina", result.getContent().get(0).getUsername());
+    }
+
+    @Test
+    @DisplayName("searchUsersByUsername returns paged results")
+    void searchUsersByUsername_success() {
+        User user1 = new User();
+        user1.setUsername("mina");
+        user1.setCurrentRate(800);
+
+        User user2 = new User();
+        user2.setUsername("minato");
+        user2.setCurrentRate(1100);
+
+        when(userRepository.findByUsernameContainingIgnoreCase("min"))
+                .thenReturn(List.of(user1, user2));
+
+        Page<UserManagementDto> result = userService.searchUsersByUsername("min", 0, 10);
+
+        assertEquals(2, result.getTotalElements());
+        assertEquals("mina", result.getContent().get(0).getUsername());
+    }
+
+    @Test
+    @DisplayName("getFilteredUsersByRole returns mapped page")
+    void getFilteredUsersByRole_success() {
+        User user = new User();
+        user.setUsername("admin");
+        user.setCurrentRate(1200);
+
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<User> page = new PageImpl<>(List.of(user), pageRequest, 1);
+
+        when(userRepository.findAllByRole(Roles.ADMIN, pageRequest)).thenReturn(page);
+
+        Page<UserManagementDto> result = userService.getFilteredUsersByRole(Roles.ADMIN, 0, 10);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("admin", result.getContent().get(0).getUsername());
+    }
+
+    @Test
+    @DisplayName("updateProfileImage replaces old image and returns URL")
+    void updateProfileImage_withOldImage() {
+        User user = new User();
+        user.setUsername("mina");
+        user.setImgUrl("old.png");
+
+        MockMultipartFile file = new MockMultipartFile("file", "avatar.png",
+                "image/png", "dummy".getBytes());
+
+        when(imageFileStorageService.storeFile(file, "mina")).thenReturn("new.png");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        String url = userService.updateProfileImage(user, file);
+
+        verify(imageFileStorageService).deleteFile("old.png");
+        verify(userRepository).save(user);
+        assertTrue(url.contains("new.png"));
+    }
+
+    @Test
+    @DisplayName("updateProfileImage with no old image")
+    void updateProfileImage_noOldImage() {
+        User user = new User();
+        user.setUsername("mina");
+
+        MockMultipartFile file = new MockMultipartFile("file", "avatar.png",
+                "image/png", "dummy".getBytes());
+
+        when(imageFileStorageService.storeFile(file, "mina")).thenReturn("new.png");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        String url = userService.updateProfileImage(user, file);
+
+        verify(imageFileStorageService, never()).deleteFile(any());
+        verify(userRepository).save(user);
+        assertTrue(url.contains("new.png"));
+    }
+
+    @Test
+    @DisplayName("deleteProfileImage removes existing image")
+    void deleteProfileImage_withImage() {
+        User user = new User();
+        user.setImgUrl("old.png");
+
+        userService.deleteProfileImage(user);
+
+        verify(imageFileStorageService).deleteFile("old.png");
+        verify(userRepository).save(user);
+        assertNull(user.getImgUrl());
+    }
+
+    @Test
+    @DisplayName("deleteProfileImage does nothing when no image")
+    void deleteProfileImage_noImage() {
+        User user = new User();
+        user.setImgUrl(null);
+
+        userService.deleteProfileImage(user);
+
+        verify(imageFileStorageService, never()).deleteFile(any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("getRank returns correct rank for low, mid, and overflow values")
+    void getRank_variousRates() throws Exception {
+        UserService service = new UserService(userRepository, imageFileStorageService);
+
+        // Low value
+        String rankLow = service.getProfile(new User() {{
+            setUsername("low");
+            setCurrentRate(100);
+        }}).getRank();
+        assertEquals("BRONZE", rankLow);
+
+        // Mid value
+        String rankMid = service.getProfile(new User() {{
+            setUsername("mid");
+            setCurrentRate(900);
+        }}).getRank();
+        assertEquals("DIAMOND", rankMid);
+
+        // Overflow value (beyond enum length)
+        String rankHigh = service.getProfile(new User() {{
+            setUsername("high");
+            setCurrentRate(9999);
+        }}).getRank();
+        assertEquals("LEGEND", rankHigh); // last enum value
+    }
+
+    @Test
+    @DisplayName("buildImageUrl returns null for null or empty filename")
+    void buildImageUrl_nullOrEmpty() {
+        UserService service = new UserService(userRepository, imageFileStorageService);
+
+        // null filename
+        String resultNull = service.updateProfileImage(new User(), new MockMultipartFile("file", "avatar.png",
+                "image/png", "dummy".getBytes()));
+        // since user has no username, storeFile will likely throw, but we can directly test private helper
+        String urlNull = service.buildImageUrl(null);
+        assertNull(urlNull);
+
+        // empty filename
+        String urlEmpty = service.buildImageUrl("");
+        assertNull(urlEmpty);
+    }
+
+    @Test
+    @DisplayName("buildImageUrl returns full URL for valid filename")
+    void buildImageUrl_valid() {
+        UserService service = new UserService(userRepository, imageFileStorageService);
+        String url = service.buildImageUrl("avatar.png");
+        assertTrue(url.contains("/files/profile-images/avatar.png"));
     }
 }

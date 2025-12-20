@@ -1,6 +1,10 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.MatchSubmissionLogDto;
+import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
@@ -28,9 +32,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -58,7 +67,7 @@ class MatchControllerTest {
         submissionRequestDto.setCodeLanguage("python");
 
         doThrow(new UnauthorizedException("User not authenticated"))
-                .when(submissionService).submitCode(any(SubmissionRequestDto.class), any(User.class));
+                .when(matchService).submitCode(any(SubmissionRequestDto.class), any(User.class));
 
         mockMvc.perform(post("/matches/123/submit")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -66,6 +75,22 @@ class MatchControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    @DisplayName("POST /matches/{matchId}/submit - Success")
+    void submitCode_success() throws Exception {
+        SubmissionRequestDto submissionRequestDto = new SubmissionRequestDto();
+        submissionRequestDto.setCode("print('Hello')");
+        submissionRequestDto.setCodeLanguage("python");
+
+        doNothing().when(matchService).submitCode(any(SubmissionRequestDto.class), any(User.class));
+
+        mockMvc.perform(post("/matches/123/submit")
+                        .principal(() -> "userPrincipal")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(submissionRequestDto)))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -81,10 +106,28 @@ class MatchControllerTest {
     }
 
     @Test
+    @DisplayName("POST /matches/{matchId}/resign - Success")
+    void resignMatch_success() throws Exception {
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setUsername("mina");
+
+        // tell the service to do nothing
+        doNothing().when(matchService).resignMatch(any(Long.class), any(User.class));
+
+        mockMvc.perform(post("/matches/123/resign")
+                        .requestAttr("user", mockUser)) // inject domain User
+                .andExpect(status().isOk());
+    }
+
+
+
+    @Test
     @DisplayName("GET /matches/{matchId}/submission-log - Success")
     void test_getMatchSubmissionLog_success() throws Exception {
         MatchSubmissionLogDto logDto = MatchSubmissionLogDto.builder()
-                .submissions(List.of()) // empty submissions for simplicity
+                .playerId(1L)
+                .submissions(List.of())
                 .build();
 
         when(matchService.getMatchSubmissionLog(123L)).thenReturn(List.of(logDto));
@@ -157,6 +200,19 @@ class MatchControllerTest {
     void test_getMatchDetails_success() throws Exception {
         MatchResponseDto matchDto = MatchResponseDto.builder()
                 .id(10L)
+    void invitePlayer_success() throws Exception {
+        doNothing().when(matchService).sendMatchInvite(any(User.class), any(String.class));
+
+        mockMvc.perform(post("/matches/invite/recipientUser")
+                        .principal(() -> "senderUser"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /matches/invite/{notificationId}/accept - Success")
+    void acceptInvite_success() throws Exception {
+        MatchResponseDto responseDto = MatchResponseDto.builder()
+                .id(123L)
                 .matchState(MatchState.ONGOING)
                 .participants(List.of())
                 .build();
@@ -279,5 +335,27 @@ class MatchControllerTest {
                 .andExpect(jsonPath("$.content[0].rateChange").value(25))
                 .andExpect(jsonPath("$.content[0].newRating").value(1525))
                 .andExpect(jsonPath("$.content[0].rated").value(true));
+        when(matchService.acceptMatchInvite(any(User.class), any(Long.class))).thenReturn(responseDto);
+
+        mockMvc.perform(post("/matches/invite/456/accept")
+                        .principal(() -> "playerUser"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.matchId").value(123))
+                .andExpect(jsonPath("$.state").value("IN_PROGRESS"));
+    }
+
+    @Test
+    @DisplayName("GET /matches/{matchId}/problem - Success")
+    void getMatchProblem_success() throws Exception {
+        ProblemResponseDto problemDto = ProblemResponseDto.builder()
+                .id(1L)
+                .title("Two Sum")
+                .build();
+
+        when(matchService.getMatchProblem(123L)).thenReturn(problemDto);
+
+        mockMvc.perform(get("/matches/123/problem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Two Sum"));
     }
 }
