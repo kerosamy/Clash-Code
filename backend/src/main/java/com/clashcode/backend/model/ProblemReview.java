@@ -29,6 +29,4 @@ public class ProblemReview {
 
     @Column(nullable = false)
     private LocalDateTime reviewedAt;
-
-    // getters & setters
 }

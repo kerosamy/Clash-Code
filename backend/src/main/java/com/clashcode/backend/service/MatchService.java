@@ -283,7 +283,6 @@ public class MatchService {
 
 
     public FullProblemResponseDto getMatchProblem(Long matchId) {
-        System.out.println(matchId+"match i");
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Match not found"));
