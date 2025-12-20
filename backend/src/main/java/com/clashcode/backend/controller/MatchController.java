@@ -85,4 +85,21 @@ public class MatchController {
         MatchResultDto matchResultDto = matchService.getMatchResults(matchId, user);
         return ResponseEntity.ok(matchResultDto);
     }
+    @PostMapping("/start-rated-match")
+    public ResponseEntity<Void> createMatch(@RequestParam MatchCreationDto matchCreationDto){
+        matchService.startRatedMatch(matchCreationDto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/search-opponent")
+    public ResponseEntity<Void> searchOpponent(@AuthenticationPrincipal User user) {
+        matchService.searchForOpponent(user);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/search-opponent/cancel")
+    public ResponseEntity<Void> cancelOpponent(@AuthenticationPrincipal User user) {
+        matchService.cancelSearchForOpponent(user);
+        return ResponseEntity.ok().build();
+    }
 }

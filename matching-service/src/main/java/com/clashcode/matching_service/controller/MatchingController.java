@@ -1,6 +1,6 @@
 package com.clashcode.matching_service.controller;
 
-import com.clashcode.matching_service.dto.MatchRequestDto;
+import com.clashcode.matching_service.dto.MatchingRequestDto;
 import com.clashcode.matching_service.service.MatchingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ public class MatchingController {
     }
 
     @PostMapping("/request-matching")
-    ResponseEntity<Void> addUserToMatching(@RequestBody MatchRequestDto matchRequestDto) {
+    ResponseEntity<Void> addUserToMatching(@RequestBody MatchingRequestDto matchRequestDto) {
         matchingService.addUserToMatchingService(matchRequestDto);
         return ResponseEntity.ok().build();
     }

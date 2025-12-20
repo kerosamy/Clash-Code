@@ -1,6 +1,6 @@
 package com.clashcode.matching_service.service;
 
-import com.clashcode.matching_service.dto.MatchRequestDto;
+import com.clashcode.matching_service.dto.MatchingRequestDto;
 import com.clashcode.matching_service.dto.UserMatchingDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -11,17 +11,21 @@ import java.util.Set;
 public class MatchingService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final MatchingNotifier matchingNotifier;
     private static final String KEY_FOR_Z_SET = "matching:queue";
     private static final Double MS_TO_MINUTE = 60_000.0;
     private static final Integer FACTOR_OF_MINUTE = 5;
     private static final Integer RANGE_INCREASING_FACTOR = 100;
 
 
-    public MatchingService(RedisTemplate<String, String> redisTemplate) {
+    public MatchingService(RedisTemplate<String, String> redisTemplate,
+                           MatchingNotifier matchingNotifier
+    ) {
         this.redisTemplate = redisTemplate;
+        this.matchingNotifier = matchingNotifier;
     }
 
-    public void addUserToMatchingService(MatchRequestDto dto) {
+    public void addUserToMatchingService(MatchingRequestDto dto) {
         long now = System.currentTimeMillis();
         redisTemplate.opsForZSet().add(
                 KEY_FOR_Z_SET,
@@ -74,7 +78,7 @@ public class MatchingService {
     public void matchTwoUsers(Long userId , Long otherUserId) {
         removeUserFromMatchingService(userId);
         removeUserFromMatchingService(otherUserId);
-        //call the other back end here
+        matchingNotifier.notifyMatch(otherUserId, userId);
     }
 
     public UserMatchingDto getUserData(Long userId) {

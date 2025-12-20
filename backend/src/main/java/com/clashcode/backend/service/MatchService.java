@@ -16,6 +16,8 @@ import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.MatchNotificationMapper;
 import com.clashcode.backend.mapper.RankMapper;
+import com.clashcode.backend.matching.MatchingServiceClient;
+import com.clashcode.backend.matching.dto.MatchingRequestDto;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
 
@@ -43,6 +45,7 @@ public class MatchService {
     private final SubmissionService submissionService;
     private final MatchNotificationMapper matchNotificationMapper;
     private final ProblemService problemService;
+    private final MatchingServiceClient matchingServiceClient;
 
     public MatchService(
             UserRepository userRepository,
@@ -57,7 +60,8 @@ public class MatchService {
             NotificationRepository notificationRepository,
             SubmissionService submissionService,
             MatchNotificationMapper matchNotificationMapper,
-            ProblemService problemService
+            ProblemService problemService,
+            MatchingServiceClient matchingServiceClient
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -72,6 +76,7 @@ public class MatchService {
         this.submissionService = submissionService;
         this.matchNotificationMapper = matchNotificationMapper;
         this.problemService = problemService;
+        this.matchingServiceClient = matchingServiceClient;
     }
 
     public Problem selectProblem(User userA, User userB) {
@@ -395,6 +400,34 @@ public class MatchService {
         userB.setCurrentRate(newRatingB);
         userB.setMaxRate(Math.max(userB.getMaxRate(), newRatingB));
     }
-}
+    
+    @Transactional
+    public void startRatedMatch(MatchCreationDto dto) {
 
+        User userA = userRepository.findById(dto.getPlayerIdA())
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
+
+        User userB = userRepository.findById(dto.getPlayerIdB())
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
+
+        Problem problem = selectProblem(userA , userB);
+
+        createMatch(userA,userB,problem,15,GameMode.RATED);// change the duration
+    }
+
+    public void searchForOpponent (User user){
+        matchingServiceClient.requestMatching(
+                new MatchingRequestDto(
+                        user.getId(),
+                        user.getCurrentRate()
+                )
+        );
+    }
+
+    public void cancelSearchForOpponent (User user){
+        matchingServiceClient.deleteMatching(
+                user.getId()
+        );
+    }
+}
 
