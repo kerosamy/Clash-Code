@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.dto.FullProblemResponseDto;
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.PracticeProblemResponseDto;
 import com.clashcode.backend.service.JwtService;
@@ -88,7 +89,7 @@ class AdminControllerTest {
     @Test
     @DisplayName("GET /admin/problems/{id} - success")
     void getProblemDetails_success() throws Exception {
-        PracticeProblemResponseDto responseDto = PracticeProblemResponseDto.builder()
+        FullProblemResponseDto responseDto = FullProblemResponseDto.builder()
                 .id(1L)
                 .title("Problem 1")
                 .rate(1200)
@@ -129,7 +130,36 @@ class AdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isEmpty())
                 .andExpect(jsonPath("$.totalElements").value(0));
+                }
+                
+	@Test
+	@DisplayName("POST /admin/problems/{id}/reject - success")
+	void rejectProblem_success() throws Exception {
+	    Long problemId = 1L;
+	    String rejectionNote = "The constraints are too vague.";
 
-        verify(problemService, times(1)).getPendingProblems(0, 10);
-    }
+	    // No return value (void), so we use doNothing
+	    doNothing().when(problemService).rejectProblem(eq(problemId), anyString());
+
+	    mockMvc.perform(post("/admin/problems/1/reject")
+		            .contentType(MediaType.TEXT_PLAIN) // Note: Controller expects String body
+		            .content(rejectionNote))
+		    .andExpect(status().isOk());
+
+	    verify(problemService, times(1)).rejectProblem(eq(problemId), contains("too vague"));
+	}
+
+	@Test
+	@DisplayName("POST /admin/problems/{id}/accept - problem not found")
+	void acceptProblem_notFound() throws Exception {
+	    doThrow(new RuntimeException("Problem not found"))
+		    .when(problemService).acceptProblem(99L);
+
+	    mockMvc.perform(post("/admin/problems/99/accept"))
+		    .andExpect(status().isInternalServerError()); 
+		    // Note: Depending on your GlobalExceptionHandler, this might be 404 or 500
+
+
+		verify(problemService, times(1)).getPendingProblems(0, 10);
+	    }
 }

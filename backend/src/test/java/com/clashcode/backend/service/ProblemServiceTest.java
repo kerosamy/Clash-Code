@@ -4,10 +4,13 @@ import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
+import com.clashcode.backend.model.ProblemReview;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.enums.ProblemTags;
 import com.clashcode.backend.repository.ProblemRepository;
+import com.clashcode.backend.repository.ProblemReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,13 +30,16 @@ class ProblemServiceTest {
     private TestCaseService testCaseService;
     private ProblemMapper problemMapper;
     private ProblemService problemService;
+    private ProblemReviewRepository problemReviewRepository;
 
     @BeforeEach
     void setUp() {
         problemRepository = mock(ProblemRepository.class);
         testCaseService = mock(TestCaseService.class);
         problemMapper = mock(ProblemMapper.class);
-        problemService = new ProblemService(problemRepository, testCaseService, problemMapper,any());
+        problemReviewRepository = mock(ProblemReviewRepository.class);
+
+        problemService = new ProblemService(problemRepository, testCaseService, problemMapper,problemReviewRepository);
     }
 
     // ---------------- Test: getProblemById ----------------
@@ -41,14 +47,14 @@ class ProblemServiceTest {
     void testGetProblemById_Success() {
         Problem problem = new Problem();
         problem.setId(1L);
-        PracticeProblemResponseDto responseDto = new PracticeProblemResponseDto();
+        FullProblemResponseDto responseDto = new FullProblemResponseDto();
         responseDto.setId(1L);
 
         when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
         when(testCaseService.getVisibleTestCasesForProblem(problem)).thenReturn(List.of());
-        when(problemMapper.toResponseDto(problem, List.of())).thenReturn(responseDto);
+        when(problemMapper.toFullResponseDto(problem, List.of())).thenReturn(responseDto);
 
-        PracticeProblemResponseDto result = problemService.getProblemById(1L);
+        FullProblemResponseDto result = problemService.getProblemById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -314,7 +320,82 @@ class ProblemServiceTest {
         Page<ProblemListDto> result = problemService.searchProblemsByName("Nonexistent", 0, 10);
         assertTrue(result.isEmpty());
     }
+    
+    // ---------------- Test: acceptProblem ----------------
+@Test
+@DisplayName("Accept Problem - Success")
+void testAcceptProblem() {
+    Long problemId = 1L;
+    Problem problem = new Problem();
+    problem.setId(problemId);
+    problem.setProblemStatus(ProblemStatus.PENDING_APPROVAL);
 
+    when(problemRepository.findById(problemId)).thenReturn(Optional.of(problem));
+    when(problemReviewRepository.findByProblemId(problemId)).thenReturn(Optional.empty());
 
+    problemService.acceptProblem(problemId);
 
+    assertEquals(ProblemStatus.APPROVED, problem.getProblemStatus());
+    verify(problemRepository).save(problem);
+    // Verify it tries to delete any existing review notes
+    verify(problemReviewRepository).findByProblemId(problemId);
+}
+
+// ---------------- Test: rejectProblem ----------------
+// ---------------- Test: acceptProblem ----------------
+@Test
+@DisplayName("Accept Problem - Updates status and deletes existing review")
+void testAcceptProblem_Success() {
+    Long problemId = 1L;
+    Problem problem = new Problem();
+    problem.setId(problemId);
+    problem.setProblemStatus(ProblemStatus.PENDING_APPROVAL);
+
+    when(problemRepository.findById(problemId)).thenReturn(Optional.of(problem));
+    when(problemReviewRepository.findByProblemId(problemId)).thenReturn(Optional.of(new ProblemReview()));
+
+    problemService.acceptProblem(problemId);
+
+    assertEquals(ProblemStatus.APPROVED, problem.getProblemStatus());
+    verify(problemRepository).save(problem);
+    verify(problemReviewRepository).delete(any(ProblemReview.class));
+}
+
+    // ---------------- Test: rejectProblem ----------------
+    @Test
+    @DisplayName("Reject Problem - Create new review record")
+    void testRejectProblem_NewReview() {
+        Long problemId = 1L;
+        String note = "Insufficient test cases.";
+        Problem problem = new Problem();
+        problem.setId(problemId);
+
+        when(problemRepository.findById(problemId)).thenReturn(Optional.of(problem));
+        when(problemReviewRepository.findByProblemId(problemId)).thenReturn(Optional.empty());
+
+        problemService.rejectProblem(problemId, note);
+
+        assertEquals(ProblemStatus.REJECTED, problem.getProblemStatus());
+        verify(problemReviewRepository).save(argThat(review ->
+                review.getNote().equals(note) && review.getProblemId().equals(problemId)
+        ));
+    }
+
+    @Test
+    @DisplayName("Reject Problem - Update existing review record")
+    void testRejectProblem_UpdateExisting() {
+        Long problemId = 1L;
+        String newNote = "Updated rejection reason.";
+        Problem problem = new Problem();
+        ProblemReview existingReview = new ProblemReview();
+        existingReview.setNote("Old note");
+
+        when(problemRepository.findById(problemId)).thenReturn(Optional.of(problem));
+        when(problemReviewRepository.findByProblemId(problemId)).thenReturn(Optional.of(existingReview));
+
+        problemService.rejectProblem(problemId, newNote);
+
+        assertEquals(newNote, existingReview.getNote());
+        verify(problemReviewRepository).save(existingReview);
+    }
 }

@@ -1,9 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.ProblemFilterDto;
-import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.PracticeProblemResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,7 +81,7 @@ class ProblemControllerTest {
     @Test
     @DisplayName("GET /problem/{id} - Success")
     void testGetProblem() throws Exception {
-        PracticeProblemResponseDto response = new PracticeProblemResponseDto();
+        FullProblemResponseDto response = new FullProblemResponseDto();
         response.setId(1L);
         response.setTitle("Add Two Integers");
 
