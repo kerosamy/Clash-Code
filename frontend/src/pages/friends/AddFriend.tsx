@@ -5,12 +5,15 @@ import SearchBar from "../../components/common/SearchBar";
 import { searchUsers, addFriend } from "../../services/UserService";
 import type { UserSearchResponse } from "../../services/UserService";
 import { useNavigate } from "react-router-dom";
+import { getUsername } from "../../utils/jwtDecoder";
 
 export default function AddFriend() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<UserSearchResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const username = getUsername();
 
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -22,7 +25,8 @@ export default function AddFriend() {
       setLoading(true);
       try {
         const results = await searchUsers(searchTerm);
-        setUsers(results);
+        const filteredResults = results.filter(user => user.username !== username);
+        setUsers(filteredResults);
       } catch (error) {
         console.error("Error fetching users:", error);
         setUsers([]);
