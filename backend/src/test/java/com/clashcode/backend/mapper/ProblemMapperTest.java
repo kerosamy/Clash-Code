@@ -2,7 +2,7 @@ package com.clashcode.backend.mapper;
 
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.PracticeProblemResponseDto;
 import com.clashcode.backend.dto.TestCaseResponseDto;
 import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.enums.ProblemTags;
@@ -94,7 +94,7 @@ class ProblemMapperTest {
         );
 
         // Act
-        ProblemResponseDto dto = problemMapper.toResponseDto(problem, testCases);
+        PracticeProblemResponseDto dto = problemMapper.toResponseDto(problem, testCases);
 
         // Assert
         assertEquals(1L, dto.getId());
@@ -118,7 +118,7 @@ class ProblemMapperTest {
                 .tags(Collections.emptyList())
                 .submissionsCount(0L)
                 .build();
-        ProblemResponseDto dto = problemMapper.toResponseDto(problem, Collections.emptyList());
+        PracticeProblemResponseDto dto = problemMapper.toResponseDto(problem, Collections.emptyList());
 
         assertEquals(2L, dto.getId());
         assertEquals("No TestCases", dto.getTitle());

@@ -3,7 +3,7 @@ package com.clashcode.backend.Dto;
 import com.clashcode.backend.dto.ProblemFilterDto;
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.PracticeProblemResponseDto;
 import com.clashcode.backend.enums.ProblemTags;
 import org.junit.jupiter.api.Test;
 
@@ -82,7 +82,7 @@ class ProblemDtoTest {
 
     @Test
     void problemResponseDto_builderAndDefaults() {
-        ProblemResponseDto dto = ProblemResponseDto.builder()
+        PracticeProblemResponseDto dto = PracticeProblemResponseDto.builder()
                 .id(1L)
                 .title("Title")
                 .inputFormat("input")

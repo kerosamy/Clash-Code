@@ -105,7 +105,7 @@ class MatchControllerTest {
     @Test
     @DisplayName("GET /matches/{matchId}/problem - Success")
     void test_getMatchProblem_success() throws Exception {
-        ProblemResponseDto problemDto = ProblemResponseDto.builder()
+        FullProblemResponseDto problemDto = FullProblemResponseDto.builder()
                 .id(10L)
                 .submissionsCount(0L)
                 .title("Problem Title")

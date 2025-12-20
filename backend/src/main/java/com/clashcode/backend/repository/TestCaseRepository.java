@@ -3,6 +3,7 @@ package com.clashcode.backend.repository;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,4 +17,8 @@ public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
 
     @Query("SELECT t.outputPath FROM TestCase t WHERE t.problem = :problem")
     List<String> findOutputPathsByProblem(@Param("problem") Problem problem);
+
+    @Modifying
+    @Query("DELETE FROM TestCase t WHERE t.problem = :problem")
+    void deleteByProblem(@Param("problem") Problem problem);
 }

@@ -1,9 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.ProblemFilterDto;
-import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.ProblemResponseDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.ProblemService;
 import org.springframework.data.domain.Page;
@@ -30,8 +27,8 @@ public class ProblemController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProblemResponseDto> getProblem(@PathVariable Long id) {
-        ProblemResponseDto problem = problemService.getProblemById(id);
+    public ResponseEntity<FullProblemResponseDto> getProblem(@PathVariable Long id) {
+        FullProblemResponseDto problem = problemService.getProblemById(id);
         return ResponseEntity.ok(problem);
     }
 
@@ -44,6 +41,7 @@ public class ProblemController {
         if(user == null) {
             return ResponseEntity.badRequest().build();
         }
+
         String username = user.getUsername();
         problemService.addProblem(problemRequestDto, files, username);
         return ResponseEntity.ok().build();
@@ -55,6 +53,16 @@ public class ProblemController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
     ) {
         Page<ProblemListDto> problems = problemService.getApprovedProblems(page, size);
+        return ResponseEntity.ok(problems);
+    }
+
+    @GetMapping("/browse/rejected")
+    public ResponseEntity<Page<ProblemListDto>> browseRejected(
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @AuthenticationPrincipal User user
+    ) {
+        Page<ProblemListDto> problems = problemService.getRejectedProblems(page, size, user.getUsername());
         return ResponseEntity.ok(problems);
     }
 

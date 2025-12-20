@@ -32,13 +32,13 @@ public class TestCasesFileStorageService {
             return filePath.toString();
         } catch (IOException e) {
             e.printStackTrace();
-            return null; // or throw a custom runtime exception if you prefer
+            return null;
         }
     }
 
     public String getTestCaseContent(String testCasePathStr) {
         if (testCasePathStr == null || testCasePathStr.isBlank()) {
-            return null; // avoid NullPointerException
+            return null;
         }
 
         try {
@@ -60,15 +60,34 @@ public class TestCasesFileStorageService {
             String fileName = "testcase_" + testCaseId + "_output.txt";
             Path filePath = problemDir.resolve(fileName);
 
-            // Write string content to file
             Files.writeString(filePath, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             return filePath.toString();
         } catch (IOException e) {
             e.printStackTrace();
-            return null; // or throw a custom runtime exception
+            return null;
         }
     }
+
+    public void deleteTestCasesDirectory(Long problemId) {
+        try {
+            Path problemDir = Paths.get(basePath, String.valueOf(problemId));
+            if (Files.exists(problemDir)) {
+                Files.walk(problemDir)
+                        .sorted((a, b) -> b.compareTo(a)) // Delete files before directory
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                System.err.println("Failed to delete file: " + path);
+                            }
+                        });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 

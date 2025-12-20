@@ -3,6 +3,14 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.*;
+import com.clashcode.backend.dto.MatchResponseDto;
+import com.clashcode.backend.dto.MatchSubmissionLogDto;
+import com.clashcode.backend.dto.SubmissionRequestDto;
+import com.clashcode.backend.enums.GameMode;
+import com.clashcode.backend.dto.PracticeProblemResponseDto;
+import com.clashcode.backend.enums.MatchState;
+import com.clashcode.backend.enums.NotificationType;
+import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.MatchMapper;
@@ -273,7 +281,8 @@ public class MatchService {
         completeMatch(match, winnerParticipant.getUser());
     }
 
-    public ProblemResponseDto getMatchProblem(Long matchId) {
+
+    public FullProblemResponseDto getMatchProblem(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Match not found"));
