@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FriendStatusMapper {
 
-    private FriendStatusMapper() {}
+    FriendStatusMapper() {}
 
     public FriendStatus map(User requester, Friend friendship) {
         if (friendship == null) return FriendStatus.NONE;
