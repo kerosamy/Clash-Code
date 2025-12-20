@@ -105,4 +105,37 @@ class MatchNotificationMapperTest {
         assertEquals(303L, dto.getMatchId());
     }
 
+    @Test
+    void test_mapMatchEnded() {
+        Match match = mock(Match.class);
+        when(match.getId()).thenReturn(404L);
+
+        MatchNotificationDto dto = mapper.mapMatchEnded(match);
+
+        assertEquals(404L, dto.getMatchId());
+        assertEquals("system", dto.getSenderUsername());
+        assertEquals(NotificationType.MATCH_COMPLETED, dto.getNotificationType());
+        assertEquals("Match Completed", dto.getTitle());
+        assertEquals("well done!", dto.getMessage());
+        assertEquals(NotificationMode.EPHEMERAL, dto.getMode());
+    }
+
+    @Test
+    void test_mapOpponentResigned() {
+        Match match = mock(Match.class);
+        User resigningUser = mock(User.class);
+        String username = "Quitter123";
+
+        when(match.getId()).thenReturn(505L);
+        when(resigningUser.getUsername()).thenReturn(username);
+
+        MatchNotificationDto dto = mapper.mapOpponentResigned(match, resigningUser);
+
+        assertEquals(505L, dto.getMatchId());
+        assertEquals(username, dto.getSenderUsername());
+        assertEquals(NotificationType.USER_RESIGNED, dto.getNotificationType());
+        assertEquals("Opponent Resigned", dto.getTitle());
+        assertEquals(username + " has resigned. You win the match!", dto.getMessage());
+        assertEquals(NotificationMode.EPHEMERAL, dto.getMode());
+    }
 }

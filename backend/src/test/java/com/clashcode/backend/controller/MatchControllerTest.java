@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -146,5 +147,30 @@ class MatchControllerTest {
         mockMvc.perform(get("/matches/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    @DisplayName("GET /matches/{matchId}/results - Success")
+    void test_getMatchResults_success() throws Exception {
+        Long matchId = 123L;
+        MatchResultDto resultDto = MatchResultDto.builder()
+                .isRated(true)
+                .username("ClashMaster")
+                .avatarUrl("https://example.com/avatar.png")
+                .rank(1)
+                .rateChange(25)
+                .newRating(1525)
+                .build();
+
+        when(matchService.getMatchResults(eq(matchId), any())).thenReturn(resultDto);
+
+        mockMvc.perform(get("/matches/{matchId}/results", matchId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.username").value("ClashMaster"))
+                .andExpect(jsonPath("$.avatarUrl").value("https://example.com/avatar.png"))
+                .andExpect(jsonPath("$.rank").value(1))
+                .andExpect(jsonPath("$.rateChange").value(25))
+                .andExpect(jsonPath("$.newRating").value(1525));
     }
 }

@@ -97,6 +97,4 @@ public class MatchMapper {
                 .newRating(participant.getNewRating())
                 .build();
     }
-
-    
 }

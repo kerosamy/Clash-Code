@@ -161,7 +161,6 @@ class MatchMapperTest {
 
     @Test
     void test_toMatchSubmissionLogDto() {
-        // Arrange
         String username = "kero";
         String avatarUrl = "avatar.png";
         int rank = 1200;
@@ -170,7 +169,6 @@ class MatchMapperTest {
         when(user1.getCurrentRate()).thenReturn(rank);
         when(user1.getImgUrl()).thenReturn(avatarUrl);
 
-        // Mock UserService methods used in the mapper
         when(userService.buildImageUrl(avatarUrl)).thenReturn("http://localhost/avatars/" + avatarUrl);
         when(userService.getRank(rank)).thenReturn("BRONZE");
 
@@ -181,10 +179,8 @@ class MatchMapperTest {
         Submission submission1 = Submission.builder().id(1L).build();
         Submission submission2 = Submission.builder().id(2L).build();
 
-        // Act
         MatchSubmissionLogDto dto = matchMapper.toMatchSubmissionLogDto(participant, List.of(submission1, submission2));
 
-        // Assert
         assertEquals(username, dto.getUsername());
         assertEquals("http://localhost/avatars/" + avatarUrl, dto.getAvatarUrl());
         assertEquals("BRONZE", dto.getRank());
@@ -213,5 +209,34 @@ class MatchMapperTest {
         assertEquals(0, dto.getNumberOfPassedTestCases());
         assertEquals(0, dto.getNumberOfTotalTestCases());
         assertEquals(0, dto.getNumberOfCurrentTestCase());
+    }
+
+    @Test
+    void test_toMatchResultDto() {
+        boolean isRated = true;
+        String username = "TestUser";
+        String rawImgUrl = "raw.png";
+        String fullImgUrl = "http://api.com/raw.png";
+
+        when(user1.getUsername()).thenReturn(username);
+        when(user1.getImgUrl()).thenReturn(rawImgUrl);
+        when(userService.buildImageUrl(rawImgUrl)).thenReturn(fullImgUrl);
+
+        MatchParticipant participant = MatchParticipant.builder()
+                .user(user1)
+                .rank(1)
+                .rateChange(25)
+                .newRating(1500)
+                .build();
+
+        MatchResultDto resultDto = matchMapper.toMatchResultDto(isRated, participant);
+
+        assertNotNull(resultDto);
+        assertTrue(resultDto.isRated());
+        assertEquals(username, resultDto.getUsername());
+        assertEquals(fullImgUrl, resultDto.getAvatarUrl());
+        assertEquals(1, resultDto.getRank());
+        assertEquals(25, resultDto.getRateChange());
+        assertEquals(1500, resultDto.getNewRating());
     }
 }
