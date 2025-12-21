@@ -114,7 +114,7 @@ export default function PlayGame() {
             
             setTimeout(() => {
                 fetchAndShowResults();
-            }, 1500); 
+            }, 1000); 
         }
         else if (payload.notificationType === 'USER_RESIGNED') {
             newNotification = {
@@ -126,10 +126,6 @@ export default function PlayGame() {
             };
 
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
-        
-            setTimeout(() => {
-                fetchAndShowResults();
-            }, 1500);
         }
         else if (payload.notificationType === 'SUBMISSION_RECEIVED') {
             newNotification = {
@@ -169,11 +165,6 @@ export default function PlayGame() {
             await resignMatch(Number(id));
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
             setIsResignModalOpen(false);
-            
-            setTimeout(() => {
-                fetchAndShowResults(); 
-            }, 1500);
-
         } catch (error) {
             console.error("Resignation failed", error);
             alert("Failed to resign.");

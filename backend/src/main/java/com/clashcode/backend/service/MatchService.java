@@ -125,7 +125,7 @@ public class MatchService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + invite.getSenderId()));
 
         Problem problem = selectProblem(player1, player2);
-        return createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+        return createMatch(player1, player2, problem, 2, GameMode.UNRATED);
     }
 
     @Transactional
@@ -232,19 +232,26 @@ public class MatchService {
     public void completeMatch(Match match, User winner) {
         if (match.getMatchState() == MatchState.COMPLETED) return;
 
-        MatchParticipant winnerParticipant = match.getParticipants().stream()
-                .filter(mp -> mp.getUser().getId().equals(winner.getId()))
-                .findFirst()
-                .orElse(null);
+        MatchParticipant winnerParticipant = null;
+        MatchParticipant loserParticipant = null;
 
-        MatchParticipant loserParticipant = match.getParticipants().stream()
-                .filter(mp -> !mp.getUser().getId().equals(winner.getId()))
-                .findFirst()
-                .orElse(null);
+        if (winner != null) {
+            winnerParticipant = match.getParticipants().stream()
+                    .filter(mp -> mp.getUser().getId().equals(winner.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            loserParticipant = match.getParticipants().stream()
+                    .filter(mp -> !mp.getUser().getId().equals(winner.getId()))
+                    .findFirst()
+                    .orElse(null);
+        }
 
         if (winnerParticipant != null && loserParticipant != null) {
             winnerParticipant.setRank(rankMapper.toRank("winner"));
             loserParticipant.setRank(rankMapper.toRank("loser"));
+        } else {
+            match.getParticipants().forEach(mp -> mp.setRank(rankMapper.toRank("draw")));
         }
 
         match.setMatchState(MatchState.COMPLETED);
