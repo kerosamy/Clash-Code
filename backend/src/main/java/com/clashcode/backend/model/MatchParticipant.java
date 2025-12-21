@@ -28,5 +28,6 @@ public class MatchParticipant {
     @Column(name = "player_rank")
     private Integer rank;
     private Integer rateChange;
-    private Integer newRating;  
+    private Integer newRating;
+
 }

@@ -188,19 +188,19 @@ public class MatchService {
 
     @Transactional
     public List<MatchSubmissionLogDto> getMatchSubmissionLog(Long matchId) {
-            Match match = matchRepository.findById(matchId)
-                    .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
-            return match.getParticipants().stream()
-                    .map(participant -> {
-                        List<Submission> submissions = submissionRepository
-                                .findByUserIdAndMatchId(participant.getUser().getId(), matchId);
-                        return matchMapper.toMatchSubmissionLogDto(participant, submissions);
-                    })
-                    .toList();
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+        return match.getParticipants().stream()
+                .map(participant -> {
+                    List<Submission> submissions = submissionRepository
+                            .findByUserIdAndMatchId(participant.getUser().getId(), matchId);
+                    return matchMapper.toMatchSubmissionLogDto(participant, submissions);
+                })
+                .toList();
     }
 
     public void submitCode(SubmissionRequestDto submissionRequestDto, User player) {
-        Match match = validateMatch(submissionRequestDto.getMatchId(),  player);
+        Match match = validateMatch(submissionRequestDto.getMatchId(), player);
 
         match.getParticipants().forEach(mp -> {
             MatchNotificationDto dto = matchNotificationMapper.mapSubmissionReceived(match, player);
@@ -231,6 +231,7 @@ public class MatchService {
     @Transactional
     public void completeMatch(Match match, User winner) {
         if (match.getMatchState() == MatchState.COMPLETED) return;
+        System.out.println("COMPLETE");
 
         MatchParticipant winnerParticipant = null;
         MatchParticipant loserParticipant = null;
@@ -268,7 +269,16 @@ public class MatchService {
                     dto
             );
         }
-        //TODO calculate new ratings
+
+        // ELO CALCULATION
+        if (match.getGameMode() == GameMode.Rated) {
+            updateParticipantRatings(match, winner);
+        }
+
+        // Save everything at the end
+        matchRepository.save(match);
+        userRepository.saveAll(match.getParticipants().stream()
+                .map(MatchParticipant::getUser).toList());
     }
 
     @Transactional
@@ -322,6 +332,55 @@ public class MatchService {
 
         boolean isRated = match.getGameMode() == GameMode.RATED;
         return matchMapper.toMatchResultDto(isRated, participant);
+    }
+    private void updateParticipantRatings(Match match, User winner) {
+        List<MatchParticipant> participants = match.getParticipants();
+        if (participants.size() != 2) return;
+
+        MatchParticipant mpA = participants.get(0);
+        MatchParticipant mpB = participants.get(1);
+
+        User userA = mpA.getUser();
+        User userB = mpB.getUser();
+
+        int oldRatingA = userA.getCurrentRate();
+        int oldRatingB = userB.getCurrentRate();
+        int difficulty = match.getProblem().getRate();
+
+        // 1. Calculate Expected Scores
+        double expectedA = EloCalculatorService.calculateExpectedScore(oldRatingA, oldRatingB);
+        double expectedB = 1.0 - expectedA;
+
+        // 2. Determine Actual Scores (Sa)
+        double scoreA, scoreB;
+        if (winner == null) {
+            scoreA = 0.5;
+            scoreB = 0.5;
+        } else if (winner.getId().equals(userA.getId())) {
+            scoreA = 1.0;
+            scoreB = 0.0;
+        } else {
+            scoreA = 0.0;
+            scoreB = 1.0;
+        }
+
+        // 3. Calculate New Ratings
+        int newRatingA = EloCalculatorService.calculateNewRating(oldRatingA, expectedA, scoreA, difficulty);
+        int newRatingB = EloCalculatorService.calculateNewRating(oldRatingB, expectedB, scoreB, difficulty);
+
+        // 4. Update MatchParticipant (The History)
+        mpA.setRateChange(newRatingA - oldRatingA);
+        mpA.setNewRating(newRatingA);
+
+        mpB.setRateChange(newRatingB - oldRatingB);
+        mpB.setNewRating(newRatingB);
+
+        // 5. Update User (The Profile)
+        userA.setCurrentRate(newRatingA);
+        userA.setMaxRate(Math.max(userA.getMaxRate(), newRatingA));
+
+        userB.setCurrentRate(newRatingB);
+        userB.setMaxRate(Math.max(userB.getMaxRate(), newRatingB));
     }
 }
 
