@@ -6,6 +6,8 @@ import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class FriendStatusMapper {
 
