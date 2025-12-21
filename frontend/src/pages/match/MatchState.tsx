@@ -122,7 +122,6 @@ export default function MatchStatePage() {
             <div className="relative group">
                 <img
                     src={player.avatarUrl} 
-                    alt={player.username}
                     className="relative w-56 h-56 rounded-full object-cover border-4 border-container shadow-2xl"
                 />
             </div>

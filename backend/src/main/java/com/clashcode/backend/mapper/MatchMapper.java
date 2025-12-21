@@ -86,4 +86,15 @@ public class MatchMapper {
                 .submissions(submissionsLog)
                 .build();
     }
+
+    public MatchResultDto toMatchResultDto(boolean isRated,  MatchParticipant participant) {
+        return MatchResultDto.builder()
+                .isRated(isRated)
+                .username(participant.getUser().getUsername())
+                .avatarUrl(userService.buildImageUrl(participant.getUser().getImgUrl()))
+                .rank(participant.getRank())
+                .rateChange(participant.getRateChange())
+                .newRating(participant.getNewRating())
+                .build();
+    }
 }

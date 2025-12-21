@@ -63,6 +63,15 @@ export interface MatchSubmissionLogDto {
   submissions: SubmissionLogEntryDto[];
 }
 
+export interface MatchResultDto {
+    isRated: boolean;
+    username: string;
+    avatarUrl: string;
+    rank: number;     
+    rateChange: number;
+    newRating: number;
+}
+
 export async function createMatch(
   body: CreateMatchRequestDto
 ): Promise<MatchResponseDto> {
@@ -113,4 +122,11 @@ export async function getMatchDetails(matchId: number): Promise<MatchResponseDto
     method: "GET",
     url: `/matches/${matchId}`,
   });
+}
+
+export async function getMatchResults(matchId: number): Promise<MatchResultDto> {
+    return apiRequest<MatchResultDto>({
+        method: "GET",
+        url: `/matches/${matchId}/results`,
+    });
 }

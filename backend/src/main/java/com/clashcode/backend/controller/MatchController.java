@@ -76,4 +76,13 @@ public class MatchController {
     public ResponseEntity<MatchResponseDto> getMatchDetails(@PathVariable Long matchId) {
         return ResponseEntity.ok(matchService.getMatchDetails(matchId));
     }
+
+    @GetMapping("/{matchId}/results")
+    public ResponseEntity<MatchResultDto> getMatchResults(
+            @PathVariable Long matchId,
+            @AuthenticationPrincipal User user
+    ) {
+        MatchResultDto matchResultDto = matchService.getMatchResults(matchId, user);
+        return ResponseEntity.ok(matchResultDto);
+    }
 }
