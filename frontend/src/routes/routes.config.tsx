@@ -16,6 +16,7 @@ import CompleteRegistration from '../pages/CompleteRegistration';
 import OAuthCallback from '../features/OAuthCallback';
 import ProblemDetails from '../pages/problem/ProblemDetails';
 import Submit from '../pages/problem/Submit';
+import LogOut from '../pages/LogOut';
 
 // Profile sub-pages
 import ProfileOverview from '../pages/profile/ProfileOverview';
@@ -59,6 +60,7 @@ import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.s
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 import RejectedProblemsIcon from '../assets/icons/RejectedProblems.svg';
+import { logout } from '../services/AuthService';
 
 
 export interface PageConfig {
@@ -184,7 +186,7 @@ export const routes: RouteConfig[] = [
     requiredRoles: [UserRole.SUPER_ADMIN]
   },
   { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
-  { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: Settings },
+  { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: LogOut },
 
 
 ];
