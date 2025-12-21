@@ -1,0 +1,9 @@
+export enum RANKS {
+  BRONZE = "BRONZE",
+  SILVER = "SILVER",
+  GOLD = "GOLD",
+  DIAMOND = "DIAMOND",
+  MASTER = "MASTER",
+  CHAMPION = "CHAMPION",
+  LEGEND = "LEGEND",
+}
