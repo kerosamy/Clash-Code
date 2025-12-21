@@ -2,18 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, useParams } from 'react-router-dom';
 import { Client, type IMessage } from "@stomp/stompjs";
 
-import TopNavigator from "../components/common/TopNavigators";
-import ConfirmationModal from "../components/common/ConfirmationModal";
-import DraggableTimer from "../components/match/Timer";
-import MatchResults from "../components/match/MatchResults";
+import TopNavigator from "../../components/common/TopNavigators";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
+import DraggableTimer from "../../components/match/Timer";
+import MatchResults from "../../components/match/MatchResults";
 
-import ToastFeed from '../components/common/PopNotification';
-import type { ToastNotification } from '../components/common/PopNotification';
+import ToastFeed from '../../components/common/PopNotification';
+import type { ToastNotification } from '../../components/common/PopNotification';
 
-import { matchSubRoutes } from '../routes/routes.config';
-import { resignMatch, getMatchDetails, getMatchResults } from "../services/MatchService"; 
-import type { MatchResultDto } from "../services/MatchService";
-import { getUsername } from "../utils/jwtDecoder";
+import { matchSubRoutes } from '../../routes/routes.config';
+import { resignMatch, getMatchDetails, getMatchResults } from "../../services/MatchService"; 
+import type { MatchResultDto } from "../../services/MatchService";
+import { getUsername } from "../../utils/jwtDecoder";
 
 interface MatchData {
     startAt: string;

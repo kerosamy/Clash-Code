@@ -4,7 +4,8 @@ import Profile from '../pages/Profile';
 import Friends from '../pages/Friends';
 import Practice from '../pages/Practice';
 import Problem from '../pages/Problem';  // Import the Problem wrapper component
-import PlayGame from '../pages/PlayGame';
+import PlayGameHome from "../pages/play-game/playGameHome";
+import PlayGameMatch from  "../pages/play-game/playGameMatch";
 import LeaderBoard from '../pages/LeaderBoard';
 import AddProblem from '../pages/AddProblem';
 import Settings from '../pages/Settings';
@@ -130,17 +131,27 @@ export const routes: RouteConfig[] = [
     ]
   },
 
+  
   { 
-    path: 'play-game/:id', 
+    path: 'play-game', 
     name: 'Game Play', 
     icon: SwordIcon, 
-    component: PlayGame,
+    component: PlayGameHome, 
+    hideFromNav: false
+  },
+  { 
+    path: 'play-game/:id', 
+    name: 'Game Match', 
+    icon: SwordIcon, 
+    component: PlayGameMatch,  
+    hideFromNav: true,
     children: [
       { index: true, component: ProblemDetails }, 
       { path: 'submit', component: Submit },
       { path: 'match-state', component: MatchState }
     ]
   },
+  
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
   {
     path: 'add-problem',
