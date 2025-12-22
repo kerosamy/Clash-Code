@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,8 +28,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -172,5 +174,56 @@ class MatchControllerTest {
                 .andExpect(jsonPath("$.rank").value(1))
                 .andExpect(jsonPath("$.rateChange").value(25))
                 .andExpect(jsonPath("$.newRating").value(1525));
+    }
+    @Test
+    @DisplayName("POST /matches/start-rated-match - Success")
+    void test_startRatedMatch_success() throws Exception {
+        MatchCreationDto dto = new MatchCreationDto();
+        dto.setPlayerIdA(1L);
+        dto.setPlayerIdB(2L);
+
+        // do nothing when service is called
+        mockMvc.perform(post("/matches/start-rated-match")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk());
+
+        // optionally verify service was called
+        verify(matchService).startRatedMatch(any(MatchCreationDto.class));
+    }
+    @Test
+    @DisplayName("POST /matches/search-opponent - Success")
+    void test_searchOpponent_success() throws Exception {
+        User user = User.builder().id(1L).username("player1").build();
+
+        // Mock SecurityContext to provide the authenticated user
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(user);
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(context);
+
+        mockMvc.perform(post("/matches/search-opponent"))
+                .andExpect(status().isOk());
+
+        verify(matchService).searchForOpponent(eq(user));
+    }
+
+    @Test
+    @DisplayName("DELETE /matches/search-opponent/cancel - Success")
+    void test_cancelSearchOpponent_success() throws Exception {
+        User user = User.builder().id(1L).username("player1").build();
+
+        // Mock SecurityContext to provide the authenticated user
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(user);
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(context);
+
+        mockMvc.perform(delete("/matches/search-opponent/cancel"))
+                .andExpect(status().isOk());
+
+        verify(matchService).cancelSearchForOpponent(eq(user));
     }
 }

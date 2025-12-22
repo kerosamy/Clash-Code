@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
+import com.clashcode.backend.dto.MatchCreationDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
@@ -10,6 +11,7 @@ import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.MatchNotificationMapper;
 import com.clashcode.backend.mapper.RankMapper;
+import com.clashcode.backend.matching.MatchingServiceClient;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -38,6 +41,7 @@ class MatchServiceTest {
     @Mock private NotificationRepository notificationRepository;
     @Mock private SubmissionService submissionService;
     @Mock private MatchNotificationMapper matchNotificationMapper;
+    @Mock private MatchingServiceClient matchingServiceClient;
 
 
     @InjectMocks
@@ -45,7 +49,6 @@ class MatchServiceTest {
 
     @Test
     void test_createMatch_success() {
-        // Arrange
         Long matchId = 100L;
         int duration = 30;
         GameMode gameMode = GameMode.UNRATED;
@@ -60,27 +63,46 @@ class MatchServiceTest {
         MatchParticipant p1 = MatchParticipant.builder().user(player1).build();
         MatchParticipant p2 = MatchParticipant.builder().user(player2).build();
 
-        MatchResponseDto expectedResponse = MatchResponseDto.builder().id(matchId).build();
+        Match savedMatch = Match.builder()
+                .id(matchId)
+                .participants(new ArrayList<>(List.of(p1, p2)))
+                .build();
+
+        MatchResponseDto expectedResponse =
+                MatchResponseDto.builder().id(matchId).build();
+
+        when(matchMapper.createParticipant(eq(player1), any(Match.class))).thenReturn(p1);
+        when(matchMapper.createParticipant(eq(player2), any(Match.class))).thenReturn(p2);
 
         when(matchRepository.save(any(Match.class))).thenReturn(savedMatch);
-        when(matchMapper.createParticipant(player1, savedMatch)).thenReturn(p1);
-        when(matchMapper.createParticipant(player2, savedMatch)).thenReturn(p2);
         when(matchMapper.toResponseDto(savedMatch)).thenReturn(expectedResponse);
-        when(matchScheduler.scheduleMatchEnd(savedMatch)).thenReturn(null);
+
+        when(matchNotificationMapper.mapMatchStarted(any(), any()))
+                .thenReturn(new MatchNotificationDto());
 
         ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
 
+<<<<<<< HEAD
         MatchResponseDto result = matchService.createMatch(player1, player2, problem, duration, gameMode);
 
+=======
+        // Act
+        MatchResponseDto result =
+                matchService.createMatch(player1, player2, problem, duration, gameMode);
+
+        // Assert
+>>>>>>> 8c5e9c7 ([CLASHCODE-180] - add testcases for match controller and match service)
         assertNotNull(result);
         assertEquals(matchId, result.getId());
 
         verify(matchRepository).save(matchCaptor.capture());
         Match constructed = matchCaptor.getValue();
+
         assertEquals(problem, constructed.getProblem());
         assertEquals(duration, constructed.getDuration());
         assertEquals(gameMode, constructed.getGameMode());
         assertEquals(MatchState.ONGOING, constructed.getMatchState());
+<<<<<<< HEAD
 
         verify(matchParticipantRepository).saveAll(argThat(iterable -> {
             List<MatchParticipant> participants = new ArrayList<>();
@@ -91,7 +113,18 @@ class MatchServiceTest {
         verify(matchScheduler).scheduleMatchEnd(savedMatch);
 
         assertEquals(2, savedMatch.getParticipants().size());
+=======
+        assertEquals(2, constructed.getParticipants().size());
+
+        verify(matchScheduler).scheduleMatchEnd(savedMatch);
+
+        verify(notificationService, times(2))
+                .send(eq(player1.getId()), anyLong(), anyString(), any());
+
+        verify(matchMapper).toResponseDto(savedMatch);
+>>>>>>> 8c5e9c7 ([CLASHCODE-180] - add testcases for match controller and match service)
     }
+
 
     @Test
     void test_validateMatch_success() {
@@ -214,18 +247,35 @@ class MatchServiceTest {
         Problem problem = new Problem();
         problem.setId(10L);
 
-        when(notificationRepository.findById(100L)).thenReturn(java.util.Optional.of(invite));
-        when(userRepository.findById(player2.getId())).thenReturn(java.util.Optional.of(player2));
+        when(notificationRepository.findById(100L))
+                .thenReturn(Optional.of(invite));
+        when(userRepository.findById(player2.getId()))
+                .thenReturn(Optional.of(player2));
 
         MatchService spyService = Mockito.spy(matchService);
-        doReturn(problem).when(spyService).selectProblem(player1, player2);
-        doReturn(new MatchResponseDto()).when(spyService).createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+
+        doReturn(problem)
+                .when(spyService)
+                .selectProblem(player1, player2);
+
+        doReturn(new MatchResponseDto())
+                .when(spyService)
+                .createMatch(
+                        eq(player1),
+                        eq(player2),
+                        eq(problem),
+                        anyInt(),
+                        eq(GameMode.UNRATED)
+                );
 
         MatchResponseDto result = spyService.acceptMatchInvite(player1, 100L);
 
         assertNotNull(result);
-        verify(spyService).createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+
+        verify(spyService)
+                .createMatch(eq(player1), eq(player2), eq(problem), anyInt(), eq(GameMode.UNRATED));
     }
+
 
     @Test
     void test_getMatchSubmissionLog_returnsLogs() {
@@ -303,5 +353,85 @@ class MatchServiceTest {
 
         verify(spyService).completeMatch(match, other);
     }
+
+    @Test
+    void test_startRatedMatch_success() {
+        // Arrange
+        MatchCreationDto dto = new MatchCreationDto();
+        dto.setPlayerIdA(1L);
+        dto.setPlayerIdB(2L);
+
+        User userA = User.builder().id(1L).build();
+        User userB = User.builder().id(2L).build();
+
+        Problem problem = new Problem();
+        problem.setId(10L);
+
+        when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(userA));
+        when(userRepository.findById(2L)).thenReturn(java.util.Optional.of(userB));
+
+        MatchService spyService = Mockito.spy(matchService);
+        doReturn(problem).when(spyService).selectProblem(userA, userB);
+        doReturn(new MatchResponseDto()).when(spyService)
+                .createMatch(userA, userB, problem, 15, GameMode.RATED);
+
+        // Act
+        spyService.startRatedMatch(dto);
+
+        // Assert
+        verify(userRepository).findById(1L);
+        verify(userRepository).findById(2L);
+        verify(spyService).selectProblem(userA, userB);
+        verify(spyService).createMatch(userA, userB, problem, 15, GameMode.RATED);
+    }
+    @Test
+    void test_startRatedMatch_playerNotFound_throwsException() {
+        MatchCreationDto dto = new MatchCreationDto();
+        dto.setPlayerIdA(1L);
+        dto.setPlayerIdB(2L);
+
+        when(userRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> matchService.startRatedMatch(dto)
+        );
+
+        assertTrue(ex.getMessage().contains("Player not found"));
+    }
+    @Test
+    void test_searchForOpponent_callsMatchingService() {
+        // Arrange
+        User user = User.builder()
+                .id(1L)
+                .currentRate(1500)
+                .build();
+
+        // Act
+        matchService.searchForOpponent(user);
+
+        // Assert
+        verify(matchingServiceClient).requestMatching(
+                argThat(req ->
+                        req.getUserId() == 1 &&
+                                req.getUserRating() == 1500   // 🔥 FIX: primitive comparison
+                )
+        );
+    }
+    @Test
+    void test_cancelSearchForOpponent_callsMatchingService() {
+        // Arrange
+        User user = User.builder().id(1L).build();
+
+        // Act
+        matchService.cancelSearchForOpponent(user);
+
+        // Assert
+        verify(matchingServiceClient).deleteMatching(1L);
+    }
+
+
+
+
 
 }

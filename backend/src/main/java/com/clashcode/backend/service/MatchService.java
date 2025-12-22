@@ -2,14 +2,12 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.*;
-import com.clashcode.backend.enums.*;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.dto.PartialProblemResponseDto;
 import com.clashcode.backend.enums.MatchState;
-import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.exception.UserNotFoundException;
@@ -22,6 +20,7 @@ import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -119,6 +118,7 @@ public class MatchService {
         );
     }
 
+
     public MatchResponseDto acceptMatchInvite(User player1, long notificationId) {
         Notification invite = notificationRepository.findById(notificationId).orElseThrow();
 
@@ -148,18 +148,18 @@ public class MatchService {
                 .problem(problem)
                 .build();
 
+        MatchParticipant p1 = matchMapper.createParticipant(player1, match);
+        MatchParticipant p2 = matchMapper.createParticipant(player2, match);
+
+        match.getParticipants().add(p1);
+        match.getParticipants().add(p2);
+
+        // Only save match; participants are persisted automatically via cascade
         Match savedMatch = matchRepository.save(match);
 
-        MatchParticipant p1 = matchMapper.createParticipant(player1, savedMatch);
-        MatchParticipant p2 = matchMapper.createParticipant(player2, savedMatch);
-
-        List<MatchParticipant> participants = List.of(p1, p2);
-        matchParticipantRepository.saveAll(participants);
-
-        savedMatch.setParticipants(participants);
         matchScheduler.scheduleMatchEnd(savedMatch);
 
-        participants.forEach(mp -> {
+        savedMatch.getParticipants().forEach(mp -> {
             MatchNotificationDto dto = matchNotificationMapper.mapMatchStarted(savedMatch, mp.getUser());
             notificationService.send(
                     player1.getId(),
@@ -171,6 +171,7 @@ public class MatchService {
 
         return matchMapper.toResponseDto(savedMatch);
     }
+
 
     public Match validateMatch(Long matchId, User user) {
         if (matchId == null) return null;
@@ -429,5 +430,6 @@ public class MatchService {
                 user.getId()
         );
     }
+
 }
 

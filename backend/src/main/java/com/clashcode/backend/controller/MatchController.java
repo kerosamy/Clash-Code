@@ -6,6 +6,7 @@ import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.MatchService;
 import com.clashcode.backend.service.SubmissionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -85,8 +86,9 @@ public class MatchController {
         MatchResultDto matchResultDto = matchService.getMatchResults(matchId, user);
         return ResponseEntity.ok(matchResultDto);
     }
+
     @PostMapping("/start-rated-match")
-    public ResponseEntity<Void> createMatch(@RequestParam MatchCreationDto matchCreationDto){
+    public ResponseEntity<Void> createMatch(@RequestBody MatchCreationDto matchCreationDto){
         matchService.startRatedMatch(matchCreationDto);
         return ResponseEntity.ok().build();
     }

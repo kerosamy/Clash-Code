@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
+import { Client, type IMessage } from "@stomp/stompjs";
 import FriendMatchingPopUp from "../../components/common/FriendMatchingPopUp";
 import LoadingMatch from "../../components/Loader/LoadingMatch";
+import MatchIntroAnimation from "../../components/match/MatchIntroAnimation";
 import { fetchMyProfile } from "../../services/UserService";
 import { calculateNextRate, getRankColor } from "../../utils/calculateNextRate";
 import { RANKS } from "../../enums/Ranks";
 import type { NextRankInfo } from "../../utils/calculateNextRate";
+import { searchOpponent, cancelOpponentSearch  , getMatchSubmissionLog} from "../../services/MatchService";
+import { getUsername } from "../../utils/jwtDecoder";
 
 interface UserStats {
     currentRate: number;
@@ -13,12 +17,29 @@ interface UserStats {
     nextRankInfo: NextRankInfo;
 }
 
+interface MatchData {
+    matchId: number;
+    problemId: number;
+    player1: {
+        username: string;
+        avatarUrl: string;
+        rank: string;
+    };
+    player2: {
+        username: string;
+        avatarUrl: string;
+        rank: string;
+    };
+}
+
 export default function PlayGameHome() {
-    const navigate = useNavigate();  // kept here for match navigation after matchmaking
+    const navigate = useNavigate();
     const [isFriendMatchingOpen, setIsFriendMatchingOpen] = useState<boolean>(false);
     const [isMatchmaking, setIsMatchmaking] = useState<boolean>(false);
     const [matchType, setMatchType] = useState<"opponent" | "friend">("opponent");
     const [invitedUser, setInvitedUser] = useState<string>("");
+    const [showIntroAnimation, setShowIntroAnimation] = useState<boolean>(false);
+    const [matchData, setMatchData] = useState<MatchData | null>(null);
     const [userStats, setUserStats] = useState<UserStats>({
         currentRate: 0,
         currentRank: RANKS.BRONZE, 
@@ -30,6 +51,14 @@ export default function PlayGameHome() {
         }
     });
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    
+    // Use ref to track if we're currently matchmaking (for cleanup)
+    const isMatchmakingRef = useRef(false);
+    
+    // Keep ref in sync with state
+    useEffect(() => {
+        isMatchmakingRef.current = isMatchmaking;
+    }, [isMatchmaking]);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -52,22 +81,103 @@ export default function PlayGameHome() {
         fetchUserData();
     }, []);
 
-    // cleanup matchmaking state when component unmounts
     useEffect(() => {
-        return () => {
-            // This runs when user navigates away
-            if (isMatchmaking) {
-                handleCancelMatchmaking();
-            }
+        const currentUser = getUsername();
+        if (!currentUser) return;
+
+        const client = new Client({
+            brokerURL: "ws://localhost:8080/ws",
+            reconnectDelay: 5000,
+            debug: (str) => console.log('STOMP Debug:', str)
+        });
+
+        client.onConnect = () => {
+            client.subscribe(`/topic/match-pop/${currentUser}`, async (message: IMessage) => {
+                try {
+                    const payload = JSON.parse(message.body);
+                    if (payload.notificationType === "MATCH_STARTED") {
+                        const data = await getMatchSubmissionLog(payload.matchId);
+
+                        const currentUser = getUsername();
+                        if (!currentUser) return;
+
+                        const opponent = data.find(
+                            (player) => player.username !== currentUser
+                        );
+
+                        if (!opponent) {
+                            console.error("Opponent not found in submission log");
+                            return;
+                        }
+
+                        setMatchData({
+                            matchId: payload.matchId,
+                            problemId: payload.problemId,
+                            player1: {
+                                username: currentUser,
+                                avatarUrl:
+                                    data.find(p => p.username === currentUser)?.avatarUrl
+                                    || "/default-avatar.png",
+                                rank:
+                                    data.find(p => p.username === currentUser)?.rank
+                                    || "BRONZE"
+                            },
+                            player2: {
+                                username: opponent.username,
+                                avatarUrl: opponent.avatarUrl || "/default-avatar.png",
+                                rank: opponent.rank
+                            }
+                        });
+
+                        setIsMatchmaking(false);
+                        setShowIntroAnimation(true);
+                    }
+                } catch (err) {
+                    console.error("WS parse error", err);
+                }
+            });
         };
-    }, [isMatchmaking]);
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+            if (isMatchmakingRef.current) cancelOpponentSearch().catch(console.error);
+        };
+    }, [navigate]);
+
+    const handleAnimationComplete = () => {
+        if (matchData) {
+            navigate(`/play-game/${matchData.matchId}`, {
+                state: { problemId: matchData.problemId }
+            });
+        }
+    };
 
     const currentRankColor = getRankColor(userStats.currentRank);
 
-    const handleOpponentMatching = () => {
+    const handleOpponentMatching = async () => {
         setMatchType("opponent");
         setInvitedUser("");
         setIsMatchmaking(true);
+        try {
+            await searchOpponent();
+            console.log('Started searching for opponent');
+        } catch (error) {
+            console.error("Failed to start opponent search", error);
+            setIsMatchmaking(false);
+        }
+    };
+
+    const handleCancelMatchmaking = async () => {
+        setIsMatchmaking(false);
+        setInvitedUser("");
+        try {
+            await cancelOpponentSearch();
+            console.log('Cancelled opponent search');
+        } catch (error) {
+            console.error("Failed to cancel opponent search", error);
+        }
     };
 
     const handleFriendInvite = (username: string) => {
@@ -77,11 +187,16 @@ export default function PlayGameHome() {
         setIsFriendMatchingOpen(false);
     };
 
-    const handleCancelMatchmaking = () => {
-        setIsMatchmaking(false);
-        setInvitedUser("");
-    };
-
+    // Show intro animation when match is found
+    if (showIntroAnimation && matchData) {
+        return (
+            <MatchIntroAnimation
+                player1={matchData.player1}
+                player2={matchData.player2}
+                onComplete={handleAnimationComplete}
+            />
+        );
+    }
 
     if (isMatchmaking) {
         return (
@@ -96,7 +211,6 @@ export default function PlayGameHome() {
     return (
         <div className="flex flex-col h-screen font-anta relative bg-background">
             <div className="flex-1 flex flex-col">
-
                 <div className="flex items-center justify-center gap-24 pt-8 pb-4 px-4">
                     <div className="text-center">
                         <div className="text-3xl text-gray-300 mb-3 font-anta">Current Rate</div>
@@ -136,7 +250,6 @@ export default function PlayGameHome() {
                     </div>
                 </div>
 
-
                 <div className="px-4 py-20">
                     <div className="flex justify-center">
                         <img src="/src/assets/logo.svg" alt="App Logo" className="w-[900px] h-auto" />
@@ -154,7 +267,6 @@ export default function PlayGameHome() {
                                 px-10 py-6 rounded-full 
                                 font-anta text-2xl uppercase tracking-widest 
                                 transition-all duration-300
-
                             "
                         >
                             Opponent Matching
@@ -169,7 +281,6 @@ export default function PlayGameHome() {
                                 px-10 py-6 rounded-full 
                                 font-anta text-2xl uppercase tracking-widest 
                                 transition-all duration-300
-
                             "
                         >
                             Friend Matching

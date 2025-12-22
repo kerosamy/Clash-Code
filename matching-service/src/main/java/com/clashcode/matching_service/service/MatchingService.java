@@ -2,6 +2,8 @@ package com.clashcode.matching_service.service;
 
 import com.clashcode.matching_service.dto.MatchingRequestDto;
 import com.clashcode.matching_service.dto.UserMatchingDto;
+import com.clashcode.matching_service.main_backend.MainBackendClient;
+import com.clashcode.matching_service.main_backend.dto.MatchCreationDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -11,18 +13,19 @@ import java.util.Set;
 public class MatchingService {
 
     private final RedisTemplate<String, String> redisTemplate;
-    private final MatchingNotifier matchingNotifier;
+    private final MainBackendClient mainBackendClient;
     private static final String KEY_FOR_Z_SET = "matching:queue";
     private static final Double MS_TO_MINUTE = 60_000.0;
     private static final Integer FACTOR_OF_MINUTE = 5;
     private static final Integer RANGE_INCREASING_FACTOR = 100;
 
 
-    public MatchingService(RedisTemplate<String, String> redisTemplate,
-                           MatchingNotifier matchingNotifier
+    public MatchingService(
+            RedisTemplate<String, String> redisTemplate,
+            MainBackendClient mainBackendClient
     ) {
         this.redisTemplate = redisTemplate;
-        this.matchingNotifier = matchingNotifier;
+        this.mainBackendClient = mainBackendClient;
     }
 
     public void addUserToMatchingService(MatchingRequestDto dto) {
@@ -78,7 +81,8 @@ public class MatchingService {
     public void matchTwoUsers(Long userId , Long otherUserId) {
         removeUserFromMatchingService(userId);
         removeUserFromMatchingService(otherUserId);
-        matchingNotifier.notifyMatch(otherUserId, userId);
+        MatchCreationDto dto = new MatchCreationDto(userId , otherUserId);
+        mainBackendClient.MatchingTwoPlayers(dto);
     }
 
     public UserMatchingDto getUserData(Long userId) {
