@@ -57,7 +57,6 @@ public class MatchingService {
 
         double waitingMinutes = ((now - user.getStartTime()) / (MS_TO_MINUTE)) * FACTOR_OF_MINUTE;
         int range = (int) (Math.ceil(waitingMinutes) * RANGE_INCREASING_FACTOR);
-        System.out.println(range);
         int rating = user.getUserRating();
 
         Set<String> candidates = redisTemplate.opsForZSet()
@@ -73,7 +72,6 @@ public class MatchingService {
             Long otherUserId = getUserIdFromString(candidate);
             if (userId.equals(otherUserId)) continue;
             matchTwoUsers(userId, otherUserId);
-            System.out.println("Matched " + userId + " with " + otherUserId);
             break;
         }
     }

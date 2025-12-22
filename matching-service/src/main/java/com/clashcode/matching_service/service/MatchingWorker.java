@@ -20,7 +20,6 @@ public class MatchingWorker {
     }
     @Scheduled(fixedDelay = 2000)
     public void runMatchingService() {
-        System.out.println("Running Matching Service");
         Set<String> waitingUsers = redisTemplate.opsForZSet().range(KEY_FOR_Z_SET,0, -1);
         if (waitingUsers == null) return;
 
@@ -28,11 +27,9 @@ public class MatchingWorker {
             long userId = matchingService.getUserIdFromString(waitingUser);
             if (matchingService.getUserData(userId) == null) continue;
 
-
             Boolean isStillWaiting = redisTemplate.opsForZSet().score(KEY_FOR_Z_SET, waitingUser) != null;
             if (!Boolean.TRUE.equals(isStillWaiting)) continue;
 
-            System.out.println(userId);
             matchingService.searchForOpponent(userId);
         }
     }
