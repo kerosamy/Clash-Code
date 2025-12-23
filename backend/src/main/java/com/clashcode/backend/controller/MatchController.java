@@ -5,6 +5,9 @@ import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.MatchService;
 import com.clashcode.backend.service.SubmissionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -103,5 +106,18 @@ public class MatchController {
     public ResponseEntity<Void> cancelOpponent(@AuthenticationPrincipal User user) {
         matchService.cancelSearchForOpponent(user);
         return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/my-history")
+    public ResponseEntity<Page<MatchHistoryDto>> getMatchHistory(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Boolean rated
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(
+                matchService.getUserMatchHistory(user.getId(), rated, pageable)
+        );
     }
 }

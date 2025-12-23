@@ -7,6 +7,7 @@ import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.dto.PartialProblemResponseDto;
+import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UnauthorizedException;
@@ -19,6 +20,8 @@ import com.clashcode.backend.matching.dto.MatchingRequestDto;
 import com.clashcode.backend.model.*;
 import com.clashcode.backend.repository.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -431,5 +434,9 @@ public class MatchService {
         );
     }
 
+    @Transactional
+    public Page<MatchHistoryDto> getUserMatchHistory(Long userId, Boolean rated, Pageable pageable) {
+        return matchParticipantRepository.findHistoryByUserId(userId, rated, pageable)
+                .map(matchParticipant -> matchMapper.toMatchHistoryDto(matchParticipant));
+    }
 }
-
