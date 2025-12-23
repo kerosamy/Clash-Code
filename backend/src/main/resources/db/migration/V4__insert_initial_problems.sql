@@ -19,7 +19,7 @@ INSERT INTO test_case (id, input_path, output_path, visible, problem_id) VALUES
 INSERT INTO problem
 (submissions_count, title, input_format, output_format, statement, notes, time_limit, memory_limit, problem_status, rate, solution_code, language_version)
 VALUES
-    (0, 'Maximum of Three Numbers', 'Three integers a b c', 'Single integer', 'Given three integers, print the maximum.', '', 1000, 64, 'APPROVED', 200, 'print(max(map(int,input().split())))', 'PYTHON_3_8');
+    (0, 'Maximum of Three Numbers', 'Three integers a b c', 'Single integer', 'Given three integers, print the maximum.', '', 1000, 64, 'APPROVED', 2000, 'print(max(map(int,input().split())))', 'PYTHON_3_8');
 INSERT INTO problem_topics (problem_id, tags) VALUES
                                                   (LAST_INSERT_ID(),'IMPLEMENTATION'),(LAST_INSERT_ID(),'MATH');
 INSERT INTO test_case (id, input_path, output_path, visible, problem_id) VALUES
