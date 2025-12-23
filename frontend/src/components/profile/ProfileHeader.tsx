@@ -9,6 +9,8 @@ import {
     removeFriend,
     type FriendStatus,
 } from "../../services/FriendService";
+import FriendStatusButton from '../common/FriendStatusButton';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 interface UserProfile {
     username: string;
@@ -38,6 +40,7 @@ export default function ProfileHeader({
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [friendStatus, setFriendStatus] = useState<FriendStatus>("NONE");
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -134,6 +137,7 @@ export default function ProfileHeader({
             await removeFriend(profile.username);
             setFriendStatus("NONE");
             setProfile(prev => prev ? { ...prev, friendCount: prev.friendCount - 1 } : prev);
+            setShowConfirm(false);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to unFriend");
             setTimeout(() => setError(null), 3000);
@@ -252,23 +256,16 @@ export default function ProfileHeader({
                             >
                                 Request Pending
                             </span>
-                            <button
+                            <FriendStatusButton
+                                label="Cancel Request"
                                 onClick={handleCancelRequest}
-                                className="
-                                flex items-center justify-center
-                                border-2 border-rose-500/30 bg-rose-500/5 text-rose-400
-                                hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:shadow-[0_0_10px_rgba(225,29,72,0.3)]
-                                px-4 py-2 rounded-full 
-                                font-anta text-lg uppercase tracking-widest 
-                                transition-all duration-300
-                                "
-                            >
-                                Cancel Request
-                            </button>
+                                variant="negative"
+                            />
                         </div>
                     )}
 
                     {friendStatus === "FRIENDS" && (
+                        <>
                         <div className="flex gap-2">
                             <span
                                 className="px-4 py-2 rounded-full text-lg uppercase font-medium"
@@ -276,50 +273,34 @@ export default function ProfileHeader({
                             >
                                 Friends
                             </span>
-                            <button
-                                onClick={handleUnFriend}
-                                className="
-                                flex items-center justify-center
-                                border-2 border-rose-500/30 bg-rose-500/5 text-rose-400
-                                hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:shadow-[0_0_10px_rgba(225,29,72,0.3)]
-                                px-4 py-2 rounded-full 
-                                font-anta text-lg uppercase tracking-widest 
-                                transition-all duration-300
-                                "
-                            >
-                                Unfriend
-                            </button>
+                            <FriendStatusButton
+                                label="Unfriend"
+                                onClick={() => setShowConfirm(true)}
+                                variant="negative"
+                            />
                         </div>
+                        <ConfirmationModal isOpen={showConfirm} onClose={() => setShowConfirm(false)}
+                            onConfirm={handleUnFriend}
+                            title="Confirm Unfriend"
+                            message={`Are you sure you want to unfriend ${profile.username}?`}
+                            confirmText="Unfriend"
+                            cancelText="Cancel"
+                        />
+                        </>
                     )}
 
                     {friendStatus === "PENDING_RECEIVED" && (
                         <div className="flex gap-2">
-                            <button
+                            <FriendStatusButton
+                                label="Accept"
                                 onClick={handleAcceptFriend}
-                                className="
-                                flex items-center justify-center
-                                border-2 border-emerald-500/30 bg-emerald-500/5 text-emerald-400
-                                hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]
-                                px-4 py-2 rounded-full 
-                                font-anta text-lg uppercase tracking-widest 
-                                transition-all duration-300
-                                "
-                            >
-                                Accept
-                            </button>
-                            <button
+                                variant="positive"
+                            />
+                            <FriendStatusButton
+                                label="Reject"
                                 onClick={handleRejectFriend}
-                                className="
-                                flex items-center justify-center
-                                border-2 border-rose-500/30 bg-rose-500/5 text-rose-400
-                                hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:shadow-[0_0_10px_rgba(225,29,72,0.3)]
-                                px-4 py-2 rounded-full 
-                                font-anta text-lg uppercase tracking-widest 
-                                transition-all duration-300
-                                "
-                            >
-                                Reject
-                            </button>
+                                variant="negative"
+                            />
                         </div>
                     )}
                 </div>
