@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
+public class FriendDto {
     private String username;
     private Integer currentRate;
     private String imgUrl;

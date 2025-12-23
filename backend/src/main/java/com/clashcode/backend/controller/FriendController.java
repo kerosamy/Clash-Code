@@ -1,6 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.FriendService;
@@ -58,7 +58,7 @@ public class FriendController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<Page<UserDto>> getFriendsList(
+    public ResponseEntity<Page<FriendDto>> getFriendsList(
             @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -68,7 +68,7 @@ public class FriendController {
     }
 
     @GetMapping("/sent-requests")
-    public ResponseEntity<Page<UserDto>> getSentFriendRequests(
+    public ResponseEntity<Page<FriendDto>> getSentFriendRequests(
             @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -78,7 +78,7 @@ public class FriendController {
     }
 
     @GetMapping("/received-requests")
-    public ResponseEntity<Page<UserDto>> getReceivedFriendRequests(
+    public ResponseEntity<Page<FriendDto>> getReceivedFriendRequests(
             @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

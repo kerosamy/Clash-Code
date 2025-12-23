@@ -1,6 +1,6 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import org.springframework.stereotype.Component;
@@ -14,12 +14,12 @@ public class FriendMapper {
         this.friendStatusMapper = friendStatusMapper;
     }
 
-    public UserDto toUserDto(Friend friendship, User currentUser) {
+    public FriendDto toFriendDto(Friend friendship, User currentUser) {
         User otherUser = friendship.getSender().getId().equals(currentUser.getId())
                 ? friendship.getReceiver()
                 : friendship.getSender();
 
-        return UserDto.builder()
+        return FriendDto.builder()
                 .username(otherUser.getUsername())
                 .currentRate(otherUser.getCurrentRate())
                 .imgUrl(otherUser.getImgUrl())

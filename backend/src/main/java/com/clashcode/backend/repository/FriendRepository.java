@@ -32,10 +32,10 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
     Page<Friend> findBySenderIdAndStatus(Long senderId, FriendRequestStatus status, Pageable pageable);
 
     @Query("""
-                SELECT COUNT(f)
-                FROM Friend f
-                WHERE (f.sender.id = :userId OR f.receiver.id = :userId) AND f.status = :status
-           """)
+        SELECT COUNT(f)
+        FROM Friend f
+        WHERE (f.sender.id = :userId OR f.receiver.id = :userId) AND f.status = :status
+    """)
     int countFriendsByUserId(
             @Param("userId") Long userId,
             @Param("status") FriendRequestStatus status

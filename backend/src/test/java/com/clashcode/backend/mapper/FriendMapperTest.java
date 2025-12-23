@@ -1,6 +1,6 @@
 package com.clashcode.backend.mapper;
 
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
@@ -38,7 +38,7 @@ class FriendMapperTest {
 
         when(friendStatusMapper.map(alice, friendship)).thenReturn(FriendStatus.PENDING_SENT);
 
-        UserDto result = friendMapper.toUserDto(friendship, alice);
+        FriendDto result = friendMapper.toFriendDto(friendship, alice);
 
         assertEquals("bob", result.getUsername());
         assertEquals(1500, result.getCurrentRate());
@@ -58,7 +58,7 @@ class FriendMapperTest {
 
         when(friendStatusMapper.map(alice, friendship)).thenReturn(FriendStatus.PENDING_RECEIVED);
 
-        UserDto result = friendMapper.toUserDto(friendship, alice);
+        FriendDto result = friendMapper.toFriendDto(friendship, alice);
 
         assertEquals("bob", result.getUsername());
         assertEquals(FriendStatus.PENDING_RECEIVED, result.getStatus());

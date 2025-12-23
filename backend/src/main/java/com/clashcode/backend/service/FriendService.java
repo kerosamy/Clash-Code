@@ -1,6 +1,6 @@
 package com.clashcode.backend.service;
 
-import com.clashcode.backend.dto.UserDto;
+import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.exception.FriendRequestExistsException;
@@ -105,18 +105,18 @@ public class FriendService {
                 .orElseThrow(() -> new UserNotFoundException(username));
     }
 
-    public Page<UserDto> getSentFriendRequests(User user, Pageable pageable) {
+    public Page<FriendDto> getSentFriendRequests(User user, Pageable pageable) {
         return friendRepository.findBySenderIdAndStatus(user.getId(), FriendRequestStatus.PENDING, pageable)
-                .map(friendship -> friendMapper.toUserDto(friendship, user));
+                .map(friendship -> friendMapper.toFriendDto(friendship, user));
     }
 
-    public Page<UserDto> getReceivedFriendRequests(User user, Pageable pageable) {
+    public Page<FriendDto> getReceivedFriendRequests(User user, Pageable pageable) {
         return friendRepository.findByReceiverIdAndStatus(user.getId(), FriendRequestStatus.PENDING, pageable)
-                .map(friendship -> friendMapper.toUserDto(friendship, user));
+                .map(friendship -> friendMapper.toFriendDto(friendship, user));
     }
 
-    public Page<UserDto> getFriendsList(User user, Pageable pageable) {
+    public Page<FriendDto> getFriendsList(User user, Pageable pageable) {
         return friendRepository.findAllFriendsByUserId(user.getId(), pageable)
-                .map(friendship -> friendMapper.toUserDto(friendship, user));
+                .map(friendship -> friendMapper.toFriendDto(friendship, user));
     }
 }
