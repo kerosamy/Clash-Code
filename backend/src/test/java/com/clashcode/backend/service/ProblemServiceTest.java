@@ -47,20 +47,20 @@ class ProblemServiceTest {
     void testGetProblemById_Success() {
         Problem problem = new Problem();
         problem.setId(1L);
-        FullProblemResponseDto responseDto = new FullProblemResponseDto();
+        PartialProblemResponseDto responseDto = new PartialProblemResponseDto();
         responseDto.setId(1L);
 
         when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
         when(testCaseService.getVisibleTestCasesForProblem(problem)).thenReturn(List.of());
-        when(problemMapper.toFullResponseDto(problem, List.of())).thenReturn(responseDto);
+        when(problemMapper.toPartialResponseDto(problem, List.of())).thenReturn(responseDto);
 
-        FullProblemResponseDto result = problemService.getProblemById(1L);
+        PartialProblemResponseDto result = problemService.getPartialProblemById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
         verify(problemRepository).findById(1L);
         verify(testCaseService).getVisibleTestCasesForProblem(problem);
-        verify(problemMapper).toResponseDto(problem, List.of());
+        verify(problemMapper).toPartialResponseDto(problem, List.of());
     }
 
     @Test
@@ -68,7 +68,7 @@ class ProblemServiceTest {
         when(problemRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            problemService.getProblemById(99L);
+            problemService.getPartialProblemById(99L);
         });
 
         assertEquals("Problem not found", exception.getMessage());

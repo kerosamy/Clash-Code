@@ -2,7 +2,7 @@ package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.FullProblemResponseDto;
 import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.PracticeProblemResponseDto;
+import com.clashcode.backend.dto.PartialProblemResponseDto;
 import com.clashcode.backend.service.ProblemService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +29,8 @@ public class AdminController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FullProblemResponseDto> getProblemDetails(@PathVariable Long id) {
-        return ResponseEntity.ok(problemService.getProblemById(id));
+    public ResponseEntity<PartialProblemResponseDto> getProblemDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(problemService.getPartialProblemById(id));
     }
 
     @PostMapping("/{id}/accept")

@@ -27,8 +27,14 @@ public class ProblemController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FullProblemResponseDto> getProblem(@PathVariable Long id) {
-        FullProblemResponseDto problem = problemService.getProblemById(id);
+    public ResponseEntity<PartialProblemResponseDto> getPartialProblem(@PathVariable Long id) {
+        PartialProblemResponseDto problem = problemService.getPartialProblemById(id);
+        return ResponseEntity.ok(problem);
+    }
+
+    @GetMapping("/draft/{id}")
+    public ResponseEntity<FullProblemResponseDto> getFullProblem(@PathVariable Long id) {
+        FullProblemResponseDto problem = problemService.getFullProblemById(id);
         return ResponseEntity.ok(problem);
     }
 

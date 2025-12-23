@@ -2,7 +2,7 @@ package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.FullProblemResponseDto;
 import com.clashcode.backend.dto.ProblemListDto;
-import com.clashcode.backend.dto.PracticeProblemResponseDto;
+import com.clashcode.backend.dto.PartialProblemResponseDto;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
 import com.clashcode.backend.service.UserService;
@@ -14,10 +14,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -89,13 +91,13 @@ class AdminControllerTest {
     @Test
     @DisplayName("GET /admin/problems/{id} - success")
     void getProblemDetails_success() throws Exception {
-        FullProblemResponseDto responseDto = FullProblemResponseDto.builder()
+        PartialProblemResponseDto responseDto = PartialProblemResponseDto.builder()
                 .id(1L)
                 .title("Problem 1")
                 .rate(1200)
                 .build();
 
-        when(problemService.getProblemById(1L)).thenReturn(responseDto);
+        when(problemService.getPartialProblemById(1L)).thenReturn(responseDto);
 
         mockMvc.perform(get("/admin/problems/1"))
                 .andExpect(status().isOk())
@@ -104,7 +106,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.title").value("Problem 1"))
                 .andExpect(jsonPath("$.rate").value(1200));
 
-        verify(problemService, times(1)).getProblemById(1L);
+        verify(problemService, times(1)).getPartialProblemById(1L);
     }
 
     @Test
@@ -149,17 +151,16 @@ class AdminControllerTest {
 	    verify(problemService, times(1)).rejectProblem(eq(problemId), contains("too vague"));
 	}
 
-	@Test
-	@DisplayName("POST /admin/problems/{id}/accept - problem not found")
-	void acceptProblem_notFound() throws Exception {
-	    doThrow(new RuntimeException("Problem not found"))
-		    .when(problemService).acceptProblem(99L);
+    @Test
+    @DisplayName("POST /admin/problems/{id}/accept - problem not found")
+    void acceptProblem_notFound() throws Exception {
 
-	    mockMvc.perform(post("/admin/problems/99/accept"))
-		    .andExpect(status().isInternalServerError()); 
-		    // Note: Depending on your GlobalExceptionHandler, this might be 404 or 500
+        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"))
+                .when(problemService).acceptProblem(99L);
 
+        mockMvc.perform(post("/admin/problems/99/accept"))
+                .andExpect(status().isNotFound());
 
-		verify(problemService, times(1)).getPendingProblems(0, 10);
-	    }
+        verify(problemService, times(1)).acceptProblem(99L);
+    }
 }

@@ -181,7 +181,7 @@ public class Judge0ClientTest {
                    for(int i = 0 ; i < 1000000000 ; i++){
                     a++;
                    }
-                   cout<<a; 
+                   cout<<a;
                    return 0;
                 }
                 """;
@@ -253,7 +253,7 @@ public class Judge0ClientTest {
                    for(int i = 0 ; i < 1000000000 ; i++){
                     a++;
                    }
-                   cout<<a; 
+                   cout<<a;
                    return 0;
                 }
                 """;

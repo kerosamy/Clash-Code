@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="26153ef4-0236-4c9c-a822-1abe91b50906" name="Changes" comment="" />
+    <list default="true" id="26153ef4-0236-4c9c-a822-1abe91b50906" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/clashcode/backend/dto/ProblemListDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/clashcode/backend/dto/ProblemListDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/clashcode/backend/service/MatchService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/clashcode/backend/service/MatchService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V9__add_author_to_problem_table.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V9__add_author_to_problem_table.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/clashcode/backend/service/ProblemServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/clashcode/backend/service/ProblemServiceTest.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -33,9 +39,9 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "CLASHCODE-110__judge0-integration",
+    "git-widget-placeholder": "CLASHCODE-187__fix-problem-dto-error",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/kero samy/OneDrive - Alexandria University/Desktop/clash code - jug/Clash-Code/backend",
+    "last_opened_file_path": "/home/john/Downloads/Clash-Code/backend",
     "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
@@ -43,8 +49,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23726.103" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23726.103" />
+        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.138" />
       </set>
     </attachedChunks>
   </component>
