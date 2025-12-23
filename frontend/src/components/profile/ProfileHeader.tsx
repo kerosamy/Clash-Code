@@ -187,11 +187,22 @@ export default function ProfileHeader({
                         className="w-80 h-80 rounded-full overflow-hidden border-4 relative"
                         style={{ borderColor: color }}
                     >
-                        <img
-                            src={preview || profile.avatarUrl || "/default-avatar.png"}
-                            alt={profile.username}
-                            className="w-full h-full object-cover"
-                        />
+                  {preview || profile.avatarUrl ? (
+                            <img
+                                src={preview || profile.avatarUrl}
+                                alt={profile.username}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div 
+                                className="w-full h-full flex items-center justify-center select-none"
+                                style={{ backgroundColor: `${color}20` }} // Light version of rank color
+                            >
+                                <span className="text-9xl font-bold uppercase" style={{ color }}>
+                                    {profile.username.charAt(0)}
+                                </span>
+                            </div>
+                        )}
                         {uploading && (
                             <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
                                 <div className="flex flex-col items-center gap-2">
