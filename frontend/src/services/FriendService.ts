@@ -36,3 +36,52 @@ export async function removeFriend(username: string): Promise<void> {
     url: `/friends/remove/${username}`,
   });
 }
+
+export interface FriendDto {
+  username: string;
+  currentRate: number;
+  imgUrl: string;
+  status: FriendStatus;
+  requestedAt: string;
+  updatedAt: string;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export async function getFriendsList(
+  page: number = 0,
+  size: number = 20
+): Promise<Page<FriendDto>> {
+  return apiRequest<Page<FriendDto>>({
+    method: "GET",
+    url: `/friends/list?page=${page}&size=${size}`,
+  });
+}
+
+export async function getPendingFriendRequests(
+  page: number = 0,
+  size: number = 20
+): Promise<Page<FriendDto>> {
+  return apiRequest<Page<FriendDto>>({
+    method: "GET",
+    url: `/friends/received-requests?page=${page}&size=${size}`,
+  });
+}
+
+export async function getSentFriendRequests(
+  page: number = 0,
+  size: number = 20
+): Promise<Page<FriendDto>> {
+  return apiRequest<Page<FriendDto>>({
+    method: "GET",
+    url: `/friends/sent-requests?page=${page}&size=${size}`,
+  });
+}

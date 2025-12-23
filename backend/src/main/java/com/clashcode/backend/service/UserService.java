@@ -3,7 +3,9 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.*;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.FriendStatusMapper;
 import com.clashcode.backend.mapper.UserMapper;
+import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.FriendRepository;
 import com.clashcode.backend.repository.MatchParticipantRepository;
@@ -27,6 +29,7 @@ public class UserService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
+    private final FriendStatusMapper friendStatusMapper = new FriendStatusMapper();
     private static final int RATING_PER_RANK = 300;
     private static final Ranks[] RANKS = Ranks.values();
 
@@ -48,6 +51,17 @@ public class UserService {
                         user.getUsername(),
                         getRank(user.getCurrentRate())
                 )).toList();
+    }
+
+    public List<UserSearchDto> searchByUsername(String username, User loggedInUser) {
+            List<Object[]> results = userRepository.searchByUsernameWithStatus(loggedInUser.getId(), username);
+
+            return results.stream().map(row -> {
+                User u = (User) row[0];
+                Friend f = (Friend) row[1];
+                FriendStatus status = friendStatusMapper.map(u,f);
+                return new UserSearchDto(u.getUsername(), u.getCurrentRate(), status);
+            }).toList();
     }
 
     private StatsDto getStats(long userId) {

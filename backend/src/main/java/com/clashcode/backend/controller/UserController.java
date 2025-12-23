@@ -1,6 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.ProfileDto;
+import com.clashcode.backend.dto.UserSearchDto;
 import com.clashcode.backend.dto.UserSearchResponseDto;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.UserService;
@@ -56,5 +57,14 @@ public class UserController {
     public ResponseEntity<Void> deleteProfileImage(@AuthenticationPrincipal User user) {
         userService.deleteProfileImage(user);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search-with-status")
+    public ResponseEntity<List<UserSearchDto>> searchUsersWithFriendStatus(
+            @RequestParam String username,
+            @AuthenticationPrincipal User user
+    ) {
+        List<UserSearchDto> results = userService.searchByUsername(username, user);
+        return ResponseEntity.ok(results);
     }
 }
