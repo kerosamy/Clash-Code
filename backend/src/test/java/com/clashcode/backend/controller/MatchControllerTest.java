@@ -17,12 +17,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -228,5 +230,40 @@ class MatchControllerTest {
                 .andExpect(status().isOk());
 
         verify(matchService).cancelSearchForOpponent(eq(user));
+    }
+    @Test
+    @DisplayName("GET /matches/my-history - Success")
+    void test_getMatchHistory_success() throws Exception {
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setUsername("currentUser");
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(mockUser, null)
+        );
+
+        MatchHistoryDto historyDto = MatchHistoryDto.builder()
+                .matchId(123L)
+                .time(LocalDateTime.now())
+                .opponent("opponentUser")
+                .problem("Sample Problem")
+                .rank(1)
+                .rateChange(25)
+                .newRating(1525)
+                .isRated(true)
+                .build();
+
+        when(matchService.getUserMatchHistory(eq(mockUser.getId()), eq(null), any()))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(historyDto)));
+
+        mockMvc.perform(get("/matches/my-history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].matchId").value(123))
+                .andExpect(jsonPath("$.content[0].opponent").value("opponentUser"))
+                .andExpect(jsonPath("$.content[0].problem").value("Sample Problem"))
+                .andExpect(jsonPath("$.content[0].rank").value(1))
+                .andExpect(jsonPath("$.content[0].rateChange").value(25))
+                .andExpect(jsonPath("$.content[0].newRating").value(1525))
+                .andExpect(jsonPath("$.content[0].rated").value(true));
     }
 }

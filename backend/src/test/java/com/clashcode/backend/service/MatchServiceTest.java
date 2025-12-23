@@ -408,4 +408,30 @@ class MatchServiceTest {
 
 
 
+    void test_getUserMatchHistory_success() {
+        Long userId = 1L;
+        Boolean rated = true;
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+
+        MatchParticipant participant = new MatchParticipant();
+        com.clashcode.backend.dto.MatchHistoryDto historyDto = new com.clashcode.backend.dto.MatchHistoryDto();
+
+        org.springframework.data.domain.Page<MatchParticipant> pageEntity =
+                new org.springframework.data.domain.PageImpl<>(List.of(participant));
+
+        when(matchParticipantRepository.findHistoryByUserId(userId, rated, pageable))
+                .thenReturn(pageEntity);
+        when(matchMapper.toMatchHistoryDto(participant))
+                .thenReturn(historyDto);
+
+        org.springframework.data.domain.Page<com.clashcode.backend.dto.MatchHistoryDto> result =
+                matchService.getUserMatchHistory(userId, rated, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(historyDto, result.getContent().get(0));
+
+        verify(matchParticipantRepository).findHistoryByUserId(userId, rated, pageable);
+        verify(matchMapper).toMatchHistoryDto(participant);
+    }
 }
