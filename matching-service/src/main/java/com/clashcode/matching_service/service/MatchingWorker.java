@@ -9,25 +9,24 @@ import java.util.Set;
 @Component
 public class MatchingWorker {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisService redisService;
     private final MatchingService matchingService;
-    private static final String KEY_FOR_Z_SET = "matching:queue";
 
+    MatchingWorker(RedisService redisService, MatchingService matchingService) {
 
-    MatchingWorker(RedisTemplate<String, String> redisTemplate, MatchingService matchingService) {
-        this.redisTemplate = redisTemplate;
         this.matchingService = matchingService;
+        this.redisService = redisService;
     }
     @Scheduled(fixedDelay = 2000)
     public void runMatchingService() {
-        Set<String> waitingUsers = redisTemplate.opsForZSet().range(KEY_FOR_Z_SET,0, -1);
+        Set<String> waitingUsers = redisService.getAllUsers();
         if (waitingUsers == null) return;
 
         for (String waitingUser : waitingUsers) {
-            long userId = matchingService.getUserIdFromString(waitingUser);
-            if (matchingService.getUserData(userId) == null) continue;
+            long userId = redisService.getUserIdFromString(waitingUser);
+            if (redisService.getUserData(userId) == null) continue;
 
-            Boolean isStillWaiting = redisTemplate.opsForZSet().score(KEY_FOR_Z_SET, waitingUser) != null;
+            Boolean isStillWaiting = redisService.isUserExist(waitingUser);
             if (!Boolean.TRUE.equals(isStillWaiting)) continue;
 
             matchingService.searchForOpponent(userId);
