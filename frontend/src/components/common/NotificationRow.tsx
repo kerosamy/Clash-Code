@@ -44,6 +44,7 @@ export default function NotificationRow({
         grid grid-cols-[150px_150px_1fr_120px_120px] gap-4 px-6 py-4
         border-b border-white/5 transition-all duration-200 items-center
         hover:bg-white/5 
+        ${!read ? "shadow-[inset_3px_0_0_0_rgba(255,127,80,0.4)] bg-white/[0.02]" : ""}        
         ${className}
       `}
     >

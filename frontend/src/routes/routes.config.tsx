@@ -198,8 +198,7 @@ export const routes: RouteConfig[] = [
     path: 'notifications', 
     name: 'Notifications', 
     icon: NotificationsIcon, 
-    component: Notifications,
-    hideFromNav: true
+    component: Notifications
   },
   { 
     path: 'notifications/:notificationId', 
