@@ -3,11 +3,11 @@ package com.clashcode.backend.repository;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.model.Friend;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
@@ -32,10 +32,10 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
     Page<Friend> findBySenderIdAndStatus(Long senderId, FriendRequestStatus status, Pageable pageable);
 
     @Query("""
-                SELECT COUNT(f)
-                FROM Friend f
-                WHERE (f.sender.id = :userId OR f.receiver.id = :userId) AND f.status = :status
-           """)
+        SELECT COUNT(f)
+        FROM Friend f
+        WHERE (f.sender.id = :userId OR f.receiver.id = :userId) AND f.status = :status
+    """)
     int countFriendsByUserId(
             @Param("userId") Long userId,
             @Param("status") FriendRequestStatus status

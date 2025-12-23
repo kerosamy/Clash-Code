@@ -1,16 +1,20 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.exception.FriendRequestExistsException;
 import com.clashcode.backend.exception.FriendRequestNotFoundException;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.FriendMapper;
 import com.clashcode.backend.mapper.FriendStatusMapper;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.FriendRepository;
 import com.clashcode.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,11 +26,18 @@ public class FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final FriendStatusMapper friendStatusMapper;
+    private final FriendMapper friendMapper;
 
-    public FriendService(UserRepository userRepository, FriendRepository friendRepository, FriendStatusMapper friendStatusMapper) {
+    public FriendService(
+            UserRepository userRepository,
+            FriendRepository friendRepository,
+            FriendStatusMapper friendStatusMapper,
+            FriendMapper friendMapper
+    ) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.friendStatusMapper = friendStatusMapper;
+        this.friendMapper = friendMapper;
     }
 
     public void sendFriendRequest(User sender, String receiverUsername) {
@@ -92,5 +103,20 @@ public class FriendService {
     private User getUserOrElseThrowException(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
+    }
+
+    public Page<FriendDto> getSentFriendRequests(User user, Pageable pageable) {
+        return friendRepository.findBySenderIdAndStatus(user.getId(), FriendRequestStatus.PENDING, pageable)
+                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+    }
+
+    public Page<FriendDto> getReceivedFriendRequests(User user, Pageable pageable) {
+        return friendRepository.findByReceiverIdAndStatus(user.getId(), FriendRequestStatus.PENDING, pageable)
+                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+    }
+
+    public Page<FriendDto> getFriendsList(User user, Pageable pageable) {
+        return friendRepository.findAllFriendsByUserId(user.getId(), pageable)
+                .map(friendship -> friendMapper.toFriendDto(friendship, user));
     }
 }
