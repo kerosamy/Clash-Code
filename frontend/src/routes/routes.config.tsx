@@ -17,6 +17,7 @@ import OAuthCallback from '../features/OAuthCallback';
 import ProblemDetails from '../pages/problem/ProblemDetails';
 import Submit from '../pages/problem/Submit';
 import LogOut from '../pages/LogOut';
+import Notifications from '../pages/Notifications';
 
 // Profile sub-pages
 import ProfileOverview from '../pages/profile/ProfileOverview';
@@ -61,6 +62,7 @@ import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 import RejectedProblemsIcon from '../assets/icons/RejectedProblems.svg';
 import { logout } from '../services/AuthService';
+import NotificationsIcon from '../assets/icons/Bell.png';
 
 
 export interface PageConfig {
@@ -121,12 +123,18 @@ export const routes: RouteConfig[] = [
     ]
   },
 
-  { path: 'practice', name: 'Practice', icon: PracticeIcon, component: Practice },
+  { path: 'practice', 
+    name: 'Practice', 
+    icon: PracticeIcon, 
+    component: Practice 
+  },
+
   {
     path: '/practice/problem/:id',
     name: 'Problem',
     icon: ProblemDetailsIcon,
     component: Problem,
+    hideFromNav: true,
     children: [
       { index: true, component: ProblemDetails },
       { path: 'submit', component: Submit }
@@ -185,6 +193,22 @@ export const routes: RouteConfig[] = [
     component: UserManagement, 
     requiredRoles: [UserRole.SUPER_ADMIN]
   },
+
+  { 
+    path: 'notifications', 
+    name: 'Notifications', 
+    icon: NotificationsIcon, 
+    component: Notifications,
+    hideFromNav: true
+  },
+  { 
+    path: 'notifications/:notificationId', 
+    name: 'Notification Detail', 
+    icon: NotificationsIcon, 
+    component: Notifications,
+    hideFromNav: true
+  },
+  
   { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
   { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: LogOut },
 
