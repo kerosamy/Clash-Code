@@ -1,5 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, UserPlus, Upload } from 'lucide-react';
+import { uploadProfileImage } from "../../services/UserService";
+import {
+    fetchFriendStatus,
+    sendFriendRequest,
+    acceptFriendRequest,
+    rejectFriendRequest,
+    removeFriend,
+    type FriendStatus,
+} from "../../services/FriendService";
+import FriendStatusButton from '../common/FriendStatusButton';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 interface UserProfile {
     username: string;
@@ -12,35 +23,35 @@ interface UserProfile {
 
 interface ProfileHeaderProps {
     profile: UserProfile;
+    setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
     isPrivate: boolean;
     color: string;
-    onAddFriend?: () => void;
     onImageUpdated?: (newImageUrl: string) => void;
 }
 
 export default function ProfileHeader({
     profile,
+    setProfile,
     isPrivate,
     color,
-    onAddFriend,
     onImageUpdated,
 }: ProfileHeaderProps) {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [friendStatus, setFriendStatus] = useState<FriendStatus>("NONE");
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // Validate file type
         if (!file.type.startsWith('image/')) {
             setError('Please select an image file');
             setTimeout(() => setError(null), 3000);
             return;
         }
 
-        // Validate file size (5MB)
         if (file.size > 10 * 1024 * 1024) {
             setError('Image must be less than 10MB');
             setTimeout(() => setError(null), 3000);
@@ -49,14 +60,12 @@ export default function ProfileHeader({
 
         setError(null);
 
-        // Show preview
         const reader = new FileReader();
         reader.onloadend = () => {
             setPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
 
-        // Upload to server
         await uploadImage(file);
     };
 
@@ -65,34 +74,12 @@ export default function ProfileHeader({
         setError(null);
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            // Adjust the authorization header based on your auth implementation
-            const token = localStorage.getItem('token'); // or however you store your token
-            
-            const response = await fetch('http://localhost:8080/users/profile/image', {
-                method: 'POST',
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to upload image');
-            }
-
-            const data = await response.json();
+            const response = await uploadProfileImage(file);
             setPreview(null);
 
-            // Notify parent component of the new image URL
             if (onImageUpdated) {
-                onImageUpdated(data.imageUrl);
+                onImageUpdated(response.imageUrl);
             }
-
-
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to upload image');
             setPreview(null);
@@ -102,9 +89,73 @@ export default function ProfileHeader({
         }
     };
 
+    useEffect(() => {
+        const loadStatus = async () => {
+            try {
+                const status = await fetchFriendStatus(profile.username);
+                setFriendStatus(status);
+            } catch {
+                setFriendStatus("NONE");
+            }
+        };
+        loadStatus();
+    }, [profile.username]);
+
+    const handleAddFriend = async () => {
+        try {
+            await sendFriendRequest(profile.username);
+            setFriendStatus("PENDING_SENT");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to send friend request");
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    const handleAcceptFriend = async () => {
+        try {
+            await acceptFriendRequest(profile.username);
+            setFriendStatus("FRIENDS");
+            setProfile(prev => prev ? { ...prev, friendCount: prev.friendCount + 1 } : prev);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to accept friend request");
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    const handleRejectFriend = async () => {
+        try {
+            await rejectFriendRequest(profile.username);
+            setFriendStatus("NONE");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to reject friend request");
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    const handleUnFriend = async () => {
+        try {
+            await removeFriend(profile.username);
+            setFriendStatus("NONE");
+            setProfile(prev => prev ? { ...prev, friendCount: prev.friendCount - 1 } : prev);
+            setShowConfirm(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to unFriend");
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    const handleCancelRequest = async () => {
+        try {
+            await removeFriend(profile.username);
+            setFriendStatus("NONE");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to unFriend");
+            setTimeout(() => setError(null), 3000);
+        }
+    };
 
     return (
-        <div className="bg-container rounded-lg p-8 mb-8">
+        <div className="bg-container rounded-lg p-8 mb-8 relative">
             <div className="flex justify-between items-start">
                 <div className="flex-1">
                     <div className="text-xl mb-2" style={{ color }}>{profile.rank}</div>
@@ -132,9 +183,12 @@ export default function ProfileHeader({
                 </div>
 
                 <div className="relative">
-                    <div className="w-80 h-80 rounded-full overflow-hidden border-4 relative" style={{ borderColor: color }}>
+                    <div
+                        className="w-80 h-80 rounded-full overflow-hidden border-4 relative"
+                        style={{ borderColor: color }}
+                    >
                         <img
-                            src={preview || profile.avatarUrl || '/default-avatar.png'}
+                            src={preview || profile.avatarUrl || "/default-avatar.png"}
                             alt={profile.username}
                             className="w-full h-full object-cover"
                         />
@@ -162,27 +216,26 @@ export default function ProfileHeader({
                             <div className="absolute top-5 right-5 flex gap-2">
                                 <label
                                     htmlFor="profile-image-input"
-                                    className={`bg-background rounded-full p-3 hover:bg-gray-700 transition-colors ${
-                                        uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                                    }`}
+                                    className={`bg-background rounded-full p-3 hover:bg-gray-700 transition-colors ${uploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                                        }`}
                                     style={{ border: `3px solid ${color}` }}
                                     aria-label="Change profile image"
                                 >
                                     <Camera className="w-8 h-8" style={{ color }} />
                                 </label>
-
-
                             </div>
                         </>
                     ) : (
-                        <button
-                            onClick={onAddFriend}
-                            className="absolute top-5 right-5 bg-background rounded-full p-4 hover:bg-gray-700 transition-colors"
-                            style={{ border: `3px solid ${color}` }}
-                            aria-label="Add friend"
-                        >
-                            <UserPlus className="w-6 h-6" style={{ color }} />
-                        </button>
+                        friendStatus === "NONE" && (
+                            <button
+                                onClick={handleAddFriend}
+                                className="absolute top-5 right-5  bg-background rounded-full p-4 hover:bg-gray-700 transition-colors"
+                                style={{ border: `3px solid ${color}` }}
+                                aria-label="Add friend"
+                            >
+                                <UserPlus className="w-6 h-6" style={{ color }} />
+                            </button>
+                        )
                     )}
 
                     {error && (
@@ -192,6 +245,67 @@ export default function ProfileHeader({
                     )}
                 </div>
             </div>
+
+            {!isPrivate && (
+                <div className="absolute bottom-9 left-8">
+                    {friendStatus === "PENDING_SENT" && (
+                        <div className="flex gap-2">
+                            <span
+                                className="px-4 py-2 rounded-full text-lg uppercase font-medium"
+                                style={{ border: `2px solid gold`, color: 'gold' }}
+                            >
+                                Request Pending
+                            </span>
+                            <FriendStatusButton
+                                label="Cancel Request"
+                                onClick={handleCancelRequest}
+                                variant="negative"
+                            />
+                        </div>
+                    )}
+
+                    {friendStatus === "FRIENDS" && (
+                        <>
+                        <div className="flex gap-2">
+                            <span
+                                className="px-4 py-2 rounded-full text-lg uppercase font-medium"
+                                style={{ border: `2px solid  #34D399`, color: '#34D399' }}
+                            >
+                                Friends
+                            </span>
+                            <FriendStatusButton
+                                label="Unfriend"
+                                onClick={() => setShowConfirm(true)}
+                                variant="negative"
+                            />
+                        </div>
+                        <ConfirmationModal isOpen={showConfirm} onClose={() => setShowConfirm(false)}
+                            onConfirm={handleUnFriend}
+                            title="Confirm Unfriend"
+                            message={`Are you sure you want to unfriend ${profile.username}?`}
+                            confirmText="Unfriend"
+                            cancelText="Cancel"
+                        />
+                        </>
+                    )}
+
+                    {friendStatus === "PENDING_RECEIVED" && (
+                        <div className="flex gap-2">
+                            <FriendStatusButton
+                                label="Accept"
+                                onClick={handleAcceptFriend}
+                                variant="positive"
+                            />
+                            <FriendStatusButton
+                                label="Reject"
+                                onClick={handleRejectFriend}
+                                variant="negative"
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
+
 }

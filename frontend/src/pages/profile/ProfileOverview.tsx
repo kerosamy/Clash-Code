@@ -73,6 +73,7 @@ export default function ProfileOverview() {
     <div className="space-y-8 p-scroll-x">
       <ProfileHeader
         profile={profileBasic}
+        setProfile={setProfileBasic}
         isPrivate={username === loggedInUsername}
         color={rankColors[profileBasic.rank]}
         onImageUpdated={handleImageUpdated}
