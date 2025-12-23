@@ -92,4 +92,11 @@ public class ProblemController {
         Page<ProblemListDto> results = problemService.searchProblemsByName(keyword, page, size);
         return ResponseEntity.ok(results);
     }
+
+    @PostMapping("/run-test-cases")
+    public ResponseEntity<List<String>> compileTestCases (
+            @RequestBody TestcaseRunRequestDto testcaseCompilationDto
+    ){
+        return ResponseEntity.ok(problemService.runTestCases(testcaseCompilationDto));
+    }
 }

@@ -2,6 +2,7 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemStatus;
+import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.ProblemReview;
@@ -31,6 +32,7 @@ class ProblemServiceTest {
     private ProblemMapper problemMapper;
     private ProblemService problemService;
     private ProblemReviewRepository problemReviewRepository;
+    private Judge0Client judge0Client;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +41,7 @@ class ProblemServiceTest {
         problemMapper = mock(ProblemMapper.class);
         problemReviewRepository = mock(ProblemReviewRepository.class);
 
-        problemService = new ProblemService(problemRepository, testCaseService, problemMapper,problemReviewRepository);
+        problemService = new ProblemService(problemRepository, testCaseService, problemMapper,problemReviewRepository,judge0Client);
     }
 
     // ---------------- Test: getProblemById ----------------
