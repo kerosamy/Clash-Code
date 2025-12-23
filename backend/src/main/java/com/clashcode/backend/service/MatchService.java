@@ -230,8 +230,8 @@ public class MatchService {
 
     @Transactional
     public void completeMatch(Match match, User winner) {
+        if (match == null) throw new IllegalArgumentException("Match cannot be null");
         if (match.getMatchState() == MatchState.COMPLETED) return;
-        System.out.println("COMPLETE");
 
         MatchParticipant winnerParticipant = null;
         MatchParticipant loserParticipant = null;
@@ -248,19 +248,29 @@ public class MatchService {
                     .orElse(null);
         }
 
+        List<MatchParticipant> participants = match.getParticipants();
+        if (participants == null || participants.size() != 2) {
+            throw new IllegalStateException("Match must have exactly 2 participants");
+        }
+
+        // Handle draw or invalid winner
         if (winnerParticipant != null && loserParticipant != null) {
             winnerParticipant.setRank(rankMapper.toRank("winner"));
             loserParticipant.setRank(rankMapper.toRank("loser"));
         } else {
-            match.getParticipants().forEach(mp -> mp.setRank(rankMapper.toRank("draw")));
+            // Either winner is null, invalid, or participants missing → draw
+            participants.forEach(mp -> mp.setRank(rankMapper.toRank("draw")));
+            winnerParticipant = null;
+            loserParticipant = null;
+            System.out.println("Match ended in a draw or invalid winner");
         }
 
         match.setMatchState(MatchState.COMPLETED);
         matchRepository.save(match);
-        matchParticipantRepository.saveAll(match.getParticipants());
+        matchParticipantRepository.saveAll(participants);
 
-
-        for (MatchParticipant participant : match.getParticipants()) {
+        // Send match ended notifications
+        for (MatchParticipant participant : participants) {
             MatchNotificationDto dto = matchNotificationMapper.mapMatchEnded(match);
             notificationService.send(
                     match.getId(),
@@ -270,15 +280,22 @@ public class MatchService {
             );
         }
 
-        // ELO CALCULATION
-        if (match.getGameMode() == GameMode.Rated) {
-            updateParticipantRatings(match, winner);
+        // ELO calculation for Rated matches
+        if (match.getGameMode() == GameMode.RATED && participants.size() == 2) {
+            updateParticipantRatings(match, winnerParticipant != null ? winnerParticipant.getUser() : null);
         }
 
-        // Save everything at the end
+        // Save users safely, ensuring no negative ratings
+        for (MatchParticipant mp : participants) {
+            User user = mp.getUser();
+            if (user.getCurrentRate() < 0) user.setCurrentRate(0);
+            user.setMaxRate(Math.max(user.getMaxRate(), user.getCurrentRate()));
+        }
+
         matchRepository.save(match);
-        userRepository.saveAll(match.getParticipants().stream()
-                .map(MatchParticipant::getUser).toList());
+        userRepository.saveAll(participants.stream()
+                .map(MatchParticipant::getUser)
+                .toList());
     }
 
     @Transactional
@@ -333,6 +350,7 @@ public class MatchService {
         boolean isRated = match.getGameMode() == GameMode.RATED;
         return matchMapper.toMatchResultDto(isRated, participant);
     }
+    
     private void updateParticipantRatings(Match match, User winner) {
         List<MatchParticipant> participants = match.getParticipants();
         if (participants.size() != 2) return;
