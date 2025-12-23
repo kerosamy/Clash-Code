@@ -6,7 +6,7 @@ export default function Layout() {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1">
-        <main className="bg-background h-full w-full">
+        <main className="bg-background h-full w-full min-w-[900px]">
           <Outlet />
         </main>
       </div>
