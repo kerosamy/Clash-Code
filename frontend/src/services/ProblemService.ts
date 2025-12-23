@@ -112,6 +112,13 @@ export async function fetchProblemById(id: number): Promise<ProblemDto> {
   });
 }
 
+export async function fetchFullProblemById(id: number): Promise<ProblemDto> {
+  return apiRequest<ProblemDto>({
+    method: "GET",
+    url: `/problem/draft/${id}`,
+  });
+}
+
 export interface ProblemRequestDto {
   title: string;
   inputFormat: string;

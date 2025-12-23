@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Board from "../../components/common/Board";
 import RejectedProblemRow from "../../components/common/RejectedProblemRow";
 import { fetchRejectedProblems } from "../../services/ProblemService";
-import { fetchProblemById } from "../../services/ProblemService";
+import { fetchFullProblemById } from "../../services/ProblemService";
 interface RejectedProblemRowProps {
   id: number;
   name: string;
@@ -48,7 +48,7 @@ export default function RejectedProblems() {
 
   const handleRowClick = async (id: number) => {
   try {
-    const problem = await fetchProblemById(id);
+    const problem = await fetchFullProblemById(id);
     console.log(problem);
 
     // --- 1. Map and Set Problem Info Draft ---

@@ -7,7 +7,7 @@ import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.GameMode;
-import com.clashcode.backend.dto.PracticeProblemResponseDto;
+import com.clashcode.backend.dto.PartialProblemResponseDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
@@ -125,7 +125,7 @@ public class MatchService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + invite.getSenderId()));
 
         Problem problem = selectProblem(player1, player2);
-        return createMatch(player1, player2, problem, 2, GameMode.UNRATED);
+        return createMatch(player1, player2, problem, 30, GameMode.UNRATED);
     }
 
     @Transactional
@@ -297,12 +297,12 @@ public class MatchService {
     }
 
 
-    public FullProblemResponseDto getMatchProblem(Long matchId) {
+    public PartialProblemResponseDto getMatchProblem(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Match not found"));
         Problem problem = match.getProblem();
-        return problemService.getProblemById(problem.getId());
+        return problemService.getPartialProblemById(problem.getId());
     }
 
     public MatchResponseDto getMatchDetails(Long matchId) {

@@ -31,9 +31,8 @@ public class ProblemMapper {
                 .build();
     }
 
-    public PracticeProblemResponseDto toResponseDto (Problem problem , List<TestCaseResponseDto> visibleTestCases) {
-        Solution solution = problem.getSolution();
-        return PracticeProblemResponseDto
+    public PartialProblemResponseDto toPartialResponseDto(Problem problem , List<TestCaseResponseDto> visibleTestCases) {
+        return PartialProblemResponseDto
                 .builder()
                 .id(problem.getId())
                 .submissionsCount(problem.getSubmissionsCount())

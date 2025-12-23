@@ -91,14 +91,22 @@ public class ProblemService {
 
 
 
-    public FullProblemResponseDto getProblemById (Long id) {
+    public PartialProblemResponseDto getPartialProblemById (Long id) {
+        Problem problem = problemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Problem not found"));
+
+        List<TestCaseResponseDto> visibleTestCases = testCaseService.getVisibleTestCasesForProblem(problem);
+        return problemMapper.toPartialResponseDto(problem, visibleTestCases);
+    }
+
+
+    public FullProblemResponseDto getFullProblemById (Long id) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Problem not found"));
 
         List<TestCaseResponseDto> visibleTestCases = testCaseService.getVisibleTestCasesForProblem(problem);
         return problemMapper.toFullResponseDto(problem, visibleTestCases);
     }
-
 
     public Page<ProblemListDto> getPendingProblems(int page, int size) {
 

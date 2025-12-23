@@ -81,11 +81,11 @@ class ProblemControllerTest {
     @Test
     @DisplayName("GET /problem/{id} - Success")
     void testGetProblem() throws Exception {
-        FullProblemResponseDto response = new FullProblemResponseDto();
+        PartialProblemResponseDto response = new PartialProblemResponseDto();
         response.setId(1L);
         response.setTitle("Add Two Integers");
 
-        when(problemService.getProblemById(1L)).thenReturn(response);
+        when(problemService.getPartialProblemById(1L)).thenReturn(response);
 
         mockMvc.perform(get("/problem/1"))
                 .andExpect(status().isOk())

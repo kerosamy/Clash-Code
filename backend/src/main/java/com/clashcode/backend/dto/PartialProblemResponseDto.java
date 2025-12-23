@@ -1,6 +1,5 @@
 package com.clashcode.backend.dto;
 
-import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.enums.ProblemTags;
 import lombok.*;
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PracticeProblemResponseDto {
+public class PartialProblemResponseDto {
     private Long id;
     private Long submissionsCount;
     private String title;

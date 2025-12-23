@@ -68,7 +68,7 @@ public class MatchController {
     }
 
     @GetMapping("/{matchId}/problem")
-    public ResponseEntity<FullProblemResponseDto> getMatchProblem(@PathVariable Long matchId) {
+    public ResponseEntity<PartialProblemResponseDto> getMatchProblem(@PathVariable Long matchId) {
         return ResponseEntity.ok(matchService.getMatchProblem(matchId));
     }
 

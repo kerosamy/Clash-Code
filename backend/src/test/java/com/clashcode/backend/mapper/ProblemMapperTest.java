@@ -2,7 +2,7 @@ package com.clashcode.backend.mapper;
 
 import com.clashcode.backend.dto.ProblemListDto;
 import com.clashcode.backend.dto.ProblemRequestDto;
-import com.clashcode.backend.dto.PracticeProblemResponseDto;
+import com.clashcode.backend.dto.PartialProblemResponseDto;
 import com.clashcode.backend.dto.TestCaseResponseDto;
 import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.enums.ProblemTags;
@@ -76,7 +76,7 @@ class ProblemMapperTest {
     }
 
     @Test
-    void testToResponseDto() {
+    void testToPartialResponseDto() {
         // Arrange
         Problem problem = Problem.builder()
                 .id(1L)
@@ -94,7 +94,7 @@ class ProblemMapperTest {
         );
 
         // Act
-        PracticeProblemResponseDto dto = problemMapper.toResponseDto(problem, testCases);
+        PartialProblemResponseDto dto = problemMapper.toPartialResponseDto(problem, testCases);
 
         // Assert
         assertEquals(1L, dto.getId());
@@ -108,7 +108,7 @@ class ProblemMapperTest {
     }
 
     @Test
-    void testToResponseDto_emptyTestCases() {
+    void testToPartialResponseDto_emptyTestCases() {
         Problem problem = Problem.builder()
                 .id(2L)
                 .title("No TestCases")
@@ -118,7 +118,7 @@ class ProblemMapperTest {
                 .tags(Collections.emptyList())
                 .submissionsCount(0L)
                 .build();
-        PracticeProblemResponseDto dto = problemMapper.toResponseDto(problem, Collections.emptyList());
+        PartialProblemResponseDto dto = problemMapper.toPartialResponseDto(problem, Collections.emptyList());
 
         assertEquals(2L, dto.getId());
         assertEquals("No TestCases", dto.getTitle());

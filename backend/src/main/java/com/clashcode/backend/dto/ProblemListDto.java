@@ -18,6 +18,6 @@ public class ProblemListDto {
     private String author;
     private String rejectionNote;
 
-    //private string for attempted holder empty for now waiting Submission entity
+    @Builder.Default
     private String attempted = "unsolved";
 }
