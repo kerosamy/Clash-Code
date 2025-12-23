@@ -365,11 +365,9 @@ public class MatchService {
         int oldRatingB = userB.getCurrentRate();
         int difficulty = match.getProblem().getRate();
 
-        // 1. Calculate Expected Scores
         double expectedA = EloCalculatorService.calculateExpectedScore(oldRatingA, oldRatingB);
         double expectedB = 1.0 - expectedA;
 
-        // 2. Determine Actual Scores (Sa)
         double scoreA, scoreB;
         if (winner == null) {
             scoreA = 0.5;
@@ -382,18 +380,15 @@ public class MatchService {
             scoreB = 1.0;
         }
 
-        // 3. Calculate New Ratings
         int newRatingA = EloCalculatorService.calculateNewRating(oldRatingA, expectedA, scoreA, difficulty);
         int newRatingB = EloCalculatorService.calculateNewRating(oldRatingB, expectedB, scoreB, difficulty);
 
-        // 4. Update MatchParticipant (The History)
         mpA.setRateChange(newRatingA - oldRatingA);
         mpA.setNewRating(newRatingA);
 
         mpB.setRateChange(newRatingB - oldRatingB);
         mpB.setNewRating(newRatingB);
 
-        // 5. Update User (The Profile)
         userA.setCurrentRate(newRatingA);
         userA.setMaxRate(Math.max(userA.getMaxRate(), newRatingA));
 
