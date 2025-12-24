@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;

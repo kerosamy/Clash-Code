@@ -60,34 +60,59 @@ class MatchServiceTest {
         Problem problem = new Problem();
         problem.setId(10L);
 
+        // Mock managed users returned from repository
+        User managedPlayer1 = User.builder().id(1L).username("p1").build();
+        User managedPlayer2 = User.builder().id(2L).username("p2").build();
 
-        MatchParticipant p1 = MatchParticipant.builder().user(player1).build();
-        MatchParticipant p2 = MatchParticipant.builder().user(player2).build();
+        MatchParticipant p1 = MatchParticipant.builder().user(managedPlayer1).build();
+        MatchParticipant p2 = MatchParticipant.builder().user(managedPlayer2).build();
 
         Match savedMatch = Match.builder()
                 .id(matchId)
                 .participants(new ArrayList<>(List.of(p1, p2)))
+                .problem(problem)
+                .duration(duration)
+                .gameMode(gameMode)
+                .matchState(MatchState.ONGOING)
                 .build();
 
         MatchResponseDto expectedResponse =
                 MatchResponseDto.builder().id(matchId).build();
 
-        when(matchMapper.createParticipant(eq(player1), any(Match.class))).thenReturn(p1);
-        when(matchMapper.createParticipant(eq(player2), any(Match.class))).thenReturn(p2);
+        MatchNotificationDto notificationDto = new MatchNotificationDto();
 
+        // Mock userRepository.findById calls
+        when(userRepository.findById(1L)).thenReturn(Optional.of(managedPlayer1));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(managedPlayer2));
+
+        // Mock participant creation
+        when(matchMapper.createParticipant(eq(managedPlayer1), any(Match.class))).thenReturn(p1);
+        when(matchMapper.createParticipant(eq(managedPlayer2), any(Match.class))).thenReturn(p2);
+
+        // Mock repository save
         when(matchRepository.save(any(Match.class))).thenReturn(savedMatch);
+
+        // Mock mapper
         when(matchMapper.toResponseDto(savedMatch)).thenReturn(expectedResponse);
 
-        when(matchNotificationMapper.mapMatchStarted(any(), any()))
-                .thenReturn(new MatchNotificationDto());
+        // Mock notification mapping
+        when(matchNotificationMapper.mapMatchStarted(any(Match.class), any(User.class)))
+                .thenReturn(notificationDto);
 
         ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
 
+        // Execute
         MatchResponseDto result = matchService.createMatch(player1, player2, problem, duration, gameMode);
 
+        // Verify result
         assertNotNull(result);
         assertEquals(matchId, result.getId());
 
+        // Verify userRepository calls
+        verify(userRepository).findById(1L);
+        verify(userRepository).findById(2L);
+
+        // Verify match construction
         verify(matchRepository).save(matchCaptor.capture());
         Match constructed = matchCaptor.getValue();
 
@@ -95,10 +120,27 @@ class MatchServiceTest {
         assertEquals(duration, constructed.getDuration());
         assertEquals(gameMode, constructed.getGameMode());
         assertEquals(MatchState.ONGOING, constructed.getMatchState());
-        
+        assertEquals(2, constructed.getParticipants().size());
+
+        // Verify scheduler called
         verify(matchScheduler).scheduleMatchEnd(savedMatch);
 
-        assertEquals(2, savedMatch.getParticipants().size());
+        // Verify notifications sent to both players
+        verify(notificationService).send(
+                eq(matchId),
+                eq(1L),
+                eq("p1"),
+                eq(notificationDto)
+        );
+        verify(notificationService).send(
+                eq(matchId),
+                eq(2L),
+                eq("p2"),
+                eq(notificationDto)
+        );
+
+        // Verify notification mapper called twice
+        verify(matchNotificationMapper, times(2)).mapMatchStarted(eq(savedMatch), any(User.class));
     }
 
 
@@ -193,31 +235,22 @@ class MatchServiceTest {
 
     @Test
     void test_sendMatchInvite_success() {
+        // Arrange
         User sender = User.builder().id(1L).username("caro").build();
         User recipient = User.builder().id(2L).username("mina").build();
 
-        // Create a saved notification that will be returned from repository
-        Notification savedNotification = Notification.builder()
-                .id(100L)
-                .senderId(sender.getId())
-                .recipientId(recipient.getId())
-                .type(NotificationType.MATCH_INVITATION)
-                .title("Match Invite")
-                .message("Match invitation message")
-                .createdAt(Instant.now())
-                .read(false)
-                .build();
+        MatchNotificationDto dto = new MatchNotificationDto();
 
-        when(userRepository.findByUsername("mina")).thenReturn(java.util.Optional.of(recipient));
-        when(matchNotificationMapper.mapMatchInvite(sender))
-                .thenReturn(new MatchNotificationDto());
+        when(userRepository.findByUsername("mina")).thenReturn(Optional.of(recipient));
+        when(matchNotificationMapper.mapMatchInvite(sender)).thenReturn(dto);
 
-        // Mock the repository to return the saved notification
-        when(notificationRepository.findTopBySenderIdAndRecipientIdAndTypeOrderByCreatedAtDesc(
-                eq(sender.getId()),
-                eq(recipient.getId()),
-                eq(NotificationType.MATCH_INVITATION)
-        )).thenReturn(Optional.of(savedNotification));
+        // Mock the notificationService.send to return the notification ID
+        when(notificationService.send(
+                sender.getId(),
+                recipient.getId(),
+                recipient.getUsername(),
+                dto
+        )).thenReturn(Optional.of(100L));
 
         // Act
         Long result = matchService.sendMatchInvite(sender, "mina");
@@ -226,20 +259,16 @@ class MatchServiceTest {
         assertNotNull(result);
         assertEquals(100L, result);
 
+        verify(userRepository).findByUsername("mina");
+        verify(matchNotificationMapper).mapMatchInvite(sender);
         verify(notificationService).send(
-                eq(sender.getId()),
-                eq(recipient.getId()),
-                eq(recipient.getUsername()),
-                any(MatchNotificationDto.class)
+                sender.getId(),
+                recipient.getId(),
+                recipient.getUsername(),
+                dto
         );
 
-        verify(notificationRepository).findTopBySenderIdAndRecipientIdAndTypeOrderByCreatedAtDesc(
-                eq(sender.getId()),
-                eq(recipient.getId()),
-                eq(NotificationType.MATCH_INVITATION)
-        );
     }
-
 
     @Test
     void test_acceptMatchInvite_success() {

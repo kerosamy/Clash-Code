@@ -40,6 +40,16 @@ class NotificationServiceTest {
 
     @Test
     void test_send_persistent_notification_savesAndSends() {
+        // Create a saved notification with ID
+        Notification savedNotification = Notification.builder()
+                .id(100L)
+                .senderId(1L)
+                .recipientId(2L)
+                .type(NotificationType.MATCH_INVITATION)
+                .title("Title")
+                .message("Message")
+                .build();
+
         NotificationPayload payload = mock(NotificationPayload.class);
         when(payload.getMode()).thenReturn(NotificationMode.PERSISTENT);
         when(payload.getNotificationType()).thenReturn(NotificationType.MATCH_INVITATION);
@@ -47,7 +57,15 @@ class NotificationServiceTest {
         when(payload.getMessage()).thenReturn("Message");
         when(payload.getDestination("user")).thenReturn("/topic/notifications/user");
 
-        notificationService.send(1L, 2L, "user", payload);
+        // Mock repository to return the saved notification with ID
+        when(repository.save(any(Notification.class))).thenReturn(savedNotification);
+
+        // Act
+        Optional<Long> result = notificationService.send(1L, 2L, "user", payload);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(100L, result.get());
 
         verify(repository).save(argThat(n ->
                 n.getSenderId().equals(1L) &&
@@ -57,6 +75,25 @@ class NotificationServiceTest {
                         n.getType() == NotificationType.MATCH_INVITATION
         ));
 
+        verify(messagingTemplate).convertAndSend("/topic/notifications/user", payload);
+    }
+
+    @Test
+    void test_send_nonPersistent_notification_sendsOnly() {
+        NotificationPayload payload = mock(NotificationPayload.class);
+        when(payload.getMode()).thenReturn(NotificationMode.EPHEMERAL);
+        when(payload.getDestination("user")).thenReturn("/topic/notifications/user");
+
+        // Act
+        Optional<Long> result = notificationService.send(1L, 2L, "user", payload);
+
+        // Assert
+        assertFalse(result.isPresent());
+
+        // Verify notification was NOT saved
+        verify(repository, never()).save(any(Notification.class));
+
+        // Verify message was still sent
         verify(messagingTemplate).convertAndSend("/topic/notifications/user", payload);
     }
 

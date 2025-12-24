@@ -56,13 +56,10 @@ public class NotificationController {
             );
         }
 
-        Page<NotificationDto> dtoPage = notificationPage.map(
-                notification -> notificationMapper.toDto(notification, user.getUsername())
-        );
+        Page<NotificationDto> dtoPage = notificationPage.map(notificationMapper::toDto);
 
         return ResponseEntity.ok(dtoPage);
     }
-
 
     @GetMapping("/unread-count")
     public ResponseEntity<Long> getUnreadCount(
@@ -99,7 +96,7 @@ public class NotificationController {
         }
 
         Notification notification = notificationService.getNotificationById(notificationId, user.getId());
-        NotificationDto dto = notificationMapper.toDto(notification, user.getUsername());
+        NotificationDto dto = notificationMapper.toDto(notification);
 
         return ResponseEntity.ok(dto);
     }

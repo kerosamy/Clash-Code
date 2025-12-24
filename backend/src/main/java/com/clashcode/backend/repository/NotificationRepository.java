@@ -31,10 +31,4 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             Pageable pageable
     );
 
-    Optional<Notification> findTopBySenderIdAndRecipientIdAndTypeOrderByCreatedAtDesc(
-            Long senderId,
-            Long recipientId,
-            NotificationType type
-    );
-
 }

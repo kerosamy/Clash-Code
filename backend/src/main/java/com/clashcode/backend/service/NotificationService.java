@@ -12,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,12 +26,14 @@ public class NotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void send(
+    public Optional<Long> send(
             Long senderId,
             Long recipientId,
             String recipientUsername,
             NotificationPayload payload
     ) {
+        Long notificationId = null;
+
         if (payload.getMode() == NotificationMode.PERSISTENT) {
             Notification notification = Notification.builder()
                     .senderId(senderId)
@@ -39,13 +42,18 @@ public class NotificationService {
                     .title(payload.getTitle())
                     .message(payload.getMessage())
                     .build();
-            repository.save(notification);
+            Notification savedNotification = repository.save(notification);
+            notificationId = savedNotification.getId();
         }
 
         messagingTemplate.convertAndSend(
                 payload.getDestination(recipientUsername),
                 payload
         );
+
+        System.out.println("=== NOTIFICATION SENT ===");
+
+        return Optional.ofNullable(notificationId);
     }
 
     public Notification getNotificationById(Long notificationId, Long userId) {
