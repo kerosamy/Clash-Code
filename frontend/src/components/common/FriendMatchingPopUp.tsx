@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { searchUsers, type UserSearchResponse } from '../../services/UserService';
-import UserInvite from  "./UserInvite";
+import UserInvite from "./UserInvite";
 
 interface FriendMatchingPopUpProps {
   isOpen: boolean;
   onClose: () => void;
-  onInvite: (username: string) => void;
+  onInvite: (notificationId: number, username: string) => void; // Updated signature
 }
 
 export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: FriendMatchingPopUpProps) {
@@ -42,11 +42,12 @@ export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: Frien
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const handleInvite = (username: string) => {
-
-    onInvite(username);
+  const handleInvite = (notificationId: number, username: string) => {
+    // Pass both notification ID and username to parent
+    onInvite(notificationId, username);
+    // Close the popup after sending invite
+    onClose();
   };
-
 
   const handleClose = () => {
     onClose();
@@ -102,8 +103,8 @@ export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: Frien
                   order={index + 1}
                   username={user.username}
                   rank={user.rank}
-                  onInviteClick={() => handleInvite(user.username)}
-                  onUsernameClick={() => {}} // Placeholder for username click handler
+                  onInviteClick={handleInvite}
+                  onUsernameClick={() => {}}
                 />
               ))}
             </>

@@ -1,5 +1,5 @@
 import type { NotificationType } from "../../enums/NotificationType";
-import {formatTimeAgo, getTypeBadge, getTypeColor} from "../../utils/notificationFormatDetailsMapper";
+import {formatTimeAgo, getTypeColor} from "../../utils/notificationFormatDetailsMapper";
 
 export interface NotificationRowProps {
   id: number;
@@ -19,6 +19,18 @@ export interface NotificationRowProps {
   className?: string;
 }
 
+const getNotificationCategory = (type: NotificationType): "Match" | "Friend" => {
+  const typeStr = String(type);
+  
+  // Check if it's a friend-related notification
+  if (typeStr.includes("FRIEND")) {
+    return "Friend";
+  }
+  
+  // Everything else is match-related (MATCH_*, SUBMISSION_*, OPPONENT_*)
+  return "Match";
+};
+
 export default function NotificationRow({
   id,
   type,
@@ -34,7 +46,7 @@ export default function NotificationRow({
   onClick,
   className = "",
 }: NotificationRowProps) {
-  const badge = getTypeBadge(type);
+  const category = getNotificationCategory(type);
   const typeColor = getTypeColor(type);
 
   return (
@@ -52,12 +64,12 @@ export default function NotificationRow({
       <div className="flex items-center justify-center gap-2">
         <span
           className={`px-3 py-1 rounded-full text-xs font-anta border ${
-            badge === "Match"
+            category === "Match"
               ? "border-orange/30 text-orange"
-              : "border-blue-500/30 text-blue-400"
+              : "border-pink-500/30 text-pink-400"
           }`}
         >
-          {badge}
+          {category}
         </span>
         <span className="w-2 h-2 flex-shrink-0">
           {!read && (
@@ -77,7 +89,6 @@ export default function NotificationRow({
           {title}
         </span>
         <span className="text-text/70 text-sm">{message}</span>
-        
         {/* Additional Info for Submission Results */}
         {submissionStatus && (
           <div className="flex items-center justify-center gap-2 mt-1">

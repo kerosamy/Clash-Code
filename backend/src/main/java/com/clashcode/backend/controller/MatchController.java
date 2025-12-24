@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
@@ -55,13 +56,18 @@ public class MatchController {
     }
 
     @PostMapping("/invite/{recipientUsername}")
-    public ResponseEntity<Void> invitePlayer(
+    public ResponseEntity<Long> invitePlayer(
             @PathVariable String recipientUsername,
             @AuthenticationPrincipal User sender
     ) {
-        matchService.sendMatchInvite(sender, recipientUsername);
-        return ResponseEntity.ok().build();
+        if (sender == null) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+
+        Long notificationId = matchService.sendMatchInvite(sender, recipientUsername);
+        return ResponseEntity.ok(notificationId);
     }
+
 
     @PostMapping("/invite/{notificationId}/accept")
     public ResponseEntity<MatchResponseDto> acceptInvite(
@@ -69,6 +75,18 @@ public class MatchController {
             @AuthenticationPrincipal User player1) {
         MatchResponseDto matchResponseDto = matchService.acceptMatchInvite(player1, notificationId);
         return ResponseEntity.ok(matchResponseDto);
+    }
+
+    @PatchMapping("/invite/{notificationId}/cancel")
+    public ResponseEntity<Void> cancelInvite(
+            @PathVariable Long notificationId,
+            @AuthenticationPrincipal User sender
+    ) {
+        if (sender == null) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+        matchService.cancelMatchInvite(sender, notificationId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{matchId}/problem")

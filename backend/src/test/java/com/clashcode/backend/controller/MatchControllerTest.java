@@ -101,11 +101,25 @@ class MatchControllerTest {
         sender.setId(1L);
         sender.setUsername("senderUser");
 
-        // just do nothing when service is called
+        Long notificationId = 100L;
 
-        mockMvc.perform(post("/matches/invite/recipientUser")
-                        .principal(() -> "senderUser")) // AuthenticationPrincipal simulation
-                .andExpect(status().isOk());
+        // Mock SecurityContext to provide the authenticated user
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(sender);
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(context);
+
+        // Mock the service to return a notification ID
+        when(matchService.sendMatchInvite(eq(sender), eq("recipientUser")))
+                .thenReturn(notificationId);
+
+        mockMvc.perform(post("/matches/invite/recipientUser"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(notificationId));
+
+        verify(matchService).sendMatchInvite(eq(sender), eq("recipientUser"));
     }
 
     @Test

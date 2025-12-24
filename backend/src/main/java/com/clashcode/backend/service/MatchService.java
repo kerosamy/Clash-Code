@@ -9,6 +9,7 @@ import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.dto.PartialProblemResponseDto;
 import com.clashcode.backend.enums.GameMode;
 import com.clashcode.backend.enums.MatchState;
+import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.exception.UserNotFoundException;
@@ -107,18 +108,22 @@ public class MatchService {
         return problems.get(new Random().nextInt(problems.size()));
     }
 
-    public void sendMatchInvite(User sender, String recipientUsername) {
+    @Transactional
+    public Long sendMatchInvite(User sender, String recipientUsername) {
         User recipient = userRepository.findByUsername(recipientUsername)
                 .orElseThrow(() -> new UserNotFoundException("User not found with username " + recipientUsername));
 
         MatchNotificationDto dto = matchNotificationMapper.mapMatchInvite(sender);
 
-        notificationService.send(
+        // Send notification using the notification service (it will save it and return the ID)
+        Long notificationId = notificationService.send(
                 sender.getId(),
                 recipient.getId(),
                 recipient.getUsername(),
                 dto
-        );
+        ).orElseThrow(() -> new IllegalStateException("Failed to create notification"));
+
+        return notificationId;
     }
 
 
@@ -137,6 +142,38 @@ public class MatchService {
     }
 
     @Transactional
+    public void cancelMatchInvite(User sender, long notificationId) {
+        Notification invite = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+
+        if (!invite.getSenderId().equals(sender.getId())) {
+            throw new UnauthorizedException("You can only cancel your own invitations");
+        }
+
+        if (invite.getType() != NotificationType.MATCH_INVITATION) {
+            throw new IllegalArgumentException("This is not a match invitation");
+        }
+
+        // Update the existing notification type to CANCELED
+        invite.setType(NotificationType.MATCH_INVITATION_CANCELED);
+        invite.setTitle("Match Invitation Canceled");
+        invite.setMessage(sender.getUsername() + " has canceled their match invitation");
+        notificationRepository.save(invite);
+
+        // Send ephemeral popup notification to recipient
+        User recipient = userRepository.findById(invite.getRecipientId())
+                .orElseThrow(() -> new UserNotFoundException("Recipient not found"));
+
+        MatchNotificationDto dto = matchNotificationMapper.mapMatchInvitationCanceled(sender);
+        notificationService.send(
+                sender.getId(),
+                recipient.getId(),
+                recipient.getUsername(),
+                dto
+        );
+    }
+
+    @Transactional
     public MatchResponseDto createMatch(
             User player1,
             User player2,
@@ -144,6 +181,12 @@ public class MatchService {
             int duration,
             GameMode gameMode
     ) {
+
+        User managedPlayer1 = userRepository.findById(player1.getId())
+                .orElseThrow(() -> new UserNotFoundException("Player 1 not found"));
+        User managedPlayer2 = userRepository.findById(player2.getId())
+                .orElseThrow(() -> new UserNotFoundException("Player 2 not found"));
+
         Match match = Match.builder()
                 .duration(duration)
                 .gameMode(gameMode)
@@ -151,13 +194,12 @@ public class MatchService {
                 .problem(problem)
                 .build();
 
-        MatchParticipant p1 = matchMapper.createParticipant(player1, match);
-        MatchParticipant p2 = matchMapper.createParticipant(player2, match);
+        MatchParticipant p1 = matchMapper.createParticipant(managedPlayer1, match);
+        MatchParticipant p2 = matchMapper.createParticipant(managedPlayer2, match);
 
         match.getParticipants().add(p1);
         match.getParticipants().add(p2);
 
-        // Only save match; participants are persisted automatically via cascade
         Match savedMatch = matchRepository.save(match);
 
         matchScheduler.scheduleMatchEnd(savedMatch);
@@ -165,7 +207,7 @@ public class MatchService {
         savedMatch.getParticipants().forEach(mp -> {
             MatchNotificationDto dto = matchNotificationMapper.mapMatchStarted(savedMatch, mp.getUser());
             notificationService.send(
-                    player1.getId(),
+                    savedMatch.getId(),
                     mp.getUser().getId(),
                     mp.getUser().getUsername(),
                     dto

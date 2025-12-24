@@ -21,6 +21,16 @@ public class MatchNotificationMapper {
                 .build();
     }
 
+    public MatchNotificationDto mapMatchInvitationCanceled(User sender) {
+        return MatchNotificationDto.builder()
+                .notificationType(NotificationType.MATCH_INVITATION_CANCELED)
+                .title("Match Invitation Canceled")
+                .message(sender.getUsername() + " has canceled their match invitation")
+                .senderUsername(sender.getUsername())
+                .mode(NotificationMode.EPHEMERAL)
+                .build();
+    }
+
     public MatchNotificationDto mapMatchStarted(Match match, User recipient) {
         return MatchNotificationDto.builder()
                 .matchId(match.getId())
