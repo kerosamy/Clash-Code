@@ -4,6 +4,7 @@ import { registerUser, type RegisterRequest } from "../services/AuthService";
 import InputField from "../components/authentication/InputField";
 import PasswordField from "../components/authentication/PasswordField";
 import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal";
+import AnimatedBackground from "../components/AnimatedBackground";
 import {
   validateUsername,
   validateEmail,
@@ -115,8 +116,10 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background font-anta">
-      <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white">
+    <div className="min-h-screen flex items-center justify-center bg-background font-anta relative overflow-hidden">
+      <AnimatedBackground />
+
+      <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white relative z-10">
         <div className="flex justify-center mb-6">
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
         </div>

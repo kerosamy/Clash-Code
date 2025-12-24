@@ -6,6 +6,7 @@ import { loginUser, type LoginRequest } from '../services/AuthService';
 import { getUsername } from '../utils/jwtDecoder';
 import { validateEmailOrUsername, validatePassword } from '../utils/validation';
 import { getOnGoingMatch } from '../services/MatchService';
+import AnimatedBackground from "../components/AnimatedBackground";
 
 export default function LogIn() {
   const [email, setEmail] = useState('');
@@ -76,8 +77,9 @@ export default function LogIn() {
   const isFormValid = email.trim().length >= 4 && password.trim().length >= 8;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background font-anta">
-      <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white">
+    <div className="min-h-screen flex items-center justify-center bg-background font-anta relative overflow-hidden">
+            <AnimatedBackground />
+      <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white relative z-10">
         <div className="flex justify-center mb-6">
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
         </div>
