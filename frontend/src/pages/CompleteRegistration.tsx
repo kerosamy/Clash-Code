@@ -1,10 +1,8 @@
-import { useState,useEffect
- } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
 import { completeRegistration } from "../services/AuthService.ts";
 import { getUsername } from "../utils/jwtDecoder.tsx";
-
 
 export default function CompleteRegistration() {
   const [username, setUsername] = useState("");
@@ -15,8 +13,8 @@ export default function CompleteRegistration() {
   const navigate = useNavigate();
 
   useEffect(() => {
-  sessionStorage.setItem("oauth_processed", "true");
-}, []);
+    sessionStorage.setItem("oauth_processed", "true");
+  }, []);
 
   const validateInputs = () => {
     const newErrors: { [key: string]: string } = {};
@@ -36,7 +34,7 @@ export default function CompleteRegistration() {
     setLoading(true);
     setErrors({});
 
-   try {
+    try {
       await completeRegistration(username);
       sessionStorage.removeItem("oauth_flow");
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -62,20 +60,18 @@ export default function CompleteRegistration() {
         <h2 className="text-2xl mb-4 text-center">Complete Your Registration</h2>
         <p className="text-gray-400 mb-6 text-center text-sm">Email: {email}</p>
 
-          <InputField
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            error={errors.username}
-          />
+        <InputField
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          error={errors.username}
+        />
    
-        {/* Divider */}
-        <div className="flex items-center my-4">
-        </div>
+        <div className="flex items-center my-4"></div>
        
         <button
           onClick={handleSubmit}
-           className="bg-orange hover:opacity-90 py-2 px-8 rounded-lg text-white mt-2 block mx-auto"
+          className="bg-orange hover:opacity-90 py-2 px-8 rounded-lg text-white mt-2 block mx-auto"
         >
           Complete Registration
         </button>

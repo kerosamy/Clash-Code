@@ -123,7 +123,7 @@ export const routes: RouteConfig[] = [
       { path: 'my-friends', component: MyFriends },
       { path: 'requested', component: Requested },
       { path: 'pending', component: Pending },
-      { path: 'add-friend', component: Users }
+      { path: 'users', component: Users }
     ]
   },
 

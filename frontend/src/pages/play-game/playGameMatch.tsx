@@ -15,6 +15,8 @@ import { resignMatch, getMatchDetails, getMatchResults } from "../../services/Ma
 import type { MatchResultDto } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
 import { wsService } from "../../services/ws";
+import { useMatchGuard } from "../../hooks/useMatchGuard"; // NEW IMPORT
+import { setActiveMatch, clearActiveMatch } from "../../utils/matchState"; // NEW IMPORT
 
 interface MatchData {
     startAt: string;
@@ -45,6 +47,23 @@ export default function PlayGame() {
 
     const clientRef = useRef<Client | null>(null);
 
+    // Track if match is active (for match guard)
+    const isMatchActive = matchData?.state === "ONGOING";
+
+    // Set active match on mount
+    useEffect(() => {
+        if (id) {
+            setActiveMatch(id);
+        }
+        
+        // Only clear on unmount if match is not ongoing
+        return () => {
+            if (!isMatchActive) {
+                clearActiveMatch();
+            }
+        };
+    }, [id]);
+
     const fetchAndShowResults = async () => {
         if (!id) return;
         try {
@@ -52,6 +71,9 @@ export default function PlayGame() {
             setMatchResults(results);
             setShowResultOverlay(true);
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+            
+            // Clear active match when showing results
+            clearActiveMatch();
         } catch (error) {
             console.error("Failed to load match results", error);
         }
@@ -98,7 +120,6 @@ export default function PlayGame() {
             wsService.disconnect();
         };
     }, []);
-
 
     const handleWebSocketMessage = (payload: WebSocketPayload) => {
         const notifId = Date.now();
@@ -151,6 +172,32 @@ export default function PlayGame() {
         }
     };
 
+    // Handle resign from match (clears match state)
+    const handleResignFromMatch = async () => {
+        if (!id) return;
+        
+        try {
+            await resignMatch(Number(id));
+            setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+            clearActiveMatch();
+        } catch (error) {
+            console.error("Resignation failed", error);
+            throw error;
+        }
+    };
+
+    // Use match guard hook
+    const {
+        showResignModal: showNavBlockModal,
+        handleResignConfirm: handleNavBlockResign,
+        handleResignCancel: handleNavBlockCancel
+    } = useMatchGuard({
+        matchId: id || '',
+        onResign: handleResignFromMatch,
+        enabled: isMatchActive
+    });
+
+    // Handle resign button click (different from navigation block)
     const handleResignClick = () => setIsResignModalOpen(true);
     
     const handleConfirmResign = async () => {
@@ -159,6 +206,7 @@ export default function PlayGame() {
         try {
             await resignMatch(Number(id));
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+            clearActiveMatch();
             setIsResignModalOpen(false);
         } catch (error) {
             console.error("Resignation failed", error);
@@ -168,14 +216,12 @@ export default function PlayGame() {
         }
     };
 
-    const isMatchOngoing = matchData?.state === "ONGOING";
-
     return (
         <div className="flex flex-col h-screen font-anta relative bg-background">
             
             <div className="relative w-full">
                 <TopNavigator navigators={matchSubRoutes} />
-                {isMatchOngoing && (
+                {isMatchActive && (
                     <div className="absolute top-3 right-4 h-full flex items-center pr-2 pointer-events-none">
                         <button
                             onClick={handleResignClick}
@@ -197,7 +243,7 @@ export default function PlayGame() {
                 <DraggableTimer 
                     startAt={matchData.startAt} 
                     durationMinutes={matchData.duration} 
-                    isMatchOver={!isMatchOngoing} 
+                    isMatchOver={!isMatchActive} 
                 />
             )}
 
@@ -207,6 +253,7 @@ export default function PlayGame() {
                 />
             )}
 
+            {/* Regular resign modal (from resign button) */}
             <ConfirmationModal
                 isOpen={isResignModalOpen}
                 onClose={() => setIsResignModalOpen(false)}
@@ -216,6 +263,17 @@ export default function PlayGame() {
                 confirmText="Yes, Resign"
                 cancelText="No, Keep Playing"
                 isLoading={isProcessing}
+            />
+
+            {/* Navigation block resign modal (from match guard) */}
+            <ConfirmationModal
+                isOpen={showNavBlockModal}
+                onClose={handleNavBlockCancel}
+                onConfirm={handleNavBlockResign}
+                title="Leave Match"
+                message="You must resign from the match to leave. This will count as a loss. Are you sure?"
+                confirmText="Resign & Leave"
+                cancelText="Stay in Match"
             />
 
             <ToastFeed notifications={notifications} />
