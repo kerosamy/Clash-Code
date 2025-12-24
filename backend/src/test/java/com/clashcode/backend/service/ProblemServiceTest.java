@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
@@ -401,5 +402,78 @@ void testAcceptProblem_Success() {
 
         assertEquals(newNote, existingReview.getNote());
         verify(problemReviewRepository).save(existingReview);
+    }
+
+    @Test
+    void test_getMySuggestedProblems_rejectedStatus_fetchesRejectionNote() {
+        String username = "testUser";
+        ProblemStatus status = ProblemStatus.REJECTED;
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size);
+
+        Problem problem = new Problem();
+        problem.setId(100L);
+        problem.setProblemStatus(ProblemStatus.REJECTED);
+        problem.setAuthor(username);
+
+        String rejectionMsg = "Logic is incorrect";
+        ProblemReview review = new ProblemReview();
+        review.setNote(rejectionMsg);
+
+        ProblemListDto expectedDto = new ProblemListDto();
+        expectedDto.setId(100L);
+
+        when(problemRepository.findByAuthorAndStatus(username, status, pageable))
+                .thenReturn(new PageImpl<>(List.of(problem)));
+
+        when(problemReviewRepository.findByProblemId(100L))
+                .thenReturn(Optional.of(review));
+
+        when(problemMapper.toListDto(problem, rejectionMsg))
+                .thenReturn(expectedDto);
+
+        Page<ProblemListDto> result = problemService.getMySuggestedProblems(username, status, page, size);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(expectedDto, result.getContent().get(0));
+
+        verify(problemRepository).findByAuthorAndStatus(username, status, pageable);
+        verify(problemReviewRepository).findByProblemId(100L);
+        verify(problemMapper).toListDto(problem, rejectionMsg);
+    }
+
+    @Test
+    void test_getMySuggestedProblems_approvedStatus_doesNotFetchNote() {
+        String username = "testUser";
+        ProblemStatus status = ProblemStatus.APPROVED;
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size);
+
+        Problem problem = new Problem();
+        problem.setId(200L);
+        problem.setProblemStatus(ProblemStatus.APPROVED);
+
+        ProblemListDto expectedDto = new ProblemListDto();
+        expectedDto.setId(200L);
+
+        when(problemRepository.findByAuthorAndStatus(username, status, pageable))
+                .thenReturn(new PageImpl<>(List.of(problem)));
+
+        when(problemMapper.toListDto(problem, null))
+                .thenReturn(expectedDto);
+
+        Page<ProblemListDto> result = problemService.getMySuggestedProblems(username, status, page, size);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+
+        verify(problemRepository).findByAuthorAndStatus(username, status, pageable);
+
+        verify(problemReviewRepository, never()).findByProblemId(anyLong());
+
+        verify(problemMapper).toListDto(problem, null);
     }
 }

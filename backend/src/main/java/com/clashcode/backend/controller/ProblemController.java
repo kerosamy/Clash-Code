@@ -1,6 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.ProblemService;
 import com.clashcode.backend.service.TestCaseService;
@@ -25,7 +26,7 @@ public class ProblemController {
         this.problemService = problemService;
         this.testCaseService = testCaseService;
     }
-
+    
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_SIZE = 10;
 
@@ -65,16 +66,6 @@ public class ProblemController {
         return ResponseEntity.ok(problems);
     }
 
-    @GetMapping("/browse/rejected")
-    public ResponseEntity<Page<ProblemListDto>> browseRejected(
-            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
-            @AuthenticationPrincipal User user
-    ) {
-        Page<ProblemListDto> problems = problemService.getRejectedProblems(page, size, user.getUsername());
-        return ResponseEntity.ok(problems);
-    }
-
     @PostMapping("/browse/filter")
     public ResponseEntity<Page<ProblemListDto>> browseFiltered(
             @RequestBody ProblemFilterDto filterDto,
@@ -101,5 +92,21 @@ public class ProblemController {
             @RequestBody TestcaseRunRequestDto testcaseCompilationDto
     ){
         return ResponseEntity.ok(testCaseService.runTestCases(testcaseCompilationDto));
+    }
+
+    @GetMapping("/my-suggestions")
+    public ResponseEntity<Page<ProblemListDto>> getMySuggestions(
+            @RequestParam(required = false) ProblemStatus status,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @AuthenticationPrincipal User user
+    ) {
+        Page<ProblemListDto> problems = problemService.getMySuggestedProblems(
+                user.getUsername(),
+                status,
+                page,
+                size
+        );
+        return ResponseEntity.ok(problems);
     }
 }

@@ -13,6 +13,7 @@ import com.clashcode.backend.repository.ProblemReviewRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -207,19 +208,17 @@ public class ProblemService {
                 .map(problemMapper::toListDto);
     }
 
-    public Page<ProblemListDto> getRejectedProblems(int page, int size, String username) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-
-        return problemRepository.findByStatusAndUsername(
-                ProblemStatus.REJECTED,
-                username,
-                pageRequest
-        ).map(problem -> {
-            String rejectionNote = problemReviewRepository
-                    .findByProblemId(problem.getId())
-                    .map(ProblemReview::getNote)
-                    .orElse(null);
-
+    public Page<ProblemListDto> getMySuggestedProblems(String username, ProblemStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Problem> problems = problemRepository.findByAuthorAndStatus(username, status, pageable);
+        return problems.map(problem -> {
+            String rejectionNote = null;
+            if (problem.getProblemStatus() == ProblemStatus.REJECTED) {
+                rejectionNote = problemReviewRepository
+                        .findByProblemId(problem.getId())
+                        .map(ProblemReview::getNote)
+                        .orElse(null);
+            }
             return problemMapper.toListDto(problem, rejectionNote);
         });
     }

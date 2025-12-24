@@ -11,6 +11,7 @@ interface ProblemInfoProps {
 
 export interface ProblemInfoData {
   id: number,
+  name?: string,
   solutionLang: LanguageVersion;
   timeLimit: number;
   memoryLimit: number;
@@ -29,6 +30,7 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
   const [selectedTopics, setSelectedTopics] = useState<ProblemTags[]>([]);
   const [solutionCode, setSolutionCode] = useState<string>("");
   const [id, setId] = useState<number>(0);
+  const [name, setName] = useState<string>(""); 
   const [saveMessage, setSaveMessage] = useState<string>("");
 
   // Load saved data from localStorage on mount
@@ -38,8 +40,9 @@ export default function ProblemInfo({ onSave }: ProblemInfoProps) {
     try {
       const parsedData: ProblemInfoData = JSON.parse(savedData);
       // Ensure the ID is captured and treated as a number
-      if (parsedData.id !== undefined) setId(Number(parsedData.id)); 
-      
+      if (parsedData.id !== undefined) setId(Number(parsedData.id));
+      if (parsedData.name) setName(parsedData.name);
+
       setSolutionLang(parsedData.solutionLang);
       setTimeLimit(parsedData.timeLimit);
       setMemoryLimit(parsedData.memoryLimit);
@@ -146,7 +149,7 @@ const handleClearAll = () => {
       <div className="bg-gray-800/40 border-l-4 border-orange p-4 mb-8 rounded-r-lg shadow-sm">
         {id ? (
           <p className="text-orange font-anta text-xl">
-            You're editing problem with ID: <span className="text-white font-mono bg-black/30 px-2 py-1 rounded">{id}</span>
+            You're editing problem with Title: <span className="text-white font-mono  px-2 py-1 rounded">{name}</span>
           </p>
         ) : (
           <p className="text-blue-400 font-anta text-xl">
@@ -306,17 +309,6 @@ const handleClearAll = () => {
             Warning: This action will permanently delete your current draft.
           </p>
         </div>
-
-        {saveMessage && (
-            <p
-                className={`mt-4 text-lg font-anta ${
-                    saveMessage.includes("success") ? "text-green-400" : "text-red-400"
-                }`}
-                >
-                {saveMessage}
-            </p>
-        )}
-
         </div>
       </div>
     </div>

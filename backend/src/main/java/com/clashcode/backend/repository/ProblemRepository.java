@@ -61,5 +61,12 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             Pageable pageable
     );
 
-
+    @Query("SELECT p FROM Problem p " +
+            "WHERE p.author = :author" +
+            " AND (:status IS NULL OR p.problemStatus = :status)")
+    Page<Problem> findByAuthorAndStatus(
+            @Param("author") String author,
+            @Param("status") ProblemStatus status,
+            Pageable pageable
+    );
 }

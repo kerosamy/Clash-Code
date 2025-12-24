@@ -17,6 +17,7 @@ public class ProblemListDto {
     private int rate;
     private String author;
     private String rejectionNote;
+    private String status;
 
     @Builder.Default
     private String attempted = "unsolved";

@@ -87,6 +87,7 @@ public class ProblemMapper {
                 .attempted("unsolved")   // placeholder
                 .author(problem.getAuthor())
                 .rejectionNote(rejectionNote) // nullable
+                .status(String.valueOf(problem.getProblemStatus()))
                 .build();
     }
 
