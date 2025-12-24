@@ -82,16 +82,8 @@ class MatchServiceTest {
 
         ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
 
-<<<<<<< HEAD
         MatchResponseDto result = matchService.createMatch(player1, player2, problem, duration, gameMode);
 
-=======
-        // Act
-        MatchResponseDto result =
-                matchService.createMatch(player1, player2, problem, duration, gameMode);
-
-        // Assert
->>>>>>> 8c5e9c7 ([CLASHCODE-180] - add testcases for match controller and match service)
         assertNotNull(result);
         assertEquals(matchId, result.getId());
 
@@ -102,7 +94,6 @@ class MatchServiceTest {
         assertEquals(duration, constructed.getDuration());
         assertEquals(gameMode, constructed.getGameMode());
         assertEquals(MatchState.ONGOING, constructed.getMatchState());
-<<<<<<< HEAD
 
         verify(matchParticipantRepository).saveAll(argThat(iterable -> {
             List<MatchParticipant> participants = new ArrayList<>();
@@ -113,16 +104,6 @@ class MatchServiceTest {
         verify(matchScheduler).scheduleMatchEnd(savedMatch);
 
         assertEquals(2, savedMatch.getParticipants().size());
-=======
-        assertEquals(2, constructed.getParticipants().size());
-
-        verify(matchScheduler).scheduleMatchEnd(savedMatch);
-
-        verify(notificationService, times(2))
-                .send(eq(player1.getId()), anyLong(), anyString(), any());
-
-        verify(matchMapper).toResponseDto(savedMatch);
->>>>>>> 8c5e9c7 ([CLASHCODE-180] - add testcases for match controller and match service)
     }
 
 
