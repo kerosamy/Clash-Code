@@ -53,7 +53,6 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
       if (!notification.read) {
         try {
           await markNotificationAsRead(notification.id);
-          console.log("Notification marked as read:", notification.id);
         } catch (err) {
           console.error("Failed to mark notification as read:", err);
         }
@@ -64,17 +63,12 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
   }, [notification.id, notification.read]);
 
   const handleAcceptInvite = async () => {
-    console.log("Accept button clicked");
-    console.log("Notification ID:", notification.id);
     
     try {
       setIsAccepting(true);
       setError(null);
-      
-      console.log("Calling acceptMatchInvite...");
-      const matchResponse = await acceptMatchInvite(notification.id);
-      console.log("Match response received:", matchResponse);
-      
+      await acceptMatchInvite(notification.id);
+
       setSuccess(true);
     } catch (err) {
       console.error("Failed to accept match invite:", err);

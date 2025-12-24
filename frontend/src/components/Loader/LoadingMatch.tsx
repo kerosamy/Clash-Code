@@ -37,20 +37,12 @@ const LoadingMatch = ({ matchType, invitedUser, notificationId, onCancel }: Load
     if (isCancelling) return;
     
     setIsCancelling(true);
-    
-    // Debug logs
-    console.log('=== CANCEL DEBUG ===');
-    console.log('matchType:', matchType);
-    console.log('notificationId:', notificationId);
-    console.log('matchType === "friend":', matchType === "friend");
-    console.log('Boolean(notificationId):', Boolean(notificationId));
-    console.log('===================');
+  
     
     try {
       if (matchType === "friend" && notificationId) {
-        console.log('Cancelling match invitation with notification ID:', notificationId);
         await cancelMatchInvite(notificationId);
-        console.log('Match invitation cancelled successfully');
+
       } else {
         console.log('Random matchmaking cancelled');
         console.log('Reason: matchType=' + matchType + ', notificationId=' + notificationId);

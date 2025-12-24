@@ -14,6 +14,16 @@ interface NotificationResponse {
   matchId?: number;
 }
 
+interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 interface MatchResponseDto {
   id: number;
   duration: number;
@@ -23,20 +33,35 @@ interface MatchResponseDto {
   participants: any[];
 }
 
-export async function fetchNotifications(category: "all" | "match" | "friend" = "all"): Promise<NotificationRowProps[]> {
-  const params: Record<string, string> = {};
+export async function fetchNotifications(
+  category: "all" | "match" | "friend" = "all",
+  page: number = 0,
+  size: number = 10
+): Promise<PaginatedResponse<NotificationRowProps>> {
+  const params: Record<string, string> = {
+    page: page.toString(),
+    size: size.toString(),
+  };
   
   if (category !== "all") {
     params.category = category;
   }
 
-  const data = await apiRequest<NotificationResponse[]>({
+  const data = await apiRequest<PaginatedResponse<NotificationResponse>>({
     method: "GET",
     url: "/notifications",
     params,
   });
 
-  return data.map(mapNotificationToRow);
+  return {
+    content: data.content.map(mapNotificationToRow),
+    totalElements: data.totalElements,
+    totalPages: data.totalPages,
+    size: data.size,
+    number: data.number,
+    first: data.first,
+    last: data.last,
+  };
 }
 
 export async function getUnreadCount(): Promise<number> {
@@ -53,7 +78,6 @@ export async function markNotificationAsRead(notificationId: number): Promise<vo
   });
 }
 
-// Updated to return the notification ID
 export async function sendMatchInvite(recipientUsername: string): Promise<number> {
   return await apiRequest<number>({
     method: "POST",
@@ -62,7 +86,7 @@ export async function sendMatchInvite(recipientUsername: string): Promise<number
 }
 
 export async function cancelMatchInvite(notificationId: number): Promise<void> {
-  console.log('Sending match cancell to:', notificationId);
+  console.log('Sending match cancel to:', notificationId);
 
   await apiRequest<void>({
     method: "PATCH",

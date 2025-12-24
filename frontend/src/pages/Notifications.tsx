@@ -4,93 +4,64 @@ import Board from "../components/common/Board";
 import NotificationRow, { type NotificationRowProps } from "../components/common/NotificationRow";
 import NotificationDetail from "../components/common/NotificationDetail";
 import { fetchNotifications } from "../services/NotificationService";
-import { NotificationType } from "../enums/NotificationType";
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState<NotificationRowProps[]>([]);
-  const [allNotifications, setAllNotifications] = useState<NotificationRowProps[]>([]);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<"all" | "match" | "friend">("all");
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { notificationId } = useParams<{ notificationId: string }>();
   const navigate = useNavigate();
 
+  const itemsPerPage = 10;
+
   const selectedNotification = notificationId 
-    ? allNotifications.find(n => n.id === parseInt(notificationId))
+    ? notifications.find(n => n.id === parseInt(notificationId))
     : null;
 
   async function loadNotifications(pageToLoad = 0, isInitialLoad = false) {
     try {
-      // Only show loading on initial page load
-      if (isInitialLoad && allNotifications.length === 0) {
+      if (isInitialLoad) {
         setLoading(true);
       }
       setError(null);
       
-      console.log("Fetching notifications from backend...");
-      const data = await fetchNotifications(selectedCategory);
-      console.log("Received notifications:", data);
-      console.log("Number of notifications:", data.length);
+      const data = await fetchNotifications(selectedCategory, pageToLoad, itemsPerPage);
 
-      setAllNotifications(data);
-
-      // Filter by type if selected
-      const filtered = selectedType
-        ? data.filter(n => n.type === selectedType)
-        : data;
-
-      console.log("Filtered notifications:", filtered.length);
-
-      // Implement client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = pageToLoad * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedData = filtered.slice(startIndex, endIndex);
-      
-      console.log("Paginated data:", paginatedData.length);
-      
-      setNotifications(paginatedData);
-      setTotalPages(Math.ceil(filtered.length / itemsPerPage) || 1);
+      setNotifications(data.content);
+      setTotalPages(data.totalPages || 1);
+      setTotalElements(data.totalElements);
       setPage(pageToLoad);
       
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
-      console.error("Error details:", err instanceof Error ? err.message : err);
       setError(`Failed to load notifications: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   }
 
-  // Load notifications on mount - only show loading on first load
+  // Load notifications on mount
   useEffect(() => {
     loadNotifications(0, true);
   }, []);
 
-  // Reload notifications when category filter changes
+  // Reload when category changes - reset to page 0
   useEffect(() => {
     loadNotifications(0, false);
   }, [selectedCategory]);
 
-  // Reload notifications when type filter changes - no loading screen
+  // Reload when returning from detail view
   useEffect(() => {
-    if (allNotifications.length > 0) {
-      loadNotifications(0, false);
-    }
-  }, [selectedType]);
-
-  // Reload notifications when returning to the list view - no loading screen
-  useEffect(() => {
-    if (!notificationId && allNotifications.length > 0) {
+    if (!notificationId) {
       loadNotifications(page, false);
     }
   }, [notificationId]);
 
   const handleNotificationClick = (notification: NotificationRowProps) => {
-    console.log("Notification clicked:", notification);
     navigate(`/notifications/${notification.id}`);
   };
 
@@ -115,11 +86,15 @@ export default function Notifications() {
   }
 
   const handlePrevPage = () => {
-    if (page > 0) loadNotifications(page - 1);
+    if (page > 0) {
+      loadNotifications(page - 1);
+    }
   };
 
   const handleNextPage = () => {
-    if (page < totalPages - 1) loadNotifications(page + 1);
+    if (page < totalPages - 1) {
+      loadNotifications(page + 1);
+    }
   };
 
   return (
@@ -165,6 +140,12 @@ export default function Notifications() {
           </button>
         </div>
 
+        {/* Results count */}
+        {!loading && totalElements > 0 && (
+          <div className="text-text/60 text-sm font-anta">
+            {totalElements} notification{totalElements !== 1 ? 's' : ''} total
+          </div>
+        )}
       </div>
 
       {/* Table Area */}
@@ -187,22 +168,18 @@ export default function Notifications() {
                 </button>
               </div>
             </div>
-          ) : notifications.length === 0 && allNotifications.length === 0 ? (
+          ) : totalElements === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <p className="text-text/60 font-anta text-lg">
-                  No notifications yet
+                  {selectedCategory === "all" 
+                    ? "No notifications yet" 
+                    : `No ${selectedCategory} notifications`}
                 </p>
                 <p className="text-text/40 text-sm mt-2">
                   You'll see notifications here when you receive match invites or updates
                 </p>
               </div>
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-text/60 font-anta text-lg">
-                No notifications match the selected filter
-              </p>
             </div>
           ) : (
             <Board<NotificationRowProps>

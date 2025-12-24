@@ -6,6 +6,7 @@ import com.clashcode.backend.mapper.NotificationMapper;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.NotificationService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,26 +30,35 @@ public class NotificationController {
         this.notificationMapper = notificationMapper;
     }
 
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_SIZE = 10;
+
     @GetMapping
-    public ResponseEntity<List<NotificationDto>> getUserNotifications(
+    public ResponseEntity<Page<NotificationDto>> getUserNotifications(
             @AuthenticationPrincipal User user,
-            @RequestParam(required = false) String category
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
     ) {
         if (user == null) {
             throw new UnauthorizedException("User not authenticated");
         }
 
-        List<Notification> notifications;
+        Page<Notification> notificationPage;
 
         if (category != null && !category.isEmpty()) {
-            notifications = notificationService.getUserNotificationsByCategory(user.getId(), category);
+            notificationPage = notificationService.getUserNotificationsByCategory(
+                    user.getId(), category, page, size
+            );
         } else {
-            notifications = notificationService.getUserNotifications(user.getId());
+            notificationPage = notificationService.getUserNotificationsPaginated(
+                    user.getId(), page, size
+            );
         }
 
-        List<NotificationDto> dtos = notificationMapper.toDtoList(notifications);
+        Page<NotificationDto> dtoPage = notificationPage.map(notificationMapper::toDto);
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/unread-count")

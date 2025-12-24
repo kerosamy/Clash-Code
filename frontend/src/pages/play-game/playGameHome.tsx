@@ -179,8 +179,6 @@ export default function PlayGameHome() {
 
 
     const handleFriendInvite = (notificationId: number, username: string) => {
-        console.log('PlayGameHome received - Notification ID:', notificationId, 'Username:', username);
-        
         setMatchType("friend");
         setInvitedUser(username);
         setPendingNotificationId(notificationId);
@@ -201,12 +199,6 @@ export default function PlayGameHome() {
 
 
     if (isMatchmaking) {
-        console.log('Rendering LoadingMatch with:', {
-            matchType,
-            invitedUser,
-            notificationId: pendingNotificationId
-        });
-        
         return (
             <LoadingMatch 
                 matchType={matchType}

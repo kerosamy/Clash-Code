@@ -5,6 +5,9 @@ import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.repository.NotificationRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -56,30 +59,32 @@ public class NotificationService {
         return notification;
     }
 
-    public List<Notification> getUserNotificationsByCategory(Long userId, String category) {
-        List<Notification> allNotifications = getUserNotifications(userId);
-
-        if ("match".equalsIgnoreCase(category)) {
-
-            return allNotifications.stream()
-                    .filter(n -> {
-                        String type = n.getType().name();
-                        return type.contains("MATCH") || type.contains("SUBMISSION") || type.contains("OPPONENT");
-                    })
-                    .collect(Collectors.toList());
-        } else if ("friend".equalsIgnoreCase(category)) {
-
-            return allNotifications.stream()
-                    .filter(n -> {
-                        String type = n.getType().name();
-                        return type.contains("FRIEND");
-                    })
-                    .collect(Collectors.toList());
-        }
-
-        return allNotifications;
+    public Page<Notification> getUserNotificationsPaginated(Long userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return repository.findByRecipientId(userId, pageRequest);
     }
 
+    public Page<Notification> getUserNotificationsByCategory(Long userId, String category, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Notification> notificationPage;
+
+        if ("match".equalsIgnoreCase(category)) {
+            notificationPage = repository.findByRecipientIdAndTypeContainingKeyword(
+                    userId, "MATCH", pageRequest
+            );
+        } else if ("friend".equalsIgnoreCase(category)) {
+            notificationPage = repository.findByRecipientIdAndTypeContainingKeyword(
+                    userId, "FRIEND", pageRequest
+            );
+        } else {
+            notificationPage = repository.findByRecipientIdExcludingSubmission(
+                    userId, "SUBMISSION", pageRequest
+            );
+        }
+
+        return notificationPage;
+    }
     public List<Notification> getUserNotifications(Long userId) {
         return repository.findByRecipientIdOrderByCreatedAtDesc(userId);
     }
