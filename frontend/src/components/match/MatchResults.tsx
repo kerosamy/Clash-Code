@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Confetti from "react-confetti";
-import arrowIcon from "../../assets/icons/Arrow.png";
 import type { MatchResultDto } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
 import { getRankColor } from "../../utils/colorMapper";
+import { FaArrowRight } from "react-icons/fa";
 
 interface MatchResultsProps {
     result: MatchResultDto;
@@ -59,7 +59,7 @@ export default function MatchResults({ result }: MatchResultsProps) {
     const config = configMap[resultState];
 
     const renderRatingChange = () => {
-        if (!result.isRated) {
+        if (!result.rated) {
             return (
                 <div className="px-3 py-1 rounded-full bg-white/10 text-s text-text/60 font-bold uppercase tracking-wider">
                     Friendly Match
@@ -97,11 +97,7 @@ export default function MatchResults({ result }: MatchResultsProps) {
                         <span className={`text-lg font-bold ${color} mb-1`}>
                             {sign}{value}
                         </span>
-                        <img
-                            src={arrowIcon}
-                            alt="arrow"
-                            className="w-12 h-auto object-contain opacity-80"
-                        />
+                         <FaArrowRight className={`w-10 h-10 text-text/60 opacity-90`} />
                     </div>
 
                     <div className="flex flex-col items-center scale-110">
