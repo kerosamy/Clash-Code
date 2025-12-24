@@ -53,9 +53,10 @@ public class ImageFileStorageService {
 
         try {
             String publicId = publicUrlOrPublicId;
-            if (publicUrlOrPublicId.contains("/")) {
+            if (publicUrlOrPublicId.startsWith("http")) {
+                // Remove Cloudinary URL prefix and version
                 publicId = publicUrlOrPublicId
-                        .replaceAll("^https://res\\.cloudinary\\.com/[^/]+/image/upload/", "")
+                        .replaceAll("^https://res\\.cloudinary\\.com/[^/]+/image/upload/v[0-9]+/", "")
                         .replaceAll("\\.[a-zA-Z0-9]+$", "");
             }
 
@@ -65,4 +66,5 @@ public class ImageFileStorageService {
             throw new FileStorageException("Could not delete file from Cloudinary", e);
         }
     }
+
 }
