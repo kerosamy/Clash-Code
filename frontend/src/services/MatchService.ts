@@ -64,7 +64,7 @@ export interface MatchSubmissionLogDto {
 }
 
 export interface MatchResultDto {
-    isRated: boolean;
+    rated: boolean;
     username: string;
     avatarUrl: string;
     rank: number;     
