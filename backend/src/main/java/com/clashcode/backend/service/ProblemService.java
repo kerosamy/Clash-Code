@@ -224,8 +224,6 @@ public class ProblemService {
             return problemMapper.toListDto(problem, rejectionNote);
         });
     }
-<<<<<<< HEAD
-=======
 
     public Page<ProblemListDto> getMySuggestedProblems(String username, ProblemStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -243,6 +241,4 @@ public class ProblemService {
             return problemMapper.toListDto(problem, rejectionNote);
         });
     }
-
->>>>>>> fa5b904 (Implemented My suggestions page and allow filtering on it based on the status)
 }
