@@ -3,6 +3,7 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.ProblemService;
+import com.clashcode.backend.service.TestCaseService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,13 +19,15 @@ import java.util.List;
 public class ProblemController {
 
     private final ProblemService problemService;
+    private final TestCaseService testCaseService;
+
+    public ProblemController(ProblemService problemService, TestCaseService testCaseService) {
+        this.problemService = problemService;
+        this.testCaseService = testCaseService;
+    }
 
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_SIZE = 10;
-
-    public ProblemController(ProblemService problemService) {
-        this.problemService = problemService;
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<PartialProblemResponseDto> getPartialProblem(@PathVariable Long id) {
@@ -91,5 +94,12 @@ public class ProblemController {
     ) {
         Page<ProblemListDto> results = problemService.searchProblemsByName(keyword, page, size);
         return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/run-test-cases")
+    public ResponseEntity<List<String>> compileTestCases (
+            @RequestBody TestcaseRunRequestDto testcaseCompilationDto
+    ){
+        return ResponseEntity.ok(testCaseService.runTestCases(testcaseCompilationDto));
     }
 }

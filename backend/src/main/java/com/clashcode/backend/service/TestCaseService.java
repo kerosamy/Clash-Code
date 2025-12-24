@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.dto.TestcaseRunRequestDto;
 import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.TestCase;
@@ -101,5 +102,20 @@ public class TestCaseService {
     public void deleteByProblem(Problem problem) {
         testCasesFileStorageService.deleteTestCasesDirectory(problem.getId());
         testCaseRepository.deleteByProblem(problem);
+    }
+
+    public List<String> runTestCases(TestcaseRunRequestDto testcaseRunRequestDto) {
+        List<String> outputs = new ArrayList<>();
+        for (String input : testcaseRunRequestDto.getStdin()) {
+            String output = judge0Client.executeAndReturnOutput(
+                    input,
+                    testcaseRunRequestDto.getSourceCode(),
+                    testcaseRunRequestDto.getLanguage(),
+                    testcaseRunRequestDto.getTimeLimit(),
+                    testcaseRunRequestDto.getMemoryLimit()
+            );
+            outputs.add(output);
+        }
+        return outputs;
     }
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Play } from "lucide-react";
 import TestCaseItem from "../../components/problem/TestCaseSuggest";
+import { runTestCasesService } from "../../services/ProblemService";
+import type { ProblemInfoData } from "./ProblemInfo";
 
 export interface TestCase {
   id: string;
@@ -11,15 +13,15 @@ export interface TestCase {
 
 interface TestCasesProps {
   onSave?: (testCases: TestCase[]) => void;
-  onRun?: (testCases: TestCase[]) => Promise<TestCase[]>;
 }
 
-
 const STORAGE_KEY = "problem_testcases_draft";
+const INFO_STORAGE_KEY = "problem_info_draft";
 
-const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
+const TestCases: React.FC<TestCasesProps> = ({ onSave }) => {
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [saveMessage, setSaveMessage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>(""); 
   const [runningTests, setRunningTests] = useState<boolean>(false);
 
   useEffect(() => {
@@ -61,27 +63,43 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
   const runTestCases = async () => {
     setRunningTests(true);
     setSaveMessage("");
+    setErrorMessage(""); 
 
     try {
-      if (onRun) {
-        const results = await onRun(testCases);
-        setTestCases(results);
-        setSaveMessage("Test cases executed successfully!");
-      } else {
-        setTimeout(() => {
-          const updated = testCases.map((tc) => ({
-            ...tc,
-            actualOutput: `Output for: ${tc.input}`,
-          }));
-          setTestCases(updated);
-          setSaveMessage("Test cases executed successfully!");
-          setRunningTests(false);
-        }, 1500);
-        return;
+      const infoStr = localStorage.getItem(INFO_STORAGE_KEY);
+      if (!infoStr) {
+        throw new Error("Missing Problem Info. Please save it first.");
       }
-    } catch (error) {
+      
+      const info: ProblemInfoData = JSON.parse(infoStr);
+      
+      if (!info.solutionCode || !info.solutionCode.trim()) {
+        throw new Error("Solution code is empty. Please go back and write your solution.");
+      }
+
+      const inputs = testCases.map(tc => tc.input);
+
+      const outputs = await runTestCasesService(
+        inputs,
+        info.solutionCode,
+        info.solutionLang,
+        info.timeLimit,
+        info.memoryLimit
+      );
+
+      const updated = testCases.map((tc, index) => ({
+        ...tc,
+        actualOutput: outputs[index] 
+      }));
+
+      setTestCases(updated);
+      setSaveMessage("Test cases executed successfully!");
+     
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (error: any) {
       console.error("Failed to run test cases:", error);
-      setSaveMessage("Failed to run test cases. Please try again.");
+      const msg = error.response?.data?.message || error.message || "An unexpected error occurred.";
+      setErrorMessage(msg);
     } finally {
       setRunningTests(false);
       setTimeout(() => setSaveMessage(""), 3000);
@@ -89,22 +107,24 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
   };
 
   const handleSave = () => {
+    setErrorMessage("");
+    setSaveMessage("");
+    
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(testCases));
       console.log(testCases);
       setSaveMessage("Test cases saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
       onSave?.(testCases);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save test cases:", error);
-      setSaveMessage("Failed to save test cases. Please try again.");
-      setTimeout(() => setSaveMessage(""), 3000);
+      setErrorMessage(error.message || "Failed to save test cases.");
     }
   };
 
   return (
     <div className="bg-background text-white py-8">
-      <div className="max-w-6xl mx-auto px-6 space-y-6">
+      <div className="max-w-6xl mx-auto px-6 space-y-6"> 
         {testCases.map((tc, index) => (
           <TestCaseItem
             key={tc.id}
@@ -142,15 +162,13 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave, onRun }) => {
           </button>
         </div>
 
-        {saveMessage && (
+        {(saveMessage || errorMessage) && (
           <p
             className={`text-center text-lg font-anta ${
-              saveMessage.includes("success") || saveMessage.includes("executed")
-                ? "text-green-400"
-                : "text-red-400"
+              errorMessage ? "text-red-400" : "text-green-400"
             }`}
           >
-            {saveMessage}
+            {errorMessage || saveMessage}
           </p>
         )}
       </div>

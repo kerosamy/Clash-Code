@@ -3,6 +3,7 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
+import com.clashcode.backend.service.TestCaseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,10 @@ class ProblemControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private TestCaseService testCaseService;
+
 
     // ---------------- Add Problem Test ----------------
     @Test
@@ -174,5 +179,49 @@ class ProblemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(jsonPath("$.content[0].title").value("Multiply Two Integers"));
+    }
+
+    @Test
+    @DisplayName("POST /problem/run-test-cases - Success")
+    void testCompileTestCases() throws Exception {
+        TestcaseRunRequestDto requestDto = new TestcaseRunRequestDto();
+        requestDto.setSourceCode("print(input())");
+        requestDto.setLanguage("python");
+        requestDto.setStdin(List.of("5", "10"));
+        requestDto.setTimeLimit(1000);
+        requestDto.setMemoryLimit(256);
+
+        List<String> expectedOutputs = List.of("5", "10");
+
+        when(testCaseService.runTestCases(any(TestcaseRunRequestDto.class)))
+                .thenReturn(expectedOutputs);
+
+        mockMvc.perform(post("/problem/run-test-cases")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0]").value("5"))
+                .andExpect(jsonPath("$[1]").value("10"));
+    }
+
+    @Test
+    @DisplayName("POST /problem/run-test-cases - Empty Inputs")
+    void testCompileTestCasesEmpty() throws Exception {
+        TestcaseRunRequestDto requestDto = new TestcaseRunRequestDto();
+        requestDto.setStdin(List.of());
+        requestDto.setSourceCode("print('hello')");
+        requestDto.setLanguage("python");
+
+        when(testCaseService.runTestCases(any(TestcaseRunRequestDto.class)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(post("/problem/run-test-cases")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

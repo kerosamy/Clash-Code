@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.TestCaseResponseDto;
+import com.clashcode.backend.dto.TestcaseRunRequestDto;
 import com.clashcode.backend.enums.LanguageVersion;
 import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.model.Problem;
@@ -8,9 +9,11 @@ import com.clashcode.backend.model.Solution;
 import com.clashcode.backend.model.TestCase;
 import com.clashcode.backend.repository.TestCaseRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,12 +24,13 @@ class TestCaseServiceTest {
     private TestCaseRepository testCaseRepository;
     private TestCasesFileStorageService testCasesFileStorageService;
     private TestCaseService testCaseService;
+    private Judge0Client judge0Client;
 
     @BeforeEach
     void setUp() {
         testCaseRepository = mock(TestCaseRepository.class);
         testCasesFileStorageService = mock(TestCasesFileStorageService.class);
-        Judge0Client judge0Client = mock(Judge0Client.class);
+        judge0Client = mock(Judge0Client.class);
         testCaseService = new TestCaseService(testCaseRepository, testCasesFileStorageService, judge0Client);
     }
 
@@ -119,4 +123,57 @@ class TestCaseServiceTest {
         assertEquals("output2", result.get(1).getOutput());
     }
 
+    @Test
+    @DisplayName("Run Test Cases - Success")
+    void testRunTestCases_Success() {
+        TestcaseRunRequestDto requestDto = TestcaseRunRequestDto.builder()
+                .stdin(List.of("5", "10"))
+                .sourceCode("print(int(input())**2)")
+                .language("python")
+                .timeLimit(1000)
+                .memoryLimit(128)
+                .build();
+
+        when(judge0Client.executeAndReturnOutput(
+                eq("5"),
+                eq(requestDto.getSourceCode()),
+                eq(requestDto.getLanguage()),
+                eq(requestDto.getTimeLimit()),
+                eq(requestDto.getMemoryLimit())
+        )).thenReturn("25");
+
+        when(judge0Client.executeAndReturnOutput(
+                eq("10"),
+                anyString(),
+                anyString(),
+                anyInt(),
+                anyInt()
+        )).thenReturn("100");
+
+        List<String> results = testCaseService.runTestCases(requestDto);
+
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        assertEquals("25", results.get(0));
+        assertEquals("100", results.get(1));
+
+        verify(judge0Client, times(2)).executeAndReturnOutput(anyString(), anyString(), anyString(), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("Run Test Cases - Empty Input List")
+    void testRunTestCases_Empty() {
+        TestcaseRunRequestDto requestDto = TestcaseRunRequestDto.builder()
+                .stdin(Collections.emptyList())
+                .sourceCode("print('hello')")
+                .language("python")
+                .build();
+
+        List<String> results = testCaseService.runTestCases(requestDto);
+
+        assertNotNull(results);
+        assertTrue(results.isEmpty());
+
+        verify(judge0Client, never()).executeAndReturnOutput(anyString(), anyString(), anyString(), anyInt(), anyInt());
+    }
 }

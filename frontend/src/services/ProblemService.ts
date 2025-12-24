@@ -33,6 +33,14 @@ interface VisibleTestCase {
   output: string;
 }
 
+interface TestcaseRunRequestDto {
+  stdin: string[];
+  sourceCode: string;
+  language: string;
+  timeLimit: number;
+  memoryLimit: number;
+}
+
 export interface ProblemDto {
   id: number;
   author: string;
@@ -199,4 +207,26 @@ export async function suggestProblemService(
   localStorage.removeItem("problem_info_draft");
   localStorage.removeItem("problem_statement_draft");
   localStorage.removeItem("problem_testcases_draft");
+}
+
+export async function runTestCasesService(
+  stdin: string[],
+  sourceCode: string,
+  language: string,
+  timeLimit: number,
+  memoryLimit: number
+): Promise<string[]> {
+  const payload: TestcaseRunRequestDto = {
+    stdin,
+    sourceCode,
+    language,
+    timeLimit,
+    memoryLimit,
+  };
+
+  return apiRequest<string[]>({
+    method: "POST",
+    url: "/problem/run-test-cases",
+    data: payload,
+  });
 }
