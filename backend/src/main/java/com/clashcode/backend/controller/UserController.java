@@ -59,7 +59,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/search-with-status")
+    @GetMapping("/search-with-friend-status")
     public ResponseEntity<List<UserSearchDto>> searchUsersWithFriendStatus(
             @RequestParam String username,
             @AuthenticationPrincipal User user

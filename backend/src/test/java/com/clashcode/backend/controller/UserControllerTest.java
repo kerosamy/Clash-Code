@@ -162,7 +162,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /users/search-with-status - Found results with friend status")
+    @DisplayName("GET /users/search-with-friend-status - Found results with friend status")
     void searchUsersWithStatus_found() throws Exception {
         // Setup logged-in user in security context
         setupSecurityContext();
@@ -175,7 +175,7 @@ class UserControllerTest {
         when(userService.searchByUsername(eq("car"), any(User.class)))
                 .thenReturn(mockResults);
 
-        mockMvc.perform(get("/users/search-with-status")
+        mockMvc.perform(get("/users/search-with-friend-status")
                         .param("username", "car")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -187,7 +187,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /users/search-with-status - No results")
+    @DisplayName("GET /users/search-with-friend-status - No results")
     void searchUsersWithStatus_noResults() throws Exception {
         User loggedIn = new User();
         loggedIn.setId(1L);
@@ -197,7 +197,7 @@ class UserControllerTest {
         when(userService.searchByUsername(eq("unknown"), eq(loggedIn)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/users/search-with-status")
+        mockMvc.perform(get("/users/search-with-friend-status")
                         .param("username", "unknown")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

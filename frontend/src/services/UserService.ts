@@ -107,7 +107,7 @@ export async function searchUsers(username: string): Promise<UserSearchResponse[
 export async function searchUsersWithFriendStatus(username: string): Promise<UserSearchResponse[]> {
   return apiRequest<UserSearchResponse[]>({
     method: "GET",
-    url: "/users/search-with-status",
+    url: "/users/search-with-friend-status",
     params: { username },
   });
 }
