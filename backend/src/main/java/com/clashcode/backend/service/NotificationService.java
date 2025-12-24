@@ -2,12 +2,14 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.Notification.NotificationPayload;
 import com.clashcode.backend.enums.NotificationMode;
+import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.repository.NotificationRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificationService {
@@ -41,6 +43,41 @@ public class NotificationService {
                 payload.getDestination(recipientUsername),
                 payload
         );
+    }
+
+    public Notification getNotificationById(Long notificationId, Long userId) {
+        Notification notification = repository.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+
+        if (!notification.getRecipientId().equals(userId)) {
+            throw new UnauthorizedException("Not your notification");
+        }
+
+        return notification;
+    }
+
+    public List<Notification> getUserNotificationsByCategory(Long userId, String category) {
+        List<Notification> allNotifications = getUserNotifications(userId);
+
+        if ("match".equalsIgnoreCase(category)) {
+
+            return allNotifications.stream()
+                    .filter(n -> {
+                        String type = n.getType().name();
+                        return type.contains("MATCH") || type.contains("SUBMISSION") || type.contains("OPPONENT");
+                    })
+                    .collect(Collectors.toList());
+        } else if ("friend".equalsIgnoreCase(category)) {
+
+            return allNotifications.stream()
+                    .filter(n -> {
+                        String type = n.getType().name();
+                        return type.contains("FRIEND");
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return allNotifications;
     }
 
     public List<Notification> getUserNotifications(Long userId) {
