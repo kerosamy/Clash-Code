@@ -10,6 +10,7 @@ import { RANKS } from "../../enums/Ranks";
 import type { NextRankInfo } from "../../utils/calculateNextRate";
 import { searchOpponent, cancelOpponentSearch  , getMatchSubmissionLog} from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
+import { wsService } from "../../services/ws";
 
 interface UserStats {
     currentRate: number;
@@ -80,31 +81,23 @@ export default function PlayGameHome() {
 
         fetchUserData();
     }, []);
-
+    
     useEffect(() => {
         const currentUser = getUsername();
         if (!currentUser) return;
 
-        const client = new Client({
-            brokerURL: "ws://localhost:8080/ws",
-            reconnectDelay: 5000,
-            debug: (str) => console.log('STOMP Debug:', str)
-        });
+        wsService.connect(() => {
+            console.log("WS connected");
 
-        client.onConnect = () => {
-            client.subscribe(`/topic/match-pop/${currentUser}`, async (message: IMessage) => {
+            wsService.subscribe(`/topic/match-pop/${currentUser}`, async (payload: any) => {
                 try {
-                    const payload = JSON.parse(message.body);
                     if (payload.notificationType === "MATCH_STARTED") {
                         const data = await getMatchSubmissionLog(payload.matchId);
 
                         const currentUser = getUsername();
                         if (!currentUser) return;
 
-                        const opponent = data.find(
-                            (player) => player.username !== currentUser
-                        );
-
+                        const opponent = data.find(player => player.username !== currentUser);
                         if (!opponent) {
                             console.error("Opponent not found in submission log");
                             return;
@@ -115,18 +108,14 @@ export default function PlayGameHome() {
                             problemId: payload.problemId,
                             player1: {
                                 username: currentUser,
-                                avatarUrl:
-                                    data.find(p => p.username === currentUser)?.avatarUrl
-                                    || "",
-                                rank:
-                                    data.find(p => p.username === currentUser)?.rank
-                                    || "BRONZE"
+                                avatarUrl: data.find(p => p.username === currentUser)?.avatarUrl || "",
+                                rank: data.find(p => p.username === currentUser)?.rank || "BRONZE",
                             },
                             player2: {
                                 username: opponent.username,
                                 avatarUrl: opponent.avatarUrl || "/default-avatar.png",
-                                rank: opponent.rank
-                            }
+                                rank: opponent.rank,
+                            },
                         });
 
                         setIsMatchmaking(false);
@@ -136,15 +125,17 @@ export default function PlayGameHome() {
                     console.error("WS parse error", err);
                 }
             });
-        };
+        });
 
-        client.activate();
-
+        // Cleanup on unmount
         return () => {
-            client.deactivate();
+            wsService.disconnect();
             if (isMatchmakingRef.current) cancelOpponentSearch().catch(console.error);
         };
     }, [navigate]);
+
+
+
 
     const handleAnimationComplete = () => {
         if (matchData) {

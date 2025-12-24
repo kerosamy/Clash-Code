@@ -9,7 +9,7 @@ export default function LogoutPage() {
 
   const handleConfirm = () => {
     clearToken();
-    navigate("/sign-up", { replace: true });
+    navigate("/log-in", { replace: true });
   };
 
   const handleClose = () => {
