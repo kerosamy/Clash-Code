@@ -7,6 +7,7 @@ import com.clashcode.backend.dto.MatchSubmissionLogDto;
 import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.MatchState;
 import com.clashcode.backend.enums.GameMode;
+import com.clashcode.backend.enums.NotificationType;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.mapper.MatchMapper;
 import com.clashcode.backend.mapper.MatchNotificationMapper;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -194,17 +196,47 @@ class MatchServiceTest {
         User sender = User.builder().id(1L).username("caro").build();
         User recipient = User.builder().id(2L).username("mina").build();
 
+        // Create a saved notification that will be returned from repository
+        Notification savedNotification = Notification.builder()
+                .id(100L)
+                .senderId(sender.getId())
+                .recipientId(recipient.getId())
+                .type(NotificationType.MATCH_INVITATION)
+                .title("Match Invite")
+                .message("Match invitation message")
+                .createdAt(Instant.now())
+                .read(false)
+                .build();
+
         when(userRepository.findByUsername("mina")).thenReturn(java.util.Optional.of(recipient));
         when(matchNotificationMapper.mapMatchInvite(sender))
                 .thenReturn(new MatchNotificationDto());
 
-        matchService.sendMatchInvite(sender, "mina");
+        // Mock the repository to return the saved notification
+        when(notificationRepository.findTopBySenderIdAndRecipientIdAndTypeOrderByCreatedAtDesc(
+                eq(sender.getId()),
+                eq(recipient.getId()),
+                eq(NotificationType.MATCH_INVITATION)
+        )).thenReturn(Optional.of(savedNotification));
+
+        // Act
+        Long result = matchService.sendMatchInvite(sender, "mina");
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(100L, result);
 
         verify(notificationService).send(
                 eq(sender.getId()),
                 eq(recipient.getId()),
                 eq(recipient.getUsername()),
                 any(MatchNotificationDto.class)
+        );
+
+        verify(notificationRepository).findTopBySenderIdAndRecipientIdAndTypeOrderByCreatedAtDesc(
+                eq(sender.getId()),
+                eq(recipient.getId()),
+                eq(NotificationType.MATCH_INVITATION)
         );
     }
 
