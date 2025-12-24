@@ -87,9 +87,18 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave }) => {
         info.memoryLimit
       );
 
+      let compilationErrorMessage: string | null = null;
+
+      for (const output of outputs) {
+        if (output.startsWith("Compilation Error")) {
+          compilationErrorMessage = output;
+          break;
+        }
+      }
+
       const updated = testCases.map((tc, index) => ({
         ...tc,
-        actualOutput: outputs[index] 
+        actualOutput: compilationErrorMessage || outputs[index] 
       }));
 
       setTestCases(updated);

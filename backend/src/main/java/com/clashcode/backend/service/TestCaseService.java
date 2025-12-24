@@ -115,6 +115,10 @@ public class TestCaseService {
                     testcaseRunRequestDto.getMemoryLimit()
             );
             outputs.add(output);
+
+            if (output != null && output.startsWith("Compilation Error")) {
+                break;
+            }
         }
         return outputs;
     }
