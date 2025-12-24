@@ -40,4 +40,19 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             @Param("userId") Long userId,
             @Param("status") FriendRequestStatus status
     );
+
+    @Query("""
+    SELECT f FROM Friend f
+    WHERE f.status = 'ACCEPTED'
+    AND (
+        (f.sender.id = :userId AND LOWER(f.receiver.username) LIKE LOWER(CONCAT('%', :query, '%')))
+        OR
+        (f.receiver.id = :userId AND LOWER(f.sender.username) LIKE LOWER(CONCAT('%', :query, '%')))
+    )
+    """)
+    Page<Friend> findFriendsByUsernameContaining(
+            @Param("userId") Long userId,
+            @Param("query") String query,
+            Pageable pageable
+    );
 }

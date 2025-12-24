@@ -85,3 +85,14 @@ export async function getSentFriendRequests(
     url: `/friends/sent-requests?page=${page}&size=${size}`,
   });
 }
+
+export async function searchFriends(
+  query: string,
+  page: number = 0,
+  size: number = 20
+): Promise<Page<FriendDto>> {
+  return apiRequest<Page<FriendDto>>({
+    method: "GET",
+    url: `/friends/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`,
+  });
+}

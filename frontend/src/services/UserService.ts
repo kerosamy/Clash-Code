@@ -91,6 +91,7 @@ export async function fetchUserProfile(username: string): Promise<BackendUserRes
 }
 
 export interface UserSearchResponse {
+  rank: string;
   username: string;
   currentRate: number;
   friendStatus?: string;

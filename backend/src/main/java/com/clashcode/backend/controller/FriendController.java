@@ -86,4 +86,20 @@ public class FriendController {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(friendService.getReceivedFriendRequests(user, pageable));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<FriendDto>> searchFriends(
+            @AuthenticationPrincipal User user,
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        if (query == null || query.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(friendService.searchFriendsByUsername(user, query.trim(), pageable));
+    }
+
 }
