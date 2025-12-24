@@ -1,0 +1,65 @@
+name: PR Verification Backend Tests
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Run Unit Tests
+        run: mvn clean verify -Dmaven.test.failure.ignore=true
+
+      - name: Generate JaCoCo Report
+        run: mvn jacoco:report
+
+      - name: Show failed tests in logs
+        if: always()
+        run: |
+          echo "Scanning for test failures..."
+          find target/surefire-reports -name "*.txt" | xargs grep -l "FAILURE\|ERROR" | while read file; do
+            echo "::error file=$file::Test Failure Detected"
+            echo "=== Start of Failure Log: $file ==="
+            cat "$file"
+            echo "=== End of Failure Log ==="
+          done
+
+      - name: Upload Test and Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            backend/target/surefire-reports/
+            backend/target/site/jacoco/
+
+      - name: Check Test Status
+        if: always()
+        run: |
+          if grep -q "FAILURE" target/surefire-reports/*.txt 2>/dev/null || grep -q "ERROR" target/surefire-reports/*.txt 2>/dev/null; then
+            echo "Tests failed! Blocking merge."
+            exit 1
+          fi
