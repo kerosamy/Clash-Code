@@ -3,6 +3,7 @@ package com.clashcode.backend.controller;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
+import com.clashcode.backend.service.TestCaseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,10 @@ class ProblemControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private TestCaseService testCaseService;
+
 
     // ---------------- Add Problem Test ----------------
     @Test
@@ -188,7 +193,7 @@ class ProblemControllerTest {
 
         List<String> expectedOutputs = List.of("5", "10");
 
-        when(problemService.runTestCases(any(TestcaseRunRequestDto.class)))
+        when(testCaseService.runTestCases(any(TestcaseRunRequestDto.class)))
                 .thenReturn(expectedOutputs);
 
         mockMvc.perform(post("/problem/run-test-cases")
@@ -209,7 +214,7 @@ class ProblemControllerTest {
         requestDto.setSourceCode("print('hello')");
         requestDto.setLanguage("python");
 
-        when(problemService.runTestCases(any(TestcaseRunRequestDto.class)))
+        when(testCaseService.runTestCases(any(TestcaseRunRequestDto.class)))
                 .thenReturn(List.of());
 
         mockMvc.perform(post("/problem/run-test-cases")

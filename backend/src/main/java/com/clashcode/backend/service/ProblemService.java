@@ -223,19 +223,4 @@ public class ProblemService {
             return problemMapper.toListDto(problem, rejectionNote);
         });
     }
-
-    public List<String> runTestCases(TestcaseRunRequestDto testcaseRunRequestDto) {
-        List<String> outputs = new ArrayList<>();
-        for (String input : testcaseRunRequestDto.getStdin()) {
-            String output = judge0Client.executeAndReturnOutput(
-                    input,
-                    testcaseRunRequestDto.getSourceCode(),
-                    testcaseRunRequestDto.getLanguage(),
-                    testcaseRunRequestDto.getTimeLimit(),
-                    testcaseRunRequestDto.getMemoryLimit()
-            );
-            outputs.add(output);
-        }
-        return outputs;
-    }
 }
