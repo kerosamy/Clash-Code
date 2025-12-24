@@ -3,6 +3,7 @@ import { useState,useEffect
 import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
 import { completeRegistration } from "../services/AuthService.ts";
+import { getUsername } from "../utils/jwtDecoder.tsx";
 
 
 export default function CompleteRegistration() {
@@ -39,7 +40,7 @@ export default function CompleteRegistration() {
       await completeRegistration(username);
       sessionStorage.removeItem("oauth_flow");
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate("/profile/1/overview");
+      navigate(`profile/${getUsername()}/overview`);
     } catch (err: any) {
       setErrors({
         username:

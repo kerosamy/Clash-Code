@@ -83,7 +83,7 @@ public class AuthServiceTest {
         when(userRepository.findByEmail("taken@example.com")).thenReturn(Optional.of(new User()));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.signup(input));
-        assertEquals("Email already registered", ex.getMessage());
+        assertEquals("Email Already Taken", ex.getMessage());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class AuthServiceTest {
         when(userRepository.findByUsername("takenuser")).thenReturn(Optional.of(new User()));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.signup(input));
-        assertEquals("Username already taken", ex.getMessage());
+        assertEquals("Username Already Taken", ex.getMessage());
     }
 
     @Test

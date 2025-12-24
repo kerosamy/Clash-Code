@@ -18,6 +18,7 @@ import ProblemDetails from '../pages/problem/ProblemDetails';
 import Submit from '../pages/problem/Submit';
 import LogOut from '../pages/LogOut';
 import Notifications from '../pages/Notifications';
+import PasswordRecovery from '../pages/PasswordRecovery';
 
 // Profile sub-pages
 import ProfileOverview from '../pages/profile/ProfileOverview';
@@ -70,6 +71,15 @@ export interface PageConfig {
   component: ComponentType;
 }
 
+export const pages: PageConfig[] = [
+  { path: '/sign-up', component: SignUp },
+  { path: '/not-found', component: NotFound },
+  { path: '/log-in', component: LogIn },
+  { path: '/auth/callback', component: OAuthCallback },
+  { path: '/complete-registration', component: CompleteRegistration },
+  { path: '/profile/:username/*', component: Profile, },
+  { path: '/password-recovery', component: PasswordRecovery },
+];
 
 export interface ChildRouteConfig {
   path?: string;
@@ -87,14 +97,6 @@ export interface RouteConfig {
   hideFromNav?: boolean; // hide from navigation menu
 }
 
-export const pages: PageConfig[] = [
-  { path: '/sign-up', component: SignUp },
-  { path: '/not-found', component: NotFound },
-  { path: '/log-in', component: LogIn },
-  { path: '/auth/callback', component: OAuthCallback },
-  { path: '/complete-registration', component: CompleteRegistration },
-  { path: '/profile/:username/*', component: Profile, },
-];
 
 export const routes: RouteConfig[] = [
   {

@@ -4,6 +4,7 @@ import com.clashcode.backend.dto.LoginUserDto;
 import com.clashcode.backend.dto.RegisterUserDto;
 import com.clashcode.backend.dto.SignUpCompletionDto;
 import com.clashcode.backend.enums.Roles;
+import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import com.clashcode.backend.mapper.UserMapper;
@@ -36,11 +37,10 @@ public class AuthService {
     public User signup(RegisterUserDto input) {
 
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new RuntimeException("Email Already Taken");
         }
-
         if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already taken");
+            throw new RuntimeException("Username Already Taken");
         }
 
         String password = passwordEncoder.encode(input.getPassword());
@@ -49,6 +49,37 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+
+    public String getRecoveryQuestion(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found"));
+
+        if (user.getRecoveryQuestion() == null) {
+            throw new RuntimeException("Google account user");
+        }
+        return user.getRecoveryQuestion().name();
+    }
+
+    public boolean verifyRecoveryAnswer(String email, String answer) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found."));
+
+        if (user.getRecoveryAnswer() == null || !user.getRecoveryAnswer().equalsIgnoreCase(answer.trim())) {
+            throw new RuntimeException("Incorrect recovery answer.");
+        }
+        return true;
+    }
+
+    public void resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found."));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+    // ---------------------------
+    //  EMAIL / PASSWORD LOGIN
+    // ---------------------------
     public User authenticate(LoginUserDto input) {
 
         authenticationManager.authenticate(
@@ -57,11 +88,15 @@ public class AuthService {
                         input.getPassword()
                 )
         );
-
         return userRepository.findByEmail(input.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+
+
+    // ---------------------------
+    //  GOOGLE OAUTH CALLBACK
+    // ---------------------------
     public User handleGoogleOAuth(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User oauth = authenticationToken.getPrincipal();
         String email = oauth.getAttribute("email");

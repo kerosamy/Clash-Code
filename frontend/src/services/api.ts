@@ -1,12 +1,15 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
-const API_BASE = "http://localhost:8080";
+
+
+const API_BASE = "http://localhost:8080/";
 
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 10000,
 });
+
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -24,17 +27,33 @@ interface ErrorResponse {
 }
 
 const handleApiError = (error: AxiosError<ErrorResponse>): never => {
-  if (error.response) {
+  console.error("API Call Failed:", error);
+
+ if (error.response) {
     const data = error.response.data;
-    const message = data?.message ?? `API Error: ${error.response.status}`;
-    throw new Error(message);
+
+    if (typeof data === "string") {
+      throw data;
+    }
+
+    if (typeof data === "object" && data !== null) {
+      if (typeof data.error === "string") {
+        throw data.error;
+      }
+
+      if (typeof data.message === "string") {
+        throw data.message;
+      }
+    }
+
+    throw "Unknown server error";
   }
-  else if (error.request) {
-    throw new Error("Network error, please try again later");
+
+  if (error.request) {
+    throw "Network error. Server is unreachable.";
   }
-  else {
-    throw new Error(error.message);
-  }
+
+  throw error.message;
 };
 
 export const apiRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {

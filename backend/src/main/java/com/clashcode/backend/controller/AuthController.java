@@ -1,8 +1,6 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.LoginUserDto;
-import com.clashcode.backend.dto.RegisterUserDto;
-import com.clashcode.backend.dto.SignUpCompletionDto;
+import com.clashcode.backend.dto.*;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.dto.AuthResponseDto;
@@ -12,6 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RequestMapping("/auth")
 @RestController
@@ -26,15 +28,50 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterUserDto registerUserDto) {
-        User registeredUser = authService.signup(registerUserDto);
-        return buildAuthResponse(registeredUser);
+    public ResponseEntity<?> register(@RequestBody RegisterUserDto registerUserDto) {
+        try {
+            User registeredUser = authService.signup(registerUserDto);
+            return buildAuthResponse(registeredUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> authenticate(@RequestBody LoginUserDto loginUserDto) {
         User authenticatedUser = authService.authenticate(loginUserDto);
         return buildAuthResponse(authenticatedUser);
+    }
+
+    @PostMapping("/recovery-question")
+    public ResponseEntity<String> getRecoveryQuestion(@RequestBody String email) {
+        try {
+            String question = authService.getRecoveryQuestion(email);
+
+            return ResponseEntity.ok(question);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/verify-recovery")
+    public ResponseEntity<?> verifyRecoveryAnswer(@RequestBody VerifyRecoveryDto request) {
+        try {
+            authService.verifyRecoveryAnswer(request.getEmail(), request.getAnswer());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody PasswordResetDto request) {
+        try {
+            authService.resetPassword(request.getEmail(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // GOOGLE LOGIN

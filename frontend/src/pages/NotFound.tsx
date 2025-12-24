@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router-dom';
+import { getUsername } from '../utils/jwtDecoder';
+const username = getUsername();
 
 export default function NotFound() {
   return (
@@ -9,7 +11,7 @@ export default function NotFound() {
         The page you're looking for doesn't exist or has been moved.
       </p>
       <NavLink 
-        to="/profile" 
+        to={`/profile/${username}/overview`}
         className="px-6 py-3 bg-orange text-white rounded-lg hover:bg-orange/80 transition-colors"
       >
         Go to Profile

@@ -1,96 +1,119 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../services/AuthService.ts";
-import InputField from "../components/authentication/InputField.tsx";
-import PasswordField from "../components/authentication/PasswordField.tsx";
-import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal.tsx";
+import { registerUser, type RegisterRequest } from "../services/AuthService";
+import InputField from "../components/authentication/InputField";
+import PasswordField from "../components/authentication/PasswordField";
+import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal";
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+  validatePasswordMatch,
+  validateRecoveryQuestion,
+  validateRecoveryAnswer
+} from "../utils/validation";
 
 export default function SignUp() {
-  const [username, setUsername] = useState("");
-  const [emailOrHandle, setEmailOrHandle] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [recoveryQuestion, setRecoveryQuestion] = useState("");
-  const [recoveryAnswer, setRecoveryAnswer] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    recoveryQuestion: "",
+    recoveryAnswer: ""
+  });
 
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
 
-  const handleGoogleSignUP = () => {
+  const handleInputChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleGoogleSignUp = () => {
     sessionStorage.setItem('oauth_flow', 'signup');
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
-  const validateInputs = () => {
+  const validateAllInputs = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!/^[a-zA-Z0-9_-]{4,32}$/.test(username)) {
-      newErrors.username =
-        "Username must be 4–32 characters and contain only letters, numbers, '_' or '-'.";
-    }
+    // Execute all validations from validation.ts
+    const usernameVal = validateUsername(formData.username);
+    if (!usernameVal.isValid) newErrors.username = usernameVal.error!;
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOrHandle)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
+    const emailVal = validateEmail(formData.email);
+    if (!emailVal.isValid) newErrors.email = emailVal.error!;
 
-    if (password.length < 8 || password.length > 64) {
-      newErrors.password = "Password must be 8–64 characters long.";
-    }
+    const passVal = validatePassword(formData.password);
+    if (!passVal.isValid) newErrors.password = passVal.error!;
 
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match.";
-    }
+    const matchVal = validatePasswordMatch(formData.password, formData.confirmPassword);
+    if (!matchVal.isValid) newErrors.confirmPassword = matchVal.error!;
 
-    if (!recoveryQuestion) {
-      newErrors.recoveryQuestion = "Please select a recovery question.";
-    }
+    const qVal = validateRecoveryQuestion(formData.recoveryQuestion);
+    if (!qVal.isValid) newErrors.recoveryQuestion = qVal.error!;
 
-    if (recoveryAnswer.length < 2 || recoveryAnswer.length > 100) {
-      newErrors.recoveryAnswer = "Recovery answer must be 2–100 characters.";
-    }
+    const aVal = validateRecoveryAnswer(formData.recoveryAnswer);
+    if (!aVal.isValid) newErrors.recoveryAnswer = aVal.error!;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
- const handleSignUp = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
 
-  // Clear previous errors
-  setErrors({});
+    if (!validateAllInputs()) return;
 
-  if (!validateInputs()) return;
+    setIsLoading(true);
 
-  const requestData = {
-    username: username,
-    email: emailOrHandle,
-    password: password,
-    recoveryQuestion: recoveryQuestion,
-    recoveryAnswer: recoveryAnswer,
+    const requestData: RegisterRequest = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      recoveryQuestion: formData.recoveryQuestion,
+      recoveryAnswer: formData.recoveryAnswer,
+    };
+
+    try {
+      await registerUser(requestData);
+
+      navigate(`/profile/${formData.username}/overview`);
+      
+    } catch (err: any) {
+      const errorMessage = err || "Registration failed";
+      setErrors({ global: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  try {
-    // Call backend and receive token
-    await registerUser(requestData);
-
-    // Redirect
-    navigate(`/profile/${username}/overview`);
+  const updateRecoveryData = (question: string, answer: string) => {
+    setFormData(prev => ({
+      ...prev,
+      recoveryQuestion: question,
+      recoveryAnswer: answer
+    }));
     
-  } catch (err: any) {
-    const errorMessage = err.message?.toLowerCase() || "";
-
-    if (errorMessage.includes("email")) {
-      setErrors({ email: err.message });
-    } else if (errorMessage.includes("username")) {
-      setErrors({ username: err.message });
-    } else {
-      alert(err.message || "Something went wrong. Try again later.");
+    // Clear errors if valid
+    if(errors.recoveryQuestion && validateRecoveryQuestion(question).isValid) {
+        setErrors(prev => ({ ...prev, recoveryQuestion: "" }));
     }
-  }
-};
-
+    if(errors.recoveryAnswer && validateRecoveryAnswer(answer).isValid) {
+        setErrors(prev => ({ ...prev, recoveryAnswer: "" }));
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
@@ -99,59 +122,70 @@ export default function SignUp() {
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
         </div>
 
+        {/* Global error banner (only shows if error isn't specific to username/email) */}
+        {errors.global && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500 text-red-100 text-sm rounded text-center">
+            {errors.global}
+          </div>
+        )}
+
         <form onSubmit={handleSignUp} className="flex flex-col gap-4">
           <InputField
             placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={formData.username}
+            onChange={handleInputChange('username')}
             error={errors.username}
           />
 
           <InputField
             type="email"
             placeholder="Email"
-            value={emailOrHandle}
-            onChange={(e) => setEmailOrHandle(e.target.value)}
+            value={formData.email}
+            onChange={handleInputChange('email')}
             error={errors.email}
           />
 
           <PasswordField
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleInputChange('password')}
             error={errors.password}
           />
 
           <PasswordField
             placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={formData.confirmPassword}
+            onChange={handleInputChange('confirmPassword')}
             error={errors.confirmPassword}
           />
 
           <button
             type="button"
             onClick={() => setIsRecoveryModalOpen(true)}
-            className="bg-background border border-gray-600 p-2 rounded-button hover:opacity-90"
+            className={`bg-background border p-2 rounded-button hover:opacity-90 transition-colors
+              ${(errors.recoveryQuestion || errors.recoveryAnswer) ? 'border-red-500 text-red-100' : 'border-gray-600'}
+            `}
           >
-            Set Recovery Question
+            {formData.recoveryQuestion ? '✓ Recovery Question Set' : 'Set Recovery Question'}
           </button>
-          {errors.recoveryQuestion && (
-            <p className="text-red-500 text-sm">{errors.recoveryQuestion}</p>
-          )}
-          {errors.recoveryAnswer && (
-            <p className="text-red-500 text-sm">{errors.recoveryAnswer}</p>
+          
+          {(errors.recoveryQuestion || errors.recoveryAnswer) && (
+            <p className="text-red-500 text-sm text-center">
+              {errors.recoveryQuestion || errors.recoveryAnswer}
+            </p>
           )}
 
           <button
             type="submit"
-            className="bg-orange hover:opacity-90 py-2 rounded-button text-white mt-2"
+            disabled={isLoading}
+            className={`bg-orange text-white py-2 rounded-button mt-2 transition-all flex justify-center items-center
+              ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
+            `}
           >
-            Sign Up
+            {isLoading ? <span>Creating account...</span> : "Sign Up"}
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center my-4">
           <div className="flex-grow border-t border-gray-600"></div>
           <span className="px-2 text-gray-400">OR</span>
@@ -159,10 +193,9 @@ export default function SignUp() {
         </div>
 
         <button
-          onClick=
-            {handleGoogleSignUP}
-  
-          className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
+          onClick={handleGoogleSignUp}
+          disabled={isLoading}
+          className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <img
             src="/src/assets/google-icon-1.png"
@@ -183,10 +216,10 @@ export default function SignUp() {
       <RecoveryQuestionModal
         isOpen={isRecoveryModalOpen}
         onClose={() => setIsRecoveryModalOpen(false)}
-        recoveryQuestion={recoveryQuestion}
-        setRecoveryQuestion={setRecoveryQuestion}
-        recoveryAnswer={recoveryAnswer}
-        setRecoveryAnswer={setRecoveryAnswer}
+        recoveryQuestion={formData.recoveryQuestion}
+        setRecoveryQuestion={(q) => updateRecoveryData(q, formData.recoveryAnswer)}
+        recoveryAnswer={formData.recoveryAnswer}
+        setRecoveryAnswer={(a) => updateRecoveryData(formData.recoveryQuestion, a)}
         errorQuestion={errors.recoveryQuestion}
         errorAnswer={errors.recoveryAnswer}
       />
