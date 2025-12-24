@@ -62,7 +62,6 @@ import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.s
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 import Suggestions from '../assets/icons/Suggestions.svg';
-import { logout } from '../services/AuthService';
 import NotificationsIcon from '../assets/icons/Bell.png';
 
 
@@ -146,7 +145,7 @@ export const routes: RouteConfig[] = [
   
   { 
     path: 'play-game', 
-    name: 'Game Play', 
+    name: 'Play Game', 
     icon: SwordIcon, 
     component: PlayGameHome, 
     hideFromNav: false
