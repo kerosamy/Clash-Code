@@ -36,6 +36,7 @@ public class UserService {
     @Value("${server.url:http://localhost:8080}")
     private String serverUrl;
 
+
     public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
@@ -176,5 +177,11 @@ public class UserService {
             return null;
         }
         return serverUrl + "/files/profile-images/" + fileName;
+    }
+
+    public Page<LeaderBoardDto> getLeaderboard(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return userRepository.findAllByOrderByCurrentRateDesc(pageRequest)
+                .map(userMapper::toLeaderboardDto); // Uses the injected mapper
     }
 }

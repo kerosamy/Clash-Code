@@ -1,5 +1,6 @@
 package com.clashcode.backend.controller;
 
+import com.clashcode.backend.dto.LeaderBoardDto;
 import com.clashcode.backend.dto.ProfileDto;
 import com.clashcode.backend.dto.UserSearchDto;
 import com.clashcode.backend.dto.UserSearchResponseDto;
@@ -66,5 +67,12 @@ public class UserController {
     ) {
         List<UserSearchDto> results = userService.searchByUsername(username, user);
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<org.springframework.data.domain.Page<LeaderBoardDto>> getLeaderboard(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(userService.getLeaderboard(page, size));
     }
 }

@@ -183,3 +183,20 @@ export async function uploadProfileImage(file: File): Promise<UploadImageRespons
         data: formData,
     });
 }
+
+
+export interface LeaderboardUserDto {
+  username: string;
+  currentRate: number;
+}
+
+export async function getLeaderboard(
+  page = 0,
+  size = 20
+): Promise<Page<LeaderboardUserDto>> {
+  return apiRequest<Page<LeaderboardUserDto>>({
+    method: "GET",
+    url: "/users/leaderboard", // Assuming this is your endpoint
+    params: { page, size },
+  });
+}
