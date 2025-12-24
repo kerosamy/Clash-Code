@@ -20,6 +20,7 @@ interface MatchData {
     startAt: string;
     duration: number;
     state: string;
+    problemId?: number;
 }
 
 interface WebSocketPayload {
@@ -65,7 +66,8 @@ export default function PlayGame() {
                 setMatchData({
                     startAt: details.startAt,
                     duration: details.duration,
-                    state: details.matchState
+                    state: details.matchState,
+                    problemId: details.problemId
                 });
 
                 if (details.matchState === "COMPLETED" || details.matchState === "RESIGNED") {
@@ -188,7 +190,7 @@ export default function PlayGame() {
             </div>
 
             <div className="flex-1 flex flex-col overflow-y-auto custom-scroll">
-                <Outlet />
+                <Outlet context={{ problemId: matchData?.problemId }} />
             </div>
 
             {matchData && (
