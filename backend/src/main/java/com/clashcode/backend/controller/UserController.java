@@ -77,7 +77,6 @@ public class UserController {
     }
     @PostMapping("/status/online")
     public ResponseEntity<Void> updateOnlineStatus(@AuthenticationPrincipal User user) {
-        System.out.println(user.getId());
         userService.markOnline(user);
         return ResponseEntity.noContent().build();
     }

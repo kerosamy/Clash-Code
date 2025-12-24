@@ -219,7 +219,7 @@ export default function ProfileHeader({
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-xl text-text">Status :</span>
-                                <span className={`text-2xl font-semibold text-${getStatusColor(profile.userStatus)}`}>
+                                <span className={`text-2xl font-semibold ${getStatusColor(profile.userStatus)}`}>
                                     {getStatusLabel(profile.userStatus)}
                                 </span>
                         </div>

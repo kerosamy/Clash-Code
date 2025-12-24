@@ -32,10 +32,9 @@ public class UserService {
     private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
     private final FriendStatusMapper friendStatusMapper = new FriendStatusMapper();
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisService redisService;
     private static final int RATING_PER_RANK = 300;
     private static final Ranks[] RANKS = Ranks.values();
-    private static final long ONLINE_TTL_SECONDS = 60;
 
     public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
@@ -43,7 +42,7 @@ public class UserService {
         this.submissionRepository = submissionRepository;
         this.matchParticipantRepository = matchParticipantRepository;
         this.imageFileStorageService = imageFileStorageService;
-        this.redisTemplate = redisTemplate;
+        this.redisService = redisService;
     }
 
     public List<UserSearchResponseDto> searchByUsername(String username) {
@@ -51,7 +50,8 @@ public class UserService {
                 .stream()
                 .map(user -> new UserSearchResponseDto(
                         user.getUsername(),
-                        getRank(user.getCurrentRate())
+                        getRank(user.getCurrentRate()),
+                        getUserStatus(user.getId())
                 )).toList();
     }
 
@@ -193,7 +193,7 @@ public class UserService {
                 .map(userMapper::toLeaderboardDto);
     }
 
-    private UserStatus getUserStatus(Long userId){
+    public UserStatus getUserStatus(Long userId){
         if(!isOnline(userId)){
             return UserStatus.OFFLINE;
         }
@@ -203,9 +203,7 @@ public class UserService {
 
     public void markOnline(User user) {
         try {
-            String key = "online:user:" + user.getId();
-            redisTemplate.opsForValue()
-                    .set(key, "1", Duration.ofSeconds(ONLINE_TTL_SECONDS));
+            redisService.addUserToRedis(user.getId());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -213,8 +211,7 @@ public class UserService {
 
     public boolean isOnline(Long userId) {
         try {
-            String key = "online:user:" + userId;
-            return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+            return redisService.searchUserFromRedis(userId);
         } catch (Exception e) {
             return false;
         }

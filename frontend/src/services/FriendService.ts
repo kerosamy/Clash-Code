@@ -1,4 +1,5 @@
 import { apiRequest } from "./api";
+import { UserStatus } from "../enums/UserStatus";
 
 export type FriendStatus = "NONE" | "PENDING_SENT" | "PENDING_RECEIVED" | "FRIENDS";
 
@@ -42,6 +43,7 @@ export interface FriendDto {
   currentRate: number;
   imgUrl: string;
   status: FriendStatus;
+  userStatus: UserStatus;
   requestedAt: string;
   updatedAt: string;
 }

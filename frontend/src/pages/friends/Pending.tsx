@@ -91,6 +91,7 @@ export default function Pending() {
             onAcceptClick={() => handleAccept(user.username)}
             onRejectClick={() => handleReject(user.username)}
             onUsernameClick={() => navigate(`/profile/${user.username}/overview`)}
+            userStatus={user.userStatus}
           />
         )}
       />

@@ -333,7 +333,7 @@ class FriendServiceTest {
 
         when(friendRepository.findBySenderIdAndStatus(eq(user.getId()), eq(FriendRequestStatus.PENDING), any()))
                 .thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
+        when(friendMapper.toFriendDto(friendship, user, null)).thenReturn(dto);
 
         Page<FriendDto> result = friendService.getSentFriendRequests(user, Pageable.unpaged());
 
@@ -350,7 +350,7 @@ class FriendServiceTest {
 
         when(friendRepository.findByReceiverIdAndStatus(eq(user.getId()), eq(FriendRequestStatus.PENDING), any()))
                 .thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
+        when(friendMapper.toFriendDto(friendship, user, null)).thenReturn(dto);
 
         Page<FriendDto> result = friendService.getReceivedFriendRequests(user, Pageable.unpaged());
 
@@ -367,7 +367,7 @@ class FriendServiceTest {
 
         when(friendRepository.findAllFriendsByUserId(eq(user.getId()), any()))
                 .thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
+        when(friendMapper.toFriendDto(friendship, user, null)).thenReturn(dto);
 
         Page<FriendDto> result = friendService.getFriendsList(user, Pageable.unpaged());
 
@@ -383,7 +383,7 @@ class FriendServiceTest {
         FriendDto dto = FriendDto.builder().username("bob").build();
 
         when(friendRepository.findAllFriendsByUserId(eq(user.getId()), any())).thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
+        when(friendMapper.toFriendDto(friendship, user, null)).thenReturn(dto);
 
         Page<FriendDto> result = friendService.getFriendsList(user, PageRequest.of(0, 20));
 

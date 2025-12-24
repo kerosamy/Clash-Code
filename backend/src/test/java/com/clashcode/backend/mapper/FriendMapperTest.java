@@ -18,9 +18,11 @@ class FriendMapperTest {
     private FriendMapper friendMapper;
     private FriendStatusMapper friendStatusMapper;
 
+
     @BeforeEach
     void setUp() {
         friendStatusMapper = Mockito.mock(FriendStatusMapper.class);
+
         friendMapper = new FriendMapper(friendStatusMapper);
     }
 
@@ -38,7 +40,7 @@ class FriendMapperTest {
 
         when(friendStatusMapper.map(alice, friendship)).thenReturn(FriendStatus.PENDING_SENT);
 
-        FriendDto result = friendMapper.toFriendDto(friendship, alice);
+        FriendDto result = friendMapper.toFriendDto(friendship, alice,null);
 
         assertEquals("bob", result.getUsername());
         assertEquals(1500, result.getCurrentRate());
@@ -58,7 +60,7 @@ class FriendMapperTest {
 
         when(friendStatusMapper.map(alice, friendship)).thenReturn(FriendStatus.PENDING_RECEIVED);
 
-        FriendDto result = friendMapper.toFriendDto(friendship, alice);
+        FriendDto result = friendMapper.toFriendDto(friendship, alice, null);
 
         assertEquals("bob", result.getUsername());
         assertEquals(FriendStatus.PENDING_RECEIVED, result.getStatus());
