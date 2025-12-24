@@ -1,11 +1,14 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.enums.Ranks;
 import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.FriendStatusMapper;
 import com.clashcode.backend.mapper.UserMapper;
+import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.*;
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +37,7 @@ class UserServiceTest {
     @Mock private MatchParticipantRepository matchParticipantRepository;
     @Mock private FriendRepository friendRepository;
     @Mock private UserMapper userMapper;
+    @Mock private FriendStatusMapper friendStatusMapper;
 
     @InjectMocks
     private UserService userService;
@@ -165,8 +171,8 @@ class UserServiceTest {
                 userService.searchByUsername("min");
 
         assertEquals(2, result.size());
-        assertEquals("mina", result.get(0).getUsername());
-        assertEquals("MASTER", result.get(0).getRank());
+        assertEquals("mina", result.getFirst().getUsername());
+        assertEquals("MASTER", result.getFirst().getRank());
     }
 
     @Test
@@ -234,4 +240,20 @@ class UserServiceTest {
 
         assertEquals(1, result.getContent().size());
     }
+
+    @Test
+    void test_searchByUsername_withLoggedInUser_noResults() {
+        User loggedInUser = new User();
+        loggedInUser.setId(5L);
+
+        when(userRepository.searchByUsernameWithStatus(5L, "xyz"))
+                .thenReturn(Collections.emptyList());
+
+        List<UserSearchDto> result = userService.searchByUsername("xyz", loggedInUser);
+
+        assertTrue(result.isEmpty());
+        verify(userRepository).searchByUsernameWithStatus(5L, "xyz");
+        verify(friendStatusMapper, never()).map(any(), any());
+    }
+
 }

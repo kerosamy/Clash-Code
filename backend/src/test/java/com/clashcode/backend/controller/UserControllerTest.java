@@ -1,9 +1,7 @@
 package com.clashcode.backend.controller;
 
-import com.clashcode.backend.dto.CategoryDto;
-import com.clashcode.backend.dto.ProfileDto;
-import com.clashcode.backend.dto.StatsDto;
-import com.clashcode.backend.dto.UserSearchResponseDto;
+import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.JwtService;
@@ -25,8 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,10 +51,10 @@ class UserControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    private void setupSecurityContext(Long userId, String username) {
+    private void setupSecurityContext() {
         User mockUser = new User();
-        mockUser.setId(userId);
-        mockUser.setUsername(username);
+        mockUser.setId(1L);
+        mockUser.setUsername("mina");
         Authentication auth = new UsernamePasswordAuthenticationToken(mockUser, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
@@ -68,7 +65,7 @@ class UserControllerTest {
         User mockUser = new User();
         mockUser.setId(1L);
         mockUser.setUsername("mina");
-        setupSecurityContext(1L, "mina");
+        setupSecurityContext();
 
         StatsDto stats = new StatsDto(750, 525, 330, 230);
         CategoryDto category = new CategoryDto("DP", 20);
@@ -159,6 +156,49 @@ class UserControllerTest {
 
         mockMvc.perform(get("/users/search")
                         .param("username", "caro")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /users/search-with-status - Found results with friend status")
+    void searchUsersWithStatus_found() throws Exception {
+        // Setup logged-in user in security context
+        setupSecurityContext();
+
+        List<UserSearchDto> mockResults = List.of(
+                new UserSearchDto("caro", 1400, FriendStatus.FRIENDS),
+                new UserSearchDto("caroline", 1200, FriendStatus.PENDING_SENT)
+        );
+
+        when(userService.searchByUsername(eq("car"), any(User.class)))
+                .thenReturn(mockResults);
+
+        mockMvc.perform(get("/users/search-with-status")
+                        .param("username", "car")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].username").value("caro"))
+                .andExpect(jsonPath("$[0].friendStatus").value("FRIENDS"))
+                .andExpect(jsonPath("$[1].username").value("caroline"))
+                .andExpect(jsonPath("$[1].friendStatus").value("PENDING_SENT"));
+    }
+
+    @Test
+    @DisplayName("GET /users/search-with-status - No results")
+    void searchUsersWithStatus_noResults() throws Exception {
+        User loggedIn = new User();
+        loggedIn.setId(1L);
+        loggedIn.setUsername("mina");
+        setupSecurityContext();
+
+        when(userService.searchByUsername(eq("unknown"), eq(loggedIn)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/users/search-with-status")
+                        .param("username", "unknown")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
