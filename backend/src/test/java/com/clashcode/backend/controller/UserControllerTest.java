@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -202,5 +205,35 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /users/leaderboard - Success")
+    void getLeaderboard_success() throws Exception {
+        LeaderBoardDto user1 = new LeaderBoardDto();
+        user1.setUsername("topPlayer");
+        user1.setCurrentRate(3000);
+
+        LeaderBoardDto user2 = new LeaderBoardDto();
+        user2.setUsername("runnerUp");
+        user2.setCurrentRate(2700);
+
+        Page<LeaderBoardDto> mockPage = new PageImpl<>(
+                List.of(user1, user2),
+                PageRequest.of(0, 20),
+                2
+        );
+
+        when(userService.getLeaderboard(0, 20)).thenReturn(mockPage);
+
+        mockMvc.perform(get("/users/leaderboard")
+                        .param("page", "0")
+                        .param("size", "20")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].username").value("topPlayer"))
+                .andExpect(jsonPath("$.content[0].currentRate").value(3000))
+                .andExpect(jsonPath("$.content[1].username").value("runnerUp"));
     }
 }

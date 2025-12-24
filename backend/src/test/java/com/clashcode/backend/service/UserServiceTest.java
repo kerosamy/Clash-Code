@@ -11,6 +11,8 @@ import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -256,4 +259,35 @@ class UserServiceTest {
         verify(friendStatusMapper, never()).map(any(), any());
     }
 
-}
+    @Test
+    @DisplayName("getLeaderboard - Should return sorted and mapped page")
+    void test_getLeaderboard_shouldReturnSortedMappedPage() {
+        // 1. ISOLATED INJECTION: Only affects this test run
+        // We manually swap the final internal 'userMapper' with our mock
+        ReflectionTestUtils.setField(userService, "userMapper", userMapper);
+
+        // 2. Arrange Data
+        User u1 = new User();
+        u1.setUsername("pro");
+        u1.setCurrentRate(2500);
+        Page<User> mockUserPage = new PageImpl<>(List.of(u1), PageRequest.of(0, 20), 1);
+
+        LeaderBoardDto mappedDto = new LeaderBoardDto();
+        mappedDto.setUsername("pro");
+        mappedDto.setCurrentRate(2500);
+
+        // 3. Mock Behavior
+        when(userRepository.findAllByOrderByCurrentRateDesc(any(PageRequest.class)))
+                .thenReturn(mockUserPage);
+
+        when(userMapper.toLeaderboardDto(u1)).thenReturn(mappedDto);
+
+        // 4. Act
+        Page<LeaderBoardDto> result = userService.getLeaderboard(0, 20);
+
+        // 5. Assert & Verify
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(userMapper).toLeaderboardDto(u1);
+    }
+    }

@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { getUsername } from '../utils/jwtDecoder';
-const username = getUsername();
 
 export default function NotFound() {
+
+  const username = getUsername();
+
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full bg-container font-anta">
       <h1 className="text-9xl font-bold text-text mb-4">404</h1>

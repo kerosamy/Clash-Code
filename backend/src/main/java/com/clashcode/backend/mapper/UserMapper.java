@@ -4,7 +4,9 @@ import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.RecoveryQuestion;
 import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.model.User;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UserMapper {
     public User toUser(RegisterUserDto input, String password) {
         return User.builder()
@@ -49,5 +51,11 @@ public class UserMapper {
                 .build();
     }
 
+        public LeaderBoardDto toLeaderboardDto(User user) {
+            LeaderBoardDto dto = new LeaderBoardDto();
+            dto.setUsername(user.getUsername());
+            dto.setCurrentRate(user.getCurrentRate());
+            return dto;
+        }
 }
 
