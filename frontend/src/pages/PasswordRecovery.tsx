@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/authentication/InputField";
 import PasswordField from "../components/authentication/PasswordField";
+import { toast } from "react-toastify";
+import { getUsername } from "../utils/jwtDecoder";
+import { loginUser } from "../services/AuthService";
 import { 
   fetchRecoveryQuestion, 
   verifyRecoveryAnswer, 
@@ -29,7 +32,8 @@ export default function PasswordRecovery() {
   // UI State
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   // Helper to safely extract error message
@@ -128,8 +132,17 @@ export default function PasswordRecovery() {
 
     try {
       await resetPassword({ email, newPassword });
-      // Optional: Add a success toast or alert here
-      navigate("/log-in");
+      setSuccessMessage("Password reset successful! Logging you in...");
+
+        await loginUser({
+        email,
+        password: newPassword,
+      });
+
+      setTimeout(() => {
+        navigate(`/profile/${getUsername()}/overview`);
+      }, 1200);
+
     } catch (err: any) {
       setErrors({ global: getErrorMessage(err) });
     } finally {
@@ -272,6 +285,12 @@ export default function PasswordRecovery() {
                 {errors.global && (
                   <div className="p-3 bg-red-500/20 border border-red-500 text-red-100 text-sm rounded text-center">
                     {errors.global}
+                  </div>
+                )}
+
+                {successMessage && (
+                  <div className="p-3 bg-green-500/20 border border-green-500 text-green-100 text-sm rounded text-center">
+                    {successMessage}
                   </div>
                 )}
 

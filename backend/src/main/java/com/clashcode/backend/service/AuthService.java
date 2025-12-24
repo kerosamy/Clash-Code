@@ -37,10 +37,10 @@ public class AuthService {
     public User signup(RegisterUserDto input) {
 
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
-            throw new RuntimeException("Username Already Taken");
+            throw new RuntimeException("Email Already Taken");
         }
         if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-            throw new RuntimeException("Email Already Taken");
+            throw new RuntimeException("Username Already Taken");
         }
 
         String password = passwordEncoder.encode(input.getPassword());

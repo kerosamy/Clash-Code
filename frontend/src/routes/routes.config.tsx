@@ -18,7 +18,6 @@ import ProblemDetails from '../pages/problem/ProblemDetails';
 import Submit from '../pages/problem/Submit';
 import LogOut from '../pages/LogOut';
 import Notifications from '../pages/Notifications';
-import MatchProblemDetails from '../pages/match/MatchProblemDetails'
 import PasswordRecovery from '../pages/PasswordRecovery';
 
 // Profile sub-pages

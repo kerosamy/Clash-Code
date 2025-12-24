@@ -6,7 +6,6 @@ import { getUsername } from "../utils/jwtDecoder";
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const username = getUsername();
   useEffect(() => {
     const processOAuth = async () => {
       try {

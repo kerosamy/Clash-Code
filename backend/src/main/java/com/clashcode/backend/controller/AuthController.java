@@ -46,9 +46,7 @@ public class AuthController {
     @PostMapping("/recovery-question")
     public ResponseEntity<String> getRecoveryQuestion(@RequestBody String email) {
         try {
-            System.out.println("ZZZZ"+email);
             String question = authService.getRecoveryQuestion(email);
-            System.out.println("LLLLL"+email);
 
             return ResponseEntity.ok(question);
         } catch (RuntimeException e) {

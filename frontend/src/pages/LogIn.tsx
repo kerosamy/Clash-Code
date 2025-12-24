@@ -45,7 +45,7 @@ export default function LogIn() {
     
     try {
       const credentials: LoginRequest = {
-        email: email, // This field handles both email or username on backend usually
+        email: email, 
         password: password
       };
 
@@ -84,7 +84,7 @@ export default function LogIn() {
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <InputField
-            placeholder="Email or Username"
+            placeholder="Email"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
