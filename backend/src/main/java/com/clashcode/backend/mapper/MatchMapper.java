@@ -97,4 +97,28 @@ public class MatchMapper {
                 .newRating(participant.getNewRating())
                 .build();
     }
+
+    public MatchHistoryDto toMatchHistoryDto(MatchParticipant mp) {
+        Match match = mp.getMatch();
+        Long currentUserId = mp.getUser().getId();
+
+        String opponentName = match.getParticipants().stream()
+                .filter(p -> !p.getUser().getId().equals(currentUserId))
+                .map(p -> p.getUser().getUsername())
+                .findFirst()
+                .orElse("Unknown");
+
+        boolean isRated = match.getGameMode() == GameMode.RATED;
+
+        return MatchHistoryDto.builder()
+                .matchId(match.getId()) 
+                .time(match.getStartAt())
+                .opponent(opponentName)
+                .problem(match.getProblem().getTitle()) 
+                .rank(mp.getRank())     
+                .rateChange(mp.getRateChange())
+                .newRating(mp.getNewRating())
+                .isRated(isRated)
+                .build();
+    }
 }

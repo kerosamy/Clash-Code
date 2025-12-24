@@ -72,6 +72,17 @@ export interface MatchResultDto {
     newRating: number;
 }
 
+export interface MatchHistoryDto {
+    matchId: number;
+    time: string;
+    opponent: string;
+    problem: string;
+    rank: number;
+    rateChange: number;
+    newRating: number;
+    rated: boolean;
+}
+
 export async function createMatch(
   body: CreateMatchRequestDto
 ): Promise<MatchResponseDto> {
@@ -145,4 +156,24 @@ export async function cancelOpponentSearch(): Promise<void> {
     method: "DELETE",
     url: "/matches/search-opponent/cancel",
   });
+}
+export async function getMatchHistory(
+  page: number = 0, 
+  size: number = 10,
+  filter: string | null = "All Matches" 
+): Promise<{ content: MatchHistoryDto[]; totalPages: number }> {
+  
+    let ratedParam = null;
+    if (filter === "Rated Only") ratedParam = true;
+    if (filter === "Friendly Only") ratedParam = false;
+
+    return apiRequest<{ content: MatchHistoryDto[]; totalPages: number }>({
+        method: "GET",
+        url: "/matches/my-history",
+        params: { 
+            page, 
+            size, 
+            rated: ratedParam 
+        }
+    });
 }

@@ -239,4 +239,53 @@ class MatchMapperTest {
         assertEquals(25, resultDto.getRateChange());
         assertEquals(1500, resultDto.getNewRating());
     }
+
+    @Test
+    void test_toMatchHistoryDto() {
+        User currentUser = mock(User.class);
+        User opponentUser = mock(User.class);
+        when(currentUser.getId()).thenReturn(1L);
+        when(opponentUser.getId()).thenReturn(2L);
+        when(opponentUser.getUsername()).thenReturn("OpponentUser");
+
+        Problem problem = mock(Problem.class);
+        when(problem.getTitle()).thenReturn("ProblemTitle");
+
+        Match match = Match.builder()
+                .id(100L)
+                .startAt(LocalDateTime.of(2025, 12, 24, 12, 0))
+                .gameMode(GameMode.RATED)
+                .problem(problem)
+                .build();
+
+        MatchParticipant currentParticipant = MatchParticipant.builder()
+                .user(currentUser)
+                .match(match)
+                .rank(1)
+                .rateChange(20)
+                .newRating(1500)
+                .build();
+
+        MatchParticipant opponentParticipant = MatchParticipant.builder()
+                .user(opponentUser)
+                .match(match)
+                .rank(2)
+                .rateChange(-20)
+                .newRating(1480)
+                .build();
+
+        match.setParticipants(List.of(currentParticipant, opponentParticipant));
+
+        MatchHistoryDto dto = matchMapper.toMatchHistoryDto(currentParticipant);
+
+        assertNotNull(dto);
+        assertEquals(100L, dto.getMatchId());
+        assertEquals(LocalDateTime.of(2025, 12, 24, 12, 0), dto.getTime());
+        assertEquals("OpponentUser", dto.getOpponent());
+        assertEquals("ProblemTitle", dto.getProblem());
+        assertEquals(1, dto.getRank());
+        assertEquals(20, dto.getRateChange());
+        assertEquals(1500, dto.getNewRating());
+        assertTrue(dto.isRated());
+    }
 }
