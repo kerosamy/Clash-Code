@@ -130,3 +130,19 @@ export async function getMatchResults(matchId: number): Promise<MatchResultDto> 
         url: `/matches/${matchId}/results`,
     });
 }
+
+
+export async function searchOpponent(): Promise<void> {
+  return apiRequest<void>({
+    method: "POST",
+    url: "/matches/search-opponent",
+  });
+}
+
+
+export async function cancelOpponentSearch(): Promise<void> {
+  return apiRequest<void>({
+    method: "DELETE",
+    url: "/matches/search-opponent/cancel",
+  });
+}

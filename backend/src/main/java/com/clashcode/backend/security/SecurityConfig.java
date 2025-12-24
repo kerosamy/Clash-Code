@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/files/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/test/public").permitAll()  // Public test
+                        .requestMatchers("/matches/start-rated-match").permitAll()
 
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN") // Most restrictive first
                         .requestMatchers("/admin/**").hasRole("ADMIN") // Super_Admin inherits Admin roles
