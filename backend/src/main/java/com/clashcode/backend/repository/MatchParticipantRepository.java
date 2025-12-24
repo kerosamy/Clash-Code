@@ -26,8 +26,8 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
     @Query("""
                   SELECT mp
                   FROM MatchParticipant mp
-                  JOIN FETCH mp.match m
-                  JOIN FETCH m.problem
+                  JOIN Match m ON mp.match.id = m.id
+                  JOIN Problem p ON m.problem.id = p.id
                   WHERE mp.user.id = :userId
                   AND m.matchState = 'COMPLETED'
                   AND (

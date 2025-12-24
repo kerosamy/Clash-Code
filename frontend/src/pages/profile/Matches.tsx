@@ -46,7 +46,7 @@ const MatchRow = ({ match }: { match: MatchHistoryDto }) => {
   const hasRateChange = match.rated && match.rateChange !== null;
   const hasNewRate = match.rated && match.newRating !== null;
 
-  const cellStyle = "text-sm font-bold truncate flex items-center justify-center";;
+  const cellStyle = "text-sm font-bold truncate flex items-center justify-center";
 
   return (
     <div 
