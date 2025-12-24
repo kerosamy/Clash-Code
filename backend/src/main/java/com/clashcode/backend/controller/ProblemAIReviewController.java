@@ -1,0 +1,23 @@
+package com.clashcode.backend.controller;
+
+import com.clashcode.backend.service.ProblemAIReviewService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@PreAuthorize("hasRole('ADMIN')")
+public class ProblemAIReviewController {
+    private final ProblemAIReviewService problemAIReviewService;
+
+    public ProblemAIReviewController(ProblemAIReviewService problemAIReviewService) {
+        this.problemAIReviewService = problemAIReviewService;
+    }
+
+    @PostMapping("/ai-review/{problemId}")
+    public ResponseEntity<String> getProblemAIReview(@PathVariable Long problemId) {
+        return ResponseEntity.ok(problemAIReviewService.getProblemAIReview(problemId));
+    }
+}

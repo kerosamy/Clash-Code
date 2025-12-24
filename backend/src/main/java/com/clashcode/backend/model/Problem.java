@@ -80,4 +80,8 @@ public class Problem {
     @Builder.Default
     @OneToMany(mappedBy = "problem" , cascade = CascadeType.ALL , fetch = FetchType.LAZY)
     private List<TestCase> testCases = new ArrayList<>();
+
+    // newly added
+    @OneToOne(mappedBy = "problem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ProblemAIReview aiReview;
 }
