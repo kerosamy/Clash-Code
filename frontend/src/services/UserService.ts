@@ -92,13 +92,22 @@ export async function fetchUserProfile(username: string): Promise<BackendUserRes
 
 export interface UserSearchResponse {
   username: string;
-  rank: string;
+  currentRate: number;
+  friendStatus?: string;
 }
 
 export async function searchUsers(username: string): Promise<UserSearchResponse[]> {
   return apiRequest<UserSearchResponse[]>({
     method: "GET",
     url: "/users/search",
+    params: { username },
+  });
+}
+
+export async function searchUsersWithFriendStatus(username: string): Promise<UserSearchResponse[]> {
+  return apiRequest<UserSearchResponse[]>({
+    method: "GET",
+    url: "/users/search-with-friend-status",
     params: { username },
   });
 }

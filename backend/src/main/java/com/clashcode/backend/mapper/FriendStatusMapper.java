@@ -11,7 +11,7 @@ import java.util.Objects;
 @Component
 public class FriendStatusMapper {
 
-    FriendStatusMapper() {}
+    public FriendStatusMapper() {}
 
     public FriendStatus map(User requester, Friend friendship) {
         if (friendship == null) return FriendStatus.NONE;

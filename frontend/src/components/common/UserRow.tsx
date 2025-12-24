@@ -1,50 +1,125 @@
-import Add from '../../assets/icons/Add.svg';
-import { rankColors } from '../../utils/colorMapper';
+import React from "react";
+import { Plus, X, Check } from "lucide-react";
+import { getRankColor } from "../../utils/colorMapper";
 
-export interface UserRowProps {
-    order: number;
-    username: string;
-    rank: string;
-    onAddClick?: () => void;
-    onUsernameClick?: () => void;
-    className?: string;
+interface UserRowProps {
+  order: number;
+  username: string;
+  rank?: number;
+  action?: React.ReactNode;
+  onAddClick?: () => void;
+  onCancelClick?: () => void;
+  onAcceptClick?: () => void;
+  onRejectClick?: () => void;
+  onUsernameClick?: () => void;
+  showAddButton?: boolean;
+  showCancelButton?: boolean;
+  showAcceptReject?: boolean;
+  friendStatus?: string;
 }
 
 export default function UserRow({
-    order,
-    username,
-    rank,
-    onAddClick,
-    onUsernameClick,
-    className = "",
+  order,
+  username,
+  rank = 0,
+  action,
+  onAddClick,
+  onCancelClick,
+  onAcceptClick,
+  onRejectClick,
+  onUsernameClick,
+  showAddButton = false,
+  showCancelButton = false,
+  showAcceptReject = false,
+  friendStatus,
 }: UserRowProps) {
+  const usernameColor = getRankColor(rank);
 
+  const getStatusDisplay = () => {
+    if (!friendStatus) return null;
+    
+    const statusConfig: Record<string, { text: string; color: string; borderColor: string }> = {
+      "FRIENDS": { text: "Friends", color: "#34D399", borderColor: "#34D399" },
+      "PENDING_SENT": { text: "Pending", color: "#FFD700", borderColor: "#FFD700" },
+      "PENDING_RECEIVED": { text: "Requested", color: "#60A5FA", borderColor: "#60A5FA" },
+      "NONE": { text: "Not Friend", color: "#FF6B35", borderColor: "#FF6B35" },
+    };
+
+    const config = statusConfig[friendStatus] || statusConfig["NONE"];
+    
     return (
-        <div
-            className={`grid grid-cols-[60px_1fr_60px] gap-4 px-6 py-3 items-center hover:bg-sidebar/20 transition-colors ${className}`}
-        >
-            <span className="text-text text-center font-anta text-sm">
-                {order}
-            </span>
-            
-            <button
-                onClick={onUsernameClick}
-                className="font-anta text-sm font-bold truncate text-left hover transition-colors"
-                style={{ color: rankColors[rank] }}
-            >
-                {username}
-            </button>
-           
-            <button
-                onClick={onAddClick}
-                className="w-6 h-6 flex items-center justify-center hover:scale-110 transition-transform"
-            >
-                <img
-                    src={Add}
-                    alt="Add"
-                    className="w-full h-full"
-                />
-            </button>
-        </div>
+      <span
+        className="px-3 py-1.5 rounded-full text-sm font-anta uppercase tracking-wider"
+        style={{ 
+          color: config.color,
+          border: `2px solid ${config.borderColor}`,
+          backgroundColor: `${config.borderColor}15`
+        }}
+      >
+        {config.text}
+      </span>
     );
+  };
+
+  return (
+    <div className="grid grid-cols-[60px_1fr_auto] gap-4 px-8 py-4 hover:bg-sidebar/30 transition-colors items-center border-b border-sidebar/50">
+      {/* Order */}
+      <div className="text-text font-anta text-lg flex items-center justify-center">
+        {order}
+      </div>
+
+      {/* Username */}
+      <div
+        className="font-anta text-xl cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center"
+        style={{ color: usernameColor }}
+        onClick={onUsernameClick}
+      >
+        {username}
+      </div>
+
+      {/* Action */}
+      <div className="flex gap-2 items-center justify-center">
+        {friendStatus ? getStatusDisplay() : action}
+        
+        {showAddButton && onAddClick && (
+          <button
+            onClick={onAddClick}
+            className="w-7 h-7 rounded-full bg-sidebar border-2 border-orange hover:bg-orange transition-all flex items-center justify-center group"
+            aria-label="Add friend"
+          >
+            <Plus className="w-4 h-4 text-orange group-hover:text-white transition-colors" />
+          </button>
+        )}
+
+        {showCancelButton && onCancelClick && (
+          <button
+            onClick={onCancelClick}
+            className="w-7 h-7 rounded-full bg-sidebar border-2 border-rose-500 hover:bg-rose-500 transition-all flex items-center justify-center group"
+            aria-label="Cancel request"
+          >
+            <X className="w-4 h-4 text-rose-500 group-hover:text-white transition-colors" />
+          </button>
+        )}
+
+        {showAcceptReject && onAcceptClick && onRejectClick && (
+          <>
+            <button
+              onClick={onAcceptClick}
+              className="w-7 h-7 rounded-full bg-sidebar border-2 border-emerald-500 hover:bg-emerald-500 transition-all flex items-center justify-center group"
+              aria-label="Accept friend request"
+            >
+              <Check className="w-4 h-4 text-emerald-500 group-hover:text-white transition-colors" />
+            </button>
+            <button
+              onClick={onRejectClick}
+              className="w-7 h-7 rounded-full bg-sidebar border-2 border-rose-500 hover:bg-rose-500 transition-all flex items-center justify-center group"
+              aria-label="Reject friend request"
+            >
+              <X className="w-4 h-4 text-rose-500 group-hover:text-white transition-colors" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }

@@ -27,7 +27,7 @@ import Matches from '../pages/profile/Matches';
 import MyFriends from '../pages/friends/MyFriends';
 import Requested from '../pages/friends/Requested';
 import Pending from '../pages/friends/Pending';
-import AddFriend from '../pages/friends/AddFriend';
+import Users from '../pages/friends/Users';
 
 // Suggest Problem sub-pages
 import ProblemInfo from '../pages/suggestProblem/ProblemInfo';
@@ -117,7 +117,7 @@ export const routes: RouteConfig[] = [
       { path: 'my-friends', component: MyFriends },
       { path: 'requested', component: Requested },
       { path: 'pending', component: Pending },
-      { path: 'add-friend', component: AddFriend }
+      { path: 'add-friend', component: Users }
     ]
   },
 
@@ -200,9 +200,9 @@ export const profileSubRoutes: RouteConfig[] = [
 
 export const friendsSubRoutes: RouteConfig[] = [
   { path: 'my-friends', name: 'My Friends', icon: friends, component: MyFriends },
-  { path: 'requested', name: 'Requested', icon: friends, component: Requested },
-  { path: 'pending', name: 'Pending', icon: friends, component: Pending },
-  { path: 'add-friend', name: 'Add Friend', icon: addUser, component: AddFriend },
+  { path: 'requested', name: 'Requested', icon: addUser, component: Requested },
+  { path: 'pending', name: 'Pending', icon: addUser, component: Pending },
+  { path: 'users', name: 'Users', icon: friends, component: Users },
 ];
 
 export const ProblemSubRoutes: RouteConfig[] = [
