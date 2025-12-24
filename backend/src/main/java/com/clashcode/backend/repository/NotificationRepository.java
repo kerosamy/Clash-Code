@@ -21,17 +21,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     Page<Notification> findByRecipientId(Long recipientId, Pageable pageable);
 
-    // Get all notifications excluding SUBMISSION type
-    @Query("SELECT n FROM Notification n WHERE n.recipientId = :recipientId " +
-            "AND CAST(n.type AS string) NOT LIKE %:excludeKeyword% " +
-            "ORDER BY n.createdAt DESC")
-    Page<Notification> findByRecipientIdExcludingSubmission(
-            @Param("recipientId") Long recipientId,
-            @Param("excludeKeyword") String excludeKeyword,
-            Pageable pageable
-    );
-
-    // Category-based query - Single keyword match
+    // filter by friend or match keyword
     @Query("SELECT n FROM Notification n WHERE n.recipientId = :recipientId " +
             "AND CAST(n.type AS string) LIKE %:keyword% " +
             "ORDER BY n.createdAt DESC")

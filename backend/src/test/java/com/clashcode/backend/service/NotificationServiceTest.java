@@ -214,7 +214,7 @@ class NotificationServiceTest {
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Notification> page = new PageImpl<>(notifications, pageRequest, notifications.size());
 
-        when(repository.findByRecipientIdExcludingSubmission(1L, "SUBMISSION", pageRequest)).thenReturn(page);
+        when(repository.findByRecipientId(1L,  pageRequest)).thenReturn(page);
 
         // Act
         Page<Notification> result = notificationService.getUserNotificationsByCategory(1L, "all", 0, 10);
@@ -222,7 +222,7 @@ class NotificationServiceTest {
         // Assert
         assertEquals(notifications.size(), result.getContent().size());
         assertTrue(result.getContent().stream().noneMatch(n -> n.getType().name().contains("SUBMISSION")));
-        verify(repository).findByRecipientIdExcludingSubmission(1L, "SUBMISSION", pageRequest);
+        verify(repository).findByRecipientId(1L,  pageRequest);
     }
 
     @Test

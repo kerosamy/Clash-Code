@@ -78,8 +78,8 @@ public class NotificationService {
                     userId, "FRIEND", pageRequest
             );
         } else {
-            notificationPage = repository.findByRecipientIdExcludingSubmission(
-                    userId, "SUBMISSION", pageRequest
+            notificationPage = repository.findByRecipientId(
+                    userId,  pageRequest
             );
         }
 

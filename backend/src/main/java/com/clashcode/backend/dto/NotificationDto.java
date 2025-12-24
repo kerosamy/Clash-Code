@@ -20,5 +20,4 @@ public class NotificationDto {
     private String message;
     private Instant createdAt;
     private boolean read;
-    private Long matchId;
 }
