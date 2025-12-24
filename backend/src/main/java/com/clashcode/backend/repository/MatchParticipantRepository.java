@@ -27,9 +27,8 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
                   SELECT mp
                   FROM MatchParticipant mp
                   JOIN Match m ON mp.match.id = m.id
-                  JOIN Problem p ON m.problem.id = p.id
                   WHERE mp.user.id = :userId
-                  AND m.matchState = 'COMPLETED'
+                  AND m.matchState = MatchState.COMPLETED
                   AND (
                        :rated IS NULL
                        OR (:rated = true  AND m.gameMode = 'RATED')
