@@ -14,6 +14,7 @@ import { matchSubRoutes } from '../../routes/routes.config';
 import { resignMatch, getMatchDetails, getMatchResults } from "../../services/MatchService"; 
 import type { MatchResultDto } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
+import { wsService } from "../../services/ws";
 
 interface MatchData {
     startAt: string;
@@ -83,25 +84,17 @@ export default function PlayGame() {
         const currentUser = getUsername();
         if (!currentUser) return;
 
-        const client = new Client({
-            brokerURL: "ws://localhost:8080/ws", 
-            reconnectDelay: 5000,
+        wsService.connect(() => {
+            console.log("WS connected");
+
+            wsService.subscribe(`/topic/match-pop/${currentUser}`, (payload: WebSocketPayload) => {
+                handleWebSocketMessage(payload);
+            });
         });
 
-        client.onConnect = () => {
-            client.subscribe(`/topic/match-pop/${currentUser}`, (message: IMessage) => {
-                try {
-                    const payload: WebSocketPayload = JSON.parse(message.body);
-                    handleWebSocketMessage(payload);
-                } catch (err) {
-                    console.error("WS Parse Error", err);
-                }
-            });
+        return () => {
+            wsService.disconnect();
         };
-
-        client.activate();
-        clientRef.current = client;
-        return () => { client.deactivate(); };
     }, []);
 
 
