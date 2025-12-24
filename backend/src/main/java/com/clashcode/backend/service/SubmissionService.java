@@ -45,17 +45,24 @@ public class SubmissionService {
     }
 
     public Submission submitCode(SubmissionRequestDto requestDto, User user) {
-        Problem problem = problemRepository.findById(requestDto.getProblemId())
-                .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+        Problem problem;
+        Match match = null;
+
+        if(requestDto.getMatchId() != null) {
+            match = matchRepository.findById(requestDto.getMatchId())
+                    .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+            problem = match.getProblem();
+        } else {
+            problem = problemRepository.findById(requestDto.getProblemId())
+                    .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+        }
 
         List<String> inputs = testCaseService.getInputTestCasesForProblem(problem) ;
         List<String> outputs = testCaseService.getOutputTestCasesForProblem(problem);
 
         Submission submission = submissionMapper.toEntity(requestDto, user, problem, inputs.size());
 
-        if(requestDto.getMatchId()!=null) {
-            Match match = matchRepository.findById(requestDto.getMatchId())
-                    .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+        if(match != null) {
             submission.setMatch(match);
         }
 
