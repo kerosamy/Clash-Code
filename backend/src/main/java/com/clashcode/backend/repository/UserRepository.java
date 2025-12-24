@@ -36,7 +36,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
             @Param("username") String username
     );
 
-    // Add to UserRepository.java
     Page<User> findAllByOrderByCurrentRateDesc(Pageable pageable);
     
 }

@@ -182,6 +182,6 @@ public class UserService {
     public Page<LeaderBoardDto> getLeaderboard(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return userRepository.findAllByOrderByCurrentRateDesc(pageRequest)
-                .map(userMapper::toLeaderboardDto); // Uses the injected mapper
+                .map(userMapper::toLeaderboardDto);
     }
 }
