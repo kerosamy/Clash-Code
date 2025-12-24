@@ -208,23 +208,6 @@ public class ProblemService {
                 .map(problemMapper::toListDto);
     }
 
-    public Page<ProblemListDto> getRejectedProblems(int page, int size, String username) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-
-        return problemRepository.findByStatusAndUsername(
-                ProblemStatus.REJECTED,
-                username,
-                pageRequest
-        ).map(problem -> {
-            String rejectionNote = problemReviewRepository
-                    .findByProblemId(problem.getId())
-                    .map(ProblemReview::getNote)
-                    .orElse(null);
-
-            return problemMapper.toListDto(problem, rejectionNote);
-        });
-    }
-
     public Page<ProblemListDto> getMySuggestedProblems(String username, ProblemStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Problem> problems = problemRepository.findByAuthorAndStatus(username, status, pageable);
@@ -235,8 +218,6 @@ public class ProblemService {
                         .findByProblemId(problem.getId())
                         .map(ProblemReview::getNote)
                         .orElse(null);
-
-                System.out.println("Problem ID: " + problem.getId() + ", rejectionNote: " + rejectionNote);
             }
             return problemMapper.toListDto(problem, rejectionNote);
         });

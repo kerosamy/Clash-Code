@@ -72,6 +72,7 @@ export default function MySuggestions() {
 
       const problemInfo = {
         id: problem.id,
+        name: problem.title,
         solutionLang: problem.solutionLanguage || "",
         timeLimit: problem.timeLimit,
         memoryLimit: problem.memoryLimit,

@@ -60,7 +60,7 @@ import ReviewProblems from '../pages/ReviewProblems';
 import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.svg';
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
-import RejectedProblemsIcon from '../assets/icons/RejectedProblems.svg';
+import Suggestions from '../assets/icons/Suggestions.svg';
 import { logout } from '../services/AuthService';
 import NotificationsIcon from '../assets/icons/Bell.png';
 
@@ -236,7 +236,7 @@ export const SuggestProblemSubRoutes: RouteConfig[] = [
   {path: 'info', name: 'Problem Info', icon: ProblemInfoIcon, component: ProblemInfo },
   {path: 'statement', name: 'Problem Statment', icon: WriteProblemStatmentIcon, component: ProblemStatment },
   {path: 'test-cases', name: 'Test Cases', icon: TestCasesIcon, component: TestCases },
-  {path: 'my-suggestions', name: 'My Suggestions', icon: RejectedProblemsIcon, component: MySuggestions },
+  {path: 'my-suggestions', name: 'My Suggestions', icon: Suggestions, component: MySuggestions },
 
 ];
 export const matchSubRoutes: RouteConfig[] = [

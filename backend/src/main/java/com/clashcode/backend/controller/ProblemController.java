@@ -26,7 +26,7 @@ public class ProblemController {
         this.problemService = problemService;
         this.testCaseService = testCaseService;
     }
-
+    
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_SIZE = 10;
 
@@ -66,16 +66,6 @@ public class ProblemController {
         return ResponseEntity.ok(problems);
     }
 
-    @GetMapping("/browse/rejected")
-    public ResponseEntity<Page<ProblemListDto>> browseRejected(
-            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
-            @AuthenticationPrincipal User user
-    ) {
-        Page<ProblemListDto> problems = problemService.getRejectedProblems(page, size, user.getUsername());
-        return ResponseEntity.ok(problems);
-    }
-
     @PostMapping("/browse/filter")
     public ResponseEntity<Page<ProblemListDto>> browseFiltered(
             @RequestBody ProblemFilterDto filterDto,
@@ -97,13 +87,13 @@ public class ProblemController {
         return ResponseEntity.ok(results);
     }
 
-<<<<<<< HEAD
     @PostMapping("/run-test-cases")
     public ResponseEntity<List<String>> compileTestCases (
             @RequestBody TestcaseRunRequestDto testcaseCompilationDto
     ){
         return ResponseEntity.ok(testCaseService.runTestCases(testcaseCompilationDto));
-=======
+    }
+
     @GetMapping("/my-suggestions")
     public ResponseEntity<Page<ProblemListDto>> getMySuggestions(
             @RequestParam(required = false) ProblemStatus status,
@@ -118,6 +108,5 @@ public class ProblemController {
                 size
         );
         return ResponseEntity.ok(problems);
->>>>>>> fa5b904 (Implemented My suggestions page and allow filtering on it based on the status)
     }
 }

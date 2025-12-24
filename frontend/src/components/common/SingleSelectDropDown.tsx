@@ -63,24 +63,34 @@ export default function SingleSelectDropdown({
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`${width} bg-container text-text/50 px-4 py-3 rounded-xl border border-sidebar/30 
-          hover:border-orange/50 transition-colors font-anta flex items-center gap-2 justify-between truncate`}
+      hover:border-orange/50 transition-colors font-anta flex items-center gap-2 justify-between truncate`}
         >
           <span className="text-sm truncate">
             {value || placeholder}
           </span>
+
           <div className="flex items-center gap-1">
             {value && (
               <button
+                type="button"
+                aria-label="Clear selection"
+
                 onClick={(e) => {
                   e.stopPropagation();
                   clearSelection();
                 }}
-                className="text-text/40 hover:text-text/60 transition-colors"
+
+                className="flex items-center justify-center w-6 h-6 rounded-full 
+                      text-red-500 hover:bg-red-500/10 hover:text-red-600 
+                      transition-all duration-200"
               >
-                ×
+                <span className="text-xl leading-none font-bold">×</span>
               </button>
             )}
-            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+
+            <ChevronDown
+              className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+            />
           </div>
         </button>
 

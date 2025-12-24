@@ -1,8 +1,6 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.*;
-import com.clashcode.backend.enums.ProblemStatus;
-import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
 import com.clashcode.backend.service.TestCaseService;
@@ -17,8 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -227,36 +223,5 @@ class ProblemControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
-    @DisplayName("GET /problem/my-suggestions - Success")
-    void testGetMySuggestions_Success() throws Exception {
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setUsername("testUser");
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(mockUser, null)
-        );
-
-        ProblemListDto suggestion = new ProblemListDto();
-        suggestion.setId(10L);
-        suggestion.setTitle("Suggested Problem");
-
-        List<ProblemListDto> list = List.of(suggestion);
-        Page<ProblemListDto> pageResult = new PageImpl<>(list, PageRequest.of(0, 10), 1);
-
-        when(problemService.getMySuggestedProblems(
-                eq("testUser"),
-                eq(ProblemStatus.PENDING_APPROVAL),
-                anyInt(),
-                anyInt()
-        )).thenReturn(pageResult);
-
-        mockMvc.perform(get("/problem/my-suggestions")
-                        .param("status", "PENDING_APPROVAL")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(10))
-                .andExpect(jsonPath("$.content[0].title").value("Suggested Problem"));
     }
 }

@@ -71,18 +71,6 @@ export async function fetchProblems(
   });
 }
 
-
-export async function fetchRejectedProblems(
-  page = 0,
-  size = 20
-): Promise<Page<ProblemListDto>> {
-  return apiRequest<Page<ProblemListDto>>({
-    method: "GET",
-    url: "/problem/browse/rejected",
-    params: { page, size },
-  });
-}
-
 export async function fetchFilteredProblems(
   tags: ProblemTags[] = [],
   minRate?: number,
