@@ -33,10 +33,6 @@ public class UserService {
     private static final int RATING_PER_RANK = 300;
     private static final Ranks[] RANKS = Ranks.values();
 
-    @Value("${server.url:http://localhost:8080}")
-    private String serverUrl;
-
-
     public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
@@ -176,7 +172,7 @@ public class UserService {
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }
-        return serverUrl + "/files/profile-images/" + fileName;
+        return fileName;
     }
 
     public Page<LeaderBoardDto> getLeaderboard(int page, int size) {
