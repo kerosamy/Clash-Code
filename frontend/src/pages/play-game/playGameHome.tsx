@@ -224,7 +224,7 @@ export default function PlayGameHome() {
                     </div>
                     
                     <div className="text-center">
-                        <div className="text-3xl text-gray-300 mb-3 font-anta">
+                        <div className="text-3xl text-gray-300 mb-2 font-anta">
                             {userStats.nextRankInfo.isMaxRank ? "Max Rank!" : "Points to Next Rank"}
                         </div>
                         <div 
@@ -241,7 +241,7 @@ export default function PlayGameHome() {
                     </div>
                 </div>
 
-                <div className="px-4 py-20">
+                <div className="px-4 py-16">
                     <div className="flex justify-center">
                         <img src="/src/assets/logo.svg" alt="App Logo" className="w-[900px] h-auto" />
                     </div>
@@ -255,7 +255,7 @@ export default function PlayGameHome() {
                                 flex items-center justify-center
                                 border border-cyan-500/30 bg-cyan-500/5 text-cyan-500
                                 hover:bg-cyan-500 hover:text-white hover:border-cyan-500 hover:shadow-[0_0_15px_rgba(6,182,212,0.4)]
-                                px-10 py-6 rounded-full 
+                                px-8 py-4 rounded-full 
                                 font-anta text-2xl uppercase tracking-widest 
                                 transition-all duration-300
                             "
@@ -269,7 +269,7 @@ export default function PlayGameHome() {
                                 flex items-center justify-center
                                 border border-emerald-500/30 bg-emerald-500/5 text-emerald-500
                                 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]
-                                px-10 py-6 rounded-full 
+                                px-8 py-4 rounded-full 
                                 font-anta text-2xl uppercase tracking-widest 
                                 transition-all duration-300
                             "
