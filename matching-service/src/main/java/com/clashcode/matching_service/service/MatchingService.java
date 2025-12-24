@@ -63,8 +63,4 @@ public class MatchingService {
         MatchCreationDto dto = new MatchCreationDto(userId , otherUserId);
         mainBackendClient.MatchingTwoPlayers(dto);
     }
-
-
-
-
 }

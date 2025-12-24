@@ -117,7 +117,7 @@ export default function PlayGameHome() {
                                 username: currentUser,
                                 avatarUrl:
                                     data.find(p => p.username === currentUser)?.avatarUrl
-                                    || "/default-avatar.png",
+                                    || "",
                                 rank:
                                     data.find(p => p.username === currentUser)?.rank
                                     || "BRONZE"

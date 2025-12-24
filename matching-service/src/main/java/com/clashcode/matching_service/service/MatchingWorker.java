@@ -13,10 +13,10 @@ public class MatchingWorker {
     private final MatchingService matchingService;
 
     MatchingWorker(RedisService redisService, MatchingService matchingService) {
-
         this.matchingService = matchingService;
         this.redisService = redisService;
     }
+
     @Scheduled(fixedDelay = 2000)
     public void runMatchingService() {
         Set<String> waitingUsers = redisService.getAllUsers();
@@ -32,5 +32,4 @@ public class MatchingWorker {
             matchingService.searchForOpponent(userId);
         }
     }
-
 }

@@ -27,6 +27,7 @@ public class RedisService {
         redisTemplate.opsForHash().put(key, "rate", String.valueOf(rate));
         redisTemplate.opsForHash().put(key, "joinedAt", String.valueOf(now));
     }
+
     public void removeUser(Long userId){
         redisTemplate.opsForZSet().remove(
                 KEY_FOR_Z_SET,
@@ -35,6 +36,7 @@ public class RedisService {
         String key = getHashKey(userId);
         redisTemplate.delete(key);
     }
+
     public Set<String> getAllUsers(){
         return redisTemplate.opsForZSet().range(KEY_FOR_Z_SET,0, -1);
     }
@@ -42,6 +44,7 @@ public class RedisService {
     public Boolean isUserExist(String userKey){
        return redisTemplate.opsForZSet().score(KEY_FOR_Z_SET, userKey) != null;
     }
+
     public Set<String>getUsersInRage(Integer minRate , Integer maxRate){
         return redisTemplate.opsForZSet()
                 .rangeByScore(
@@ -69,8 +72,7 @@ public class RedisService {
                 .startTime(startTime)
                 .build();
     }
-
-
+    
     public String getZSetMember(Long userId) {
         return "user:" + userId;
     }

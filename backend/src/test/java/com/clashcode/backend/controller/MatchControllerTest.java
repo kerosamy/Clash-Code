@@ -77,6 +77,7 @@ class MatchControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("User not authenticated"));
     }
+
     @Test
     @DisplayName("GET /matches/{matchId}/submission-log - Success")
     void test_getMatchSubmissionLog_success() throws Exception {
@@ -175,6 +176,7 @@ class MatchControllerTest {
                 .andExpect(jsonPath("$.rateChange").value(25))
                 .andExpect(jsonPath("$.newRating").value(1525));
     }
+
     @Test
     @DisplayName("POST /matches/start-rated-match - Success")
     void test_startRatedMatch_success() throws Exception {
@@ -191,6 +193,7 @@ class MatchControllerTest {
         // optionally verify service was called
         verify(matchService).startRatedMatch(any(MatchCreationDto.class));
     }
+
     @Test
     @DisplayName("POST /matches/search-opponent - Success")
     void test_searchOpponent_success() throws Exception {
