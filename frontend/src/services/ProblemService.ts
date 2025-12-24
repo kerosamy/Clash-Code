@@ -23,6 +23,7 @@ interface ProblemListDto {
   rate: number;
   tags: ProblemTags[];
   rejectionNote: string;
+  status: string;
 }
 
 
@@ -228,5 +229,22 @@ export async function runTestCasesService(
     method: "POST",
     url: "/problem/run-test-cases",
     data: payload,
+  });
+}
+
+export async function fetchMySuggestions(
+  page = 0,
+  size = 20,
+  status: string | null = null
+): Promise<Page<ProblemListDto>> {
+  const params: any = { page, size };
+  if (status) {
+    params.status = status;
+  }
+
+  return apiRequest<Page<ProblemListDto>>({
+    method: "GET",
+    url: "/problem/my-suggestions",
+    params: params,
   });
 }

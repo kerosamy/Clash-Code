@@ -13,6 +13,7 @@ import com.clashcode.backend.repository.ProblemReviewRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -223,4 +224,25 @@ public class ProblemService {
             return problemMapper.toListDto(problem, rejectionNote);
         });
     }
+<<<<<<< HEAD
+=======
+
+    public Page<ProblemListDto> getMySuggestedProblems(String username, ProblemStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Problem> problems = problemRepository.findByAuthorAndStatus(username, status, pageable);
+        return problems.map(problem -> {
+            String rejectionNote = null;
+            if (problem.getProblemStatus() == ProblemStatus.REJECTED) {
+                rejectionNote = problemReviewRepository
+                        .findByProblemId(problem.getId())
+                        .map(ProblemReview::getNote)
+                        .orElse(null);
+
+                System.out.println("Problem ID: " + problem.getId() + ", rejectionNote: " + rejectionNote);
+            }
+            return problemMapper.toListDto(problem, rejectionNote);
+        });
+    }
+
+>>>>>>> fa5b904 (Implemented My suggestions page and allow filtering on it based on the status)
 }

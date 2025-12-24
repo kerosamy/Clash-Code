@@ -34,7 +34,7 @@ import Users from '../pages/friends/Users';
 import ProblemInfo from '../pages/suggestProblem/ProblemInfo';
 import ProblemStatment from '../pages/suggestProblem/ProblemStatment';
 import TestCases from '../pages/suggestProblem/TestCases';
-import RejectedProblems from '../pages/suggestProblem/RejectedProblems';
+import MySuggestions from '../pages/suggestProblem/MySuggestions';
 
 // match sub-pages
 import MatchState from '../pages/match/MatchState' 
@@ -173,7 +173,7 @@ export const routes: RouteConfig[] = [
       { path: 'info' , component: ProblemInfo },
       { path: 'statement' , component: ProblemStatment },
       { path: 'test-cases', component: TestCases },
-      { path: 'rejected-problems', component: RejectedProblems }
+      { path: 'my-suggestions', component: MySuggestions }
 
     ]
   },
@@ -236,7 +236,7 @@ export const SuggestProblemSubRoutes: RouteConfig[] = [
   {path: 'info', name: 'Problem Info', icon: ProblemInfoIcon, component: ProblemInfo },
   {path: 'statement', name: 'Problem Statment', icon: WriteProblemStatmentIcon, component: ProblemStatment },
   {path: 'test-cases', name: 'Test Cases', icon: TestCasesIcon, component: TestCases },
-  {path: 'rejected-problems', name: 'Rejected', icon: RejectedProblemsIcon, component: RejectedProblems },
+  {path: 'my-suggestions', name: 'My Suggestions', icon: RejectedProblemsIcon, component: MySuggestions },
 
 ];
 export const matchSubRoutes: RouteConfig[] = [

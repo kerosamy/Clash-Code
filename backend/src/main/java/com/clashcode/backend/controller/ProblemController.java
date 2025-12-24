@@ -1,6 +1,7 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.ProblemService;
 import com.clashcode.backend.service.TestCaseService;
@@ -96,10 +97,27 @@ public class ProblemController {
         return ResponseEntity.ok(results);
     }
 
+<<<<<<< HEAD
     @PostMapping("/run-test-cases")
     public ResponseEntity<List<String>> compileTestCases (
             @RequestBody TestcaseRunRequestDto testcaseCompilationDto
     ){
         return ResponseEntity.ok(testCaseService.runTestCases(testcaseCompilationDto));
+=======
+    @GetMapping("/my-suggestions")
+    public ResponseEntity<Page<ProblemListDto>> getMySuggestions(
+            @RequestParam(required = false) ProblemStatus status,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @AuthenticationPrincipal User user
+    ) {
+        Page<ProblemListDto> problems = problemService.getMySuggestedProblems(
+                user.getUsername(),
+                status,
+                page,
+                size
+        );
+        return ResponseEntity.ok(problems);
+>>>>>>> fa5b904 (Implemented My suggestions page and allow filtering on it based on the status)
     }
 }

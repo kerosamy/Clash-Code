@@ -78,6 +78,7 @@ public class ProblemMapper {
 
     // Call this when you have a rejection note
     public ProblemListDto toListDto(Problem problem, String rejectionNote) {
+        System.out.println("rejection: " + rejectionNote);
         return ProblemListDto.builder()
                 .id(problem.getId())
                 .title(problem.getTitle())
@@ -87,6 +88,7 @@ public class ProblemMapper {
                 .attempted("unsolved")   // placeholder
                 .author(problem.getAuthor())
                 .rejectionNote(rejectionNote) // nullable
+                .status(String.valueOf(problem.getProblemStatus()))
                 .build();
     }
 
