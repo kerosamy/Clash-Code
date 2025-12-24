@@ -2,19 +2,30 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
 import { completeRegistration } from "../services/AuthService.ts";
-import { getUsername } from "../utils/jwtDecoder.tsx";
+import { decodeToken } from "../utils/jwtDecoder.tsx";
 
 export default function CompleteRegistration() {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
+  
   const location = useLocation();
-  const email = location.state?.email;
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    } 
+    else {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const decoded = decodeToken(token);
+        if (decoded?.sub) setEmail(decoded.sub);
+      }
+    }
     sessionStorage.setItem("oauth_processed", "true");
-  }, []);
+  }, [location.state]);
 
   const validateInputs = () => {
     const newErrors: { [key: string]: string } = {};
@@ -59,7 +70,10 @@ export default function CompleteRegistration() {
         </div>
       
         <h2 className="text-2xl mb-4 text-center">Complete Your Registration</h2>
-        <p className="text-gray-400 mb-6 text-center text-sm">Email: {email}</p>
+
+        <p className="text-gray-400 mb-6 text-center text-sm">
+          Email: <span className="text-white">{email || "Not found"}</span>
+        </p>
 
         <InputField
           placeholder="Username"
@@ -74,7 +88,7 @@ export default function CompleteRegistration() {
           onClick={handleSubmit}
           className="bg-orange hover:opacity-90 py-2 px-8 rounded-lg text-white mt-2 block mx-auto"
         >
-          Complete Registration
+          {loading ? "Finalizing..." : "Complete Registration"}
         </button>
       </div>
     </div>
