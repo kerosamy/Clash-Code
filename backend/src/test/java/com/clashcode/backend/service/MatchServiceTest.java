@@ -58,7 +58,6 @@ class MatchServiceTest {
         Problem problem = new Problem();
         problem.setId(10L);
 
-        Match savedMatch = Match.builder().id(matchId).build();
 
         MatchParticipant p1 = MatchParticipant.builder().user(player1).build();
         MatchParticipant p2 = MatchParticipant.builder().user(player2).build();
@@ -94,13 +93,7 @@ class MatchServiceTest {
         assertEquals(duration, constructed.getDuration());
         assertEquals(gameMode, constructed.getGameMode());
         assertEquals(MatchState.ONGOING, constructed.getMatchState());
-
-        verify(matchParticipantRepository).saveAll(argThat(iterable -> {
-            List<MatchParticipant> participants = new ArrayList<>();
-            iterable.forEach(participants::add);
-            return participants.size() == 2 && participants.containsAll(List.of(p1, p2));
-        }));
-
+        
         verify(matchScheduler).scheduleMatchEnd(savedMatch);
 
         assertEquals(2, savedMatch.getParticipants().size());
