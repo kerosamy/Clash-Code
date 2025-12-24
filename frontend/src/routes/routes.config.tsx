@@ -62,7 +62,10 @@ import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.s
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 import Suggestions from '../assets/icons/Suggestions.svg';
+import { logout } from '../services/AuthService';
+import RejectedProblemsIcon from '../assets/icons/RejectedProblems.svg';
 import NotificationsIcon from '../assets/icons/Bell.png';
+
 
 
 export interface PageConfig {
@@ -208,7 +211,6 @@ export const routes: RouteConfig[] = [
     component: Notifications,
     hideFromNav: true
   },
-  
   { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
   { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: LogOut },
 

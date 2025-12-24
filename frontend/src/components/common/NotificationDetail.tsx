@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import type { NotificationRowProps } from "./NotificationRow";
+import { acceptMatchInvite, markNotificationAsRead } from "../../services/NotificationService";
 
 interface NotificationDetailProps {
   notification: NotificationRowProps;
@@ -39,6 +41,47 @@ const formatFullDate = (timestamp: string): string => {
 
 export default function NotificationDetail({ notification, onReturn }: NotificationDetailProps) {
   const typeColorClass = getTypeColor(notification.type);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const isMatchInvite = notification.type === "MATCH_INVITATION";
+
+  // Mark notification as read when component mounts
+  useEffect(() => {
+    const markAsRead = async () => {
+      if (!notification.read) {
+        try {
+          await markNotificationAsRead(notification.id);
+          console.log("Notification marked as read:", notification.id);
+        } catch (err) {
+          console.error("Failed to mark notification as read:", err);
+        }
+      }
+    };
+
+    markAsRead();
+  }, [notification.id, notification.read]);
+
+  const handleAcceptInvite = async () => {
+    console.log("Accept button clicked");
+    console.log("Notification ID:", notification.id);
+    
+    try {
+      setIsAccepting(true);
+      setError(null);
+      
+      console.log("Calling acceptMatchInvite...");
+      const matchResponse = await acceptMatchInvite(notification.id);
+      console.log("Match response received:", matchResponse);
+      
+      setSuccess(true);
+    } catch (err) {
+      console.error("Failed to accept match invite:", err);
+      setError(err instanceof Error ? err.message : "Failed to accept invite");
+      setIsAccepting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full p-8">
@@ -123,14 +166,63 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
               </div>
             </div>
           )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <p className="text-green-400 text-sm font-anta">✓ Match invite accepted successfully!</p>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm font-anta">{error}</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Return Button */}
-      <div className="flex justify-center">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4">
+        {isMatchInvite && !success && (
+          <button
+            type="button"
+            onClick={handleAcceptInvite}
+            disabled={isAccepting}
+            className="
+              flex items-center justify-center
+              border border-emerald-500/30 bg-emerald-500/5 text-emerald-500
+              hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]
+              px-10 py-3 rounded-full 
+              font-anta text-sm uppercase tracking-widest 
+              transition-all duration-300
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500/5 disabled:hover:text-emerald-500 disabled:hover:shadow-none
+            "
+          >
+            {isAccepting ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Accepting...
+              </>
+            ) : (
+              "Accept Invite"
+            )}
+          </button>
+        )}
+        
         <button
+          type="button"
           onClick={onReturn}
-          className="px-8 py-3 bg-orange border border-orange text-white rounded-xl font-anta text-sm hover:bg-orange/80 transition-all duration-200 shadow-lg hover:shadow-orange/20"
+          className="
+            flex items-center justify-center
+            border border-orange/30 bg-orange/5 text-orange
+            hover:bg-orange hover:text-white hover:border-orange hover:shadow-[0_0_15px_rgba(249,115,22,0.4)]
+            px-10 py-3 rounded-full 
+            font-anta text-sm uppercase tracking-widest 
+            transition-all duration-300
+            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange/5 disabled:hover:text-orange disabled:hover:shadow-none
+          "
         >
           Return to Notifications
         </button>

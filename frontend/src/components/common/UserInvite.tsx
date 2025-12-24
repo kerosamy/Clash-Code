@@ -1,10 +1,11 @@
 import { rankColors } from '../../utils/colorMapper';
+import { sendMatchInvite } from '../../services/NotificationService';
 
 export interface UserInviteProps {
     order: number;
     username: string;
     rank: string;
-    onInviteClick: () => void;
+    onInviteClick: (notificationId: number, username: string) => void; // Modified signature
     onUsernameClick?: () => void;
     className?: string;
 }
@@ -17,6 +18,21 @@ export default function UserInvite({
     onUsernameClick,
     className = "",
 }: UserInviteProps) {
+
+    const handleInviteClick = async () => {
+        try {
+            // Get the notification ID from the backend
+            const notificationId = await sendMatchInvite(username);
+            console.log('Match invitation sent, notification ID:', notificationId);
+            
+            // Pass both the notification ID and username to parent
+            onInviteClick(notificationId, username); 
+        } catch (error) {
+            console.error('Failed to send match invitation:', error);
+            alert('Failed to send invitation. Please try again.');
+        }
+    };
+
     return (
         <div
             className={`grid grid-cols-[60px_1fr_120px] gap-4 px-6 py-3 items-center hover:bg-sidebar/20 transition-colors ${className}`}
@@ -34,7 +50,7 @@ export default function UserInvite({
             </button>
            
             <button
-                onClick={onInviteClick}
+                onClick={handleInviteClick}
                 className="
                     border border-emerald-500/30 bg-emerald-500/5 text-emerald-400
                     hover:bg-emerald-500 hover:text-white hover:border-emerald-500 

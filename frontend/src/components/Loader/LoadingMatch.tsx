@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import { cancelMatchInvite } from "../../services/NotificationService";
 
 interface LoadingMatchProps {
   matchType: "opponent" | "friend";
   invitedUser?: string;
+  notificationId?: number; // Add this prop
   onCancel: () => void;
 }
 
-const LoadingMatch = ({ matchType, invitedUser, onCancel }: LoadingMatchProps) => {
+const LoadingMatch = ({ matchType, invitedUser, notificationId, onCancel }: LoadingMatchProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -32,17 +34,36 @@ const LoadingMatch = ({ matchType, invitedUser, onCancel }: LoadingMatchProps) =
   };
 
   const handleCancel = async () => {
-
-    if (isCancelling) return; // prevent multiple clicks
+    if (isCancelling) return;
     
     setIsCancelling(true);
     
-      // try {} catch {}
-      // send cancel request to backend here
-      console.log('Matchmaking cancelled successfully:');
-      setIsCancelling(false);
+    // Debug logs
+    console.log('=== CANCEL DEBUG ===');
+    console.log('matchType:', matchType);
+    console.log('notificationId:', notificationId);
+    console.log('matchType === "friend":', matchType === "friend");
+    console.log('Boolean(notificationId):', Boolean(notificationId));
+    console.log('===================');
+    
+    try {
+      if (matchType === "friend" && notificationId) {
+        console.log('Cancelling match invitation with notification ID:', notificationId);
+        await cancelMatchInvite(notificationId);
+        console.log('Match invitation cancelled successfully');
+      } else {
+        console.log('Random matchmaking cancelled');
+        console.log('Reason: matchType=' + matchType + ', notificationId=' + notificationId);
+      }
       onCancel();
-  }
+    } catch (error) {
+      console.error('Failed to cancel match:', error);
+      console.error('Error details:', error);
+      alert('Failed to cancel invitation. Please try again.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
   
 
   return (

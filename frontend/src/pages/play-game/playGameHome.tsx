@@ -41,6 +41,7 @@ export default function PlayGameHome() {
     const [invitedUser, setInvitedUser] = useState<string>("");
     const [showIntroAnimation, setShowIntroAnimation] = useState<boolean>(false);
     const [matchData, setMatchData] = useState<MatchData | null>(null);
+    const [pendingNotificationId, setPendingNotificationId] = useState<number | undefined>();
     const [userStats, setUserStats] = useState<UserStats>({
         currentRate: 0,
         currentRank: RANKS.BRONZE, 
@@ -131,6 +132,9 @@ export default function PlayGameHome() {
         return () => {
             wsService.disconnect();
             if (isMatchmakingRef.current) cancelOpponentSearch().catch(console.error);
+            if (isMatchmaking) {
+                handleCancelMatchmaking();
+            }
         };
     }, [navigate]);
 
@@ -150,6 +154,7 @@ export default function PlayGameHome() {
     const handleOpponentMatching = async () => {
         setMatchType("opponent");
         setInvitedUser("");
+        setPendingNotificationId(undefined);
         setIsMatchmaking(true);
         try {
             await searchOpponent();
@@ -163,6 +168,7 @@ export default function PlayGameHome() {
     const handleCancelMatchmaking = async () => {
         setIsMatchmaking(false);
         setInvitedUser("");
+        setPendingNotificationId(undefined);
         try {
             await cancelOpponentSearch();
             console.log('Cancelled opponent search');
@@ -171,9 +177,13 @@ export default function PlayGameHome() {
         }
     };
 
-    const handleFriendInvite = (username: string) => {
+
+    const handleFriendInvite = (notificationId: number, username: string) => {
+        console.log('PlayGameHome received - Notification ID:', notificationId, 'Username:', username);
+        
         setMatchType("friend");
         setInvitedUser(username);
+        setPendingNotificationId(notificationId);
         setIsMatchmaking(true);
         setIsFriendMatchingOpen(false);
     };
@@ -189,11 +199,19 @@ export default function PlayGameHome() {
         );
     }
 
+
     if (isMatchmaking) {
+        console.log('Rendering LoadingMatch with:', {
+            matchType,
+            invitedUser,
+            notificationId: pendingNotificationId
+        });
+        
         return (
             <LoadingMatch 
                 matchType={matchType}
                 invitedUser={invitedUser}
+                notificationId={pendingNotificationId}
                 onCancel={handleCancelMatchmaking}
             />
         );
