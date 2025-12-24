@@ -5,6 +5,7 @@ import PasswordField from '../components/authentication/PasswordField';
 import { loginUser, type LoginRequest } from '../services/AuthService';
 import { getUsername } from '../utils/jwtDecoder';
 import { validateEmailOrUsername, validatePassword } from '../utils/validation';
+import { getOnGoingMatch } from '../services/MatchService';
 
 export default function LogIn() {
   const [email, setEmail] = useState('');
@@ -50,9 +51,14 @@ export default function LogIn() {
       };
 
       await loginUser(credentials);
-      
-      // Navigate to profile using the decoded username from the stored token
-      navigate(`/profile/${getUsername()}/overview`);
+    
+      const activeMatch = await getOnGoingMatch();
+
+      if(activeMatch) {
+        navigate(`/play-game/${activeMatch}`, { replace: true });
+      } else {
+        navigate(`/profile/${getUsername()}/overview`, { replace: true });
+      }
 
     } catch (err: any) {
       setApiError(err || 'Login failed. Please try again.');

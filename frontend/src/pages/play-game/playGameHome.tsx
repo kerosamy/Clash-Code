@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Client, type IMessage } from "@stomp/stompjs";
 import FriendMatchingPopUp from "../../components/common/FriendMatchingPopUp";
 import LoadingMatch from "../../components/Loader/LoadingMatch";
 import MatchIntroAnimation from "../../components/match/MatchIntroAnimation";
@@ -8,9 +7,10 @@ import { fetchMyProfile } from "../../services/UserService";
 import { calculateNextRate, getRankColor } from "../../utils/calculateNextRate";
 import { RANKS } from "../../enums/Ranks";
 import type { NextRankInfo } from "../../utils/calculateNextRate";
-import { searchOpponent, cancelOpponentSearch  , getMatchSubmissionLog} from "../../services/MatchService";
+import { searchOpponent, cancelOpponentSearch, getMatchSubmissionLog } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
 import { wsService } from "../../services/ws";
+import { setActiveMatch } from "../../utils/matchState";
 
 interface UserStats {
     currentRate: number;
@@ -54,10 +54,8 @@ export default function PlayGameHome() {
     });
     const [isLoading, setIsLoading] = useState<boolean>(true);
     
-    // Use ref to track if we're currently matchmaking (for cleanup)
     const isMatchmakingRef = useRef(false);
     
-    // Keep ref in sync with state
     useEffect(() => {
         isMatchmakingRef.current = isMatchmaking;
     }, [isMatchmaking]);
@@ -143,6 +141,9 @@ export default function PlayGameHome() {
 
     const handleAnimationComplete = () => {
         if (matchData) {
+            // Set active match before navigation
+            setActiveMatch(matchData.matchId.toString());
+            
             navigate(`/play-game/${matchData.matchId}`, {
                 state: { problemId: matchData.problemId }
             });
@@ -186,7 +187,6 @@ export default function PlayGameHome() {
         setIsFriendMatchingOpen(false);
     };
 
-    // Show intro animation when match is found
     if (showIntroAnimation && matchData) {
         return (
             <MatchIntroAnimation

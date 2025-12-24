@@ -89,8 +89,7 @@ export default function SignUp() {
     try {
       await registerUser(requestData);
 
-      navigate(`/profile/${formData.username}/overview`);
-      
+      navigate(`/profile/${formData.username}/overview`, { replace: true });
     } catch (err: any) {
       const errorMessage = err || "Registration failed";
       setErrors({ global: errorMessage });

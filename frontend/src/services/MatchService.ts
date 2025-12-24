@@ -177,3 +177,10 @@ export async function getMatchHistory(
         }
     });
 }
+
+export async function getOnGoingMatch(): Promise<number | null> {
+  return apiRequest<number | null>({
+    method: "GET",
+    url: "/matches/on-going",
+  });
+}

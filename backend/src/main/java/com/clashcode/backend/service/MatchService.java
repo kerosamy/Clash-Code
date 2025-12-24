@@ -24,12 +24,12 @@ import com.clashcode.backend.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -480,5 +480,9 @@ public class MatchService {
     public Page<MatchHistoryDto> getUserMatchHistory(Long userId, Boolean rated, Pageable pageable) {
         return matchParticipantRepository.findHistoryByUserId(userId, rated, pageable)
                 .map(matchParticipant -> matchMapper.toMatchHistoryDto(matchParticipant));
+    }
+    
+    public Optional<Long> getOnGoingMatch(User user){
+        return matchParticipantRepository.getOnGoingMatchByUserId(user.getId(), MatchState.ONGOING);
     }
 }
