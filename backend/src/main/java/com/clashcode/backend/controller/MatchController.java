@@ -15,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/matches")
@@ -26,7 +27,7 @@ public class MatchController {
     }
 
     @PostMapping("/{matchId}/submit")
-    public ResponseEntity<Void> submitCode (
+    public ResponseEntity<Void> submitCode(
             @RequestBody SubmissionRequestDto submissionRequestDto,
             @AuthenticationPrincipal User user
     ) {
@@ -109,7 +110,7 @@ public class MatchController {
     }
 
     @PostMapping("/start-rated-match")
-    public ResponseEntity<Void> createMatch(@RequestBody MatchCreationDto matchCreationDto){
+    public ResponseEntity<Void> createMatch(@RequestBody MatchCreationDto matchCreationDto) {
         matchService.startRatedMatch(matchCreationDto);
         return ResponseEntity.ok().build();
     }
@@ -137,5 +138,10 @@ public class MatchController {
         return ResponseEntity.ok(
                 matchService.getUserMatchHistory(user.getId(), rated, pageable)
         );
+    }
+
+    @GetMapping("/on-going")
+    public ResponseEntity<Optional<Long>> getOnGoingMatch(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(matchService.getOnGoingMatch(user));
     }
 }

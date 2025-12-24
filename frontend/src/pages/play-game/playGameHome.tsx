@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Client, type IMessage } from "@stomp/stompjs";
 import FriendMatchingPopUp from "../../components/common/FriendMatchingPopUp";
 import LoadingMatch from "../../components/Loader/LoadingMatch";
 import MatchIntroAnimation from "../../components/match/MatchIntroAnimation";
@@ -11,7 +10,7 @@ import type { NextRankInfo } from "../../utils/calculateNextRate";
 import { searchOpponent, cancelOpponentSearch, getMatchSubmissionLog } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
 import { wsService } from "../../services/ws";
-import { setActiveMatch, clearActiveMatch } from "../../utils/matchState"; // NEW IMPORT
+import { setActiveMatch } from "../../utils/matchState";
 
 interface UserStats {
     currentRate: number;

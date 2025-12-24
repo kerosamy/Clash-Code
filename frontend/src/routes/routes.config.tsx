@@ -62,8 +62,6 @@ import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.s
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 import Suggestions from '../assets/icons/Suggestions.svg';
-import { logout } from '../services/AuthService';
-import RejectedProblemsIcon from '../assets/icons/RejectedProblems.svg';
 import NotificationsIcon from '../assets/icons/Bell.png';
 
 

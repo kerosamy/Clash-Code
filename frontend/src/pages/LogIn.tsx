@@ -5,14 +5,12 @@ import PasswordField from '../components/authentication/PasswordField';
 import { loginUser, type LoginRequest } from '../services/AuthService';
 import { getUsername } from '../utils/jwtDecoder';
 import { validateEmailOrUsername, validatePassword } from '../utils/validation';
+import { getOnGoingMatch } from '../services/MatchService';
 
 export default function LogIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-<<<<<<< HEAD
   
-=======
->>>>>>> c5fe08f (Add protected routes and match navigation guard)
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -53,9 +51,14 @@ export default function LogIn() {
       };
 
       await loginUser(credentials);
-      
-      // Navigate to profile using the decoded username from the stored token
-      navigate(`/profile/${getUsername()}/overview`);
+    
+      const activeMatch = await getOnGoingMatch();
+
+      if(activeMatch) {
+        navigate(`/play-game/${activeMatch}`, { replace: true });
+      } else {
+        navigate(`/profile/${getUsername()}/overview`, { replace: true });
+      }
 
     } catch (err: any) {
       setApiError(err || 'Login failed. Please try again.');
@@ -69,12 +72,8 @@ export default function LogIn() {
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
-<<<<<<< HEAD
   // Basic check for button disable state (UX optimization)
   const isFormValid = email.trim().length >= 4 && password.trim().length >= 8;
-=======
-  const isFormValid = email.length >= 4 && password.length >= 8 && password.length <= 64;
->>>>>>> c5fe08f (Add protected routes and match navigation guard)
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">

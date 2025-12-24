@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useParams } from 'react-router-dom';
-import { Client, type IMessage } from "@stomp/stompjs";
 
 import TopNavigator from "../../components/common/TopNavigators";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
@@ -15,8 +14,8 @@ import { resignMatch, getMatchDetails, getMatchResults } from "../../services/Ma
 import type { MatchResultDto } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
 import { wsService } from "../../services/ws";
-import { useMatchGuard } from "../../hooks/useMatchGuard"; // NEW IMPORT
-import { setActiveMatch, clearActiveMatch } from "../../utils/matchState"; // NEW IMPORT
+import { useMatchGuard } from "../../hooks/useMatchGuard";
+import { setActiveMatch, clearActiveMatch } from "../../utils/matchState";
 
 interface MatchData {
     startAt: string;
@@ -45,18 +44,13 @@ export default function PlayGame() {
     const [matchResults, setMatchResults] = useState<MatchResultDto | null>(null);
     const [showResultOverlay, setShowResultOverlay] = useState(false);
 
-    const clientRef = useRef<Client | null>(null);
-
-    // Track if match is active (for match guard)
     const isMatchActive = matchData?.state === "ONGOING";
 
-    // Set active match on mount
     useEffect(() => {
         if (id) {
             setActiveMatch(id);
         }
-        
-        // Only clear on unmount if match is not ongoing
+
         return () => {
             if (!isMatchActive) {
                 clearActiveMatch();
@@ -72,7 +66,6 @@ export default function PlayGame() {
             setShowResultOverlay(true);
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
             
-            // Clear active match when showing results
             clearActiveMatch();
         } catch (error) {
             console.error("Failed to load match results", error);
@@ -172,7 +165,6 @@ export default function PlayGame() {
         }
     };
 
-    // Handle resign from match (clears match state)
     const handleResignFromMatch = async () => {
         if (!id) return;
         
@@ -186,7 +178,6 @@ export default function PlayGame() {
         }
     };
 
-    // Use match guard hook
     const {
         showResignModal: showNavBlockModal,
         handleResignConfirm: handleNavBlockResign,
@@ -197,7 +188,6 @@ export default function PlayGame() {
         enabled: isMatchActive
     });
 
-    // Handle resign button click (different from navigation block)
     const handleResignClick = () => setIsResignModalOpen(true);
     
     const handleConfirmResign = async () => {

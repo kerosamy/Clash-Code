@@ -38,7 +38,8 @@ export default function CompleteRegistration() {
       await completeRegistration(username);
       sessionStorage.removeItem("oauth_flow");
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate(`profile/${getUsername()}/overview`);
+
+      navigate(`/profile/${username}/overview`, { replace: true });
     } catch (err: any) {
       setErrors({
         username:

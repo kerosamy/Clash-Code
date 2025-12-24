@@ -89,8 +89,7 @@ export default function SignUp() {
     try {
       await registerUser(requestData);
 
-      navigate(`/profile/${formData.username}/overview`);
-      
+      navigate(`/profile/${formData.username}/overview`, { replace: true });
     } catch (err: any) {
       const errorMessage = err || "Registration failed";
       setErrors({ global: errorMessage });
@@ -193,14 +192,9 @@ export default function SignUp() {
         </div>
 
         <button
-<<<<<<< HEAD
           onClick={handleGoogleSignUp}
           disabled={isLoading}
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-          onClick={handleGoogleSignUP}
-          className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full"
->>>>>>> c5fe08f (Add protected routes and match navigation guard)
         >
           <img
             src="/src/assets/google-icon-1.png"

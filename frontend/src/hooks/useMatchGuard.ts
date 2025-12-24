@@ -24,7 +24,6 @@ export const useMatchGuard = ({
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [isResigning, setIsResigning] = useState(false);
 
-  // Block navigation away from match routes
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) => {
       if (!enabled || isResigning) return false;
@@ -44,7 +43,6 @@ export const useMatchGuard = ({
     }
   }, [blocker.state]);
 
-  // Warn on browser close/refresh
   useEffect(() => {
     if (!enabled) return;
 
@@ -65,7 +63,6 @@ export const useMatchGuard = ({
       
       setShowResignModal(false);
       
-      // Allow the blocked navigation to proceed
       if (blocker.state === 'blocked' && blocker.proceed) {
         blocker.proceed();
       } else if (pendingNavigation) {

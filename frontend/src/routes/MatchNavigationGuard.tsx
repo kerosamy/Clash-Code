@@ -1,5 +1,6 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useLocation, useBlocker } from 'react-router-dom';
+import { resignMatch } from '../services/MatchService';
 
 interface MatchNavigationGuardProps {
   children: ReactNode;
@@ -11,20 +12,17 @@ const MatchNavigationGuard = ({ children }: MatchNavigationGuardProps) => {
   const [showResignModal, setShowResignModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
 
-  // Check if user is currently in a match
   const isInMatch = () => {
     const matchId = sessionStorage.getItem('currentMatchId');
     const isMatchRoute = location.pathname.includes('/play-game/');
     return matchId && isMatchRoute;
   };
 
-  // Block navigation if in a match and trying to leave
   const shouldBlockNavigation = (nextLocation: any) => {
     const matchId = sessionStorage.getItem('currentMatchId');
     const isCurrentlyInMatch = location.pathname.includes('/play-game/');
     const isNavigatingToMatch = nextLocation.location.pathname.includes('/play-game/');
     
-    // Block if user is in a match and trying to navigate away from match routes
     return matchId && isCurrentlyInMatch && !isNavigatingToMatch;
   };
 
@@ -39,19 +37,14 @@ const MatchNavigationGuard = ({ children }: MatchNavigationGuardProps) => {
 
   const handleResign = async () => {
     try {
-      // Call your resign API here
       const matchId = sessionStorage.getItem('currentMatchId');
       
-      // Example API call (adjust based on your implementation):
-      // await resignFromMatch(matchId);
-      
-      // Clear match session
+      await resignMatch(Number(matchId));
+
       sessionStorage.removeItem('currentMatchId');
-      
-      // Close modal
+
       setShowResignModal(false);
-      
-      // Proceed with navigation
+
       if (blocker.state === 'blocked') {
         blocker.proceed();
       } else if (pendingNavigation) {
@@ -73,7 +66,6 @@ const MatchNavigationGuard = ({ children }: MatchNavigationGuardProps) => {
     }
   };
 
-  // Handle browser back/forward buttons and refresh
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isInMatch()) {
