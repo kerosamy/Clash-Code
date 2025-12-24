@@ -1,51 +1,127 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Search } from 'lucide-react';
-import { searchUsers, type UserSearchResponse } from '../../services/UserService';
+import { searchFriends, getFriendsList, type FriendDto } from '../../services/FriendService';
+import { getRankName } from '../../utils/colorMapper';
 import UserInvite from "./UserInvite";
 
 interface FriendMatchingPopUpProps {
   isOpen: boolean;
   onClose: () => void;
-  onInvite: (notificationId: number, username: string) => void; // Updated signature
+  onInvite: (notificationId: number, username: string) => void;
 }
 
 export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: FriendMatchingPopUpProps) {
-  const [users, setUsers] = useState<UserSearchResponse[]>([]);
+  const [allFriends, setAllFriends] = useState<FriendDto[]>([]);
+  const [searchResults, setSearchResults] = useState<FriendDto[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Reset state when popup closes
   useEffect(() => {
     if (!isOpen) {
       setSearchQuery('');
-      setUsers([]);
+      setAllFriends([]);
+      setSearchResults([]);
+      setCurrentPage(0);
+      setHasMore(true);
     }
   }, [isOpen]);
-  
+
+  // Fetch initial friends when popup opens
   useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchInitialFriends = async () => {
+      setIsLoadingMore(true);
+      try {
+        const result = await getFriendsList(0, 20);
+        setAllFriends(result.content);
+        setCurrentPage(0);
+        setHasMore(!result.last);
+      } catch (error) {
+        console.error('Failed to fetch friends:', error);
+        setAllFriends([]);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    };
+
+    fetchInitialFriends();
+  }, [isOpen]);
+
+  // Load more friends
+  const loadMoreFriends = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const result = await getFriendsList(nextPage, 20);
+      setAllFriends(prev => [...prev, ...result.content]);
+      setCurrentPage(nextPage);
+      setHasMore(!result.last);
+    } catch (error) {
+      console.error('Failed to load more friends:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentPage, hasMore, isLoadingMore]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !searchQuery.trim()) {
+          loadMoreFriends();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isLoadingMore, loadMoreFriends, searchQuery]);
+  
+  // Search friends based on query
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // If no search query, clear search results
     if (!searchQuery.trim()) {
-      setUsers([]);
+      setSearchResults([]);
       return;
     }
 
     const timer = setTimeout(async () => {
-      setIsLoading(true);
+      setIsSearching(true);
       try {
-        const results = await searchUsers(searchQuery);
-        setUsers(results);
+        const result = await searchFriends(searchQuery, 0, 100);
+        setSearchResults(result.content);
       } catch (error) {
-        setUsers([]);
+        console.error('Failed to search friends:', error);
+        setSearchResults([]);
       } finally {
-        setIsLoading(false);
+        setIsSearching(false);
       }
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, isOpen]);
 
   const handleInvite = (notificationId: number, username: string) => {
-    // Pass both notification ID and username to parent
     onInvite(notificationId, username);
-    // Close the popup after sending invite
     onClose();
   };
 
@@ -54,6 +130,11 @@ export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: Frien
   };
 
   if (!isOpen) return null;
+
+  // Determine what to display
+  const isSearchActive = searchQuery.trim().length > 0;
+  const displayFriends = isSearchActive ? searchResults : allFriends;
+  const isLoading = isSearchActive ? isSearching : isLoadingMore && allFriends.length === 0;
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -71,6 +152,7 @@ export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: Frien
           </button>
         </div>
 
+        {/* Search Input */}
         <div className="p-4 border-b border-gray-700">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -78,35 +160,56 @@ export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: Frien
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by username..."
+              placeholder="Search friends by username..."
               className="w-full pl-10 pr-4 py-2 bg-background border border-gray-600 rounded-lg text-text placeholder-gray-400 focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors font-anta"
             />
           </div>
         </div>
 
+        {/* Friends List with Infinite Scroll */}
         <div className="flex-1 overflow-y-auto custom-scroll">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-text font-anta">Searching...</div>
+              <div className="text-text font-anta">
+                {isSearchActive ? 'Searching...' : 'Loading friends...'}
+              </div>
             </div>
-          ) : users.length === 0 ? (
+          ) : displayFriends.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-text font-anta text-center px-4">
-                {searchQuery ? 'No users found' : 'Enter a username to search'}
+                {isSearchActive 
+                  ? `No friends found matching "${searchQuery}"`
+                  : 'No friends yet. Add some friends first!'}
               </div>
             </div>
           ) : (
             <>
-              {users.map((user, index) => (
+              {displayFriends.map((friend, index) => (
                 <UserInvite
-                  key={`${user.username}-${index}`}
+                  key={`${friend.username}-${index}`}
                   order={index + 1}
-                  username={user.username}
-                  rank={user.rank}
+                  username={friend.username}
+                  rank={getRankName(friend.currentRate)}
                   onInviteClick={handleInvite}
                   onUsernameClick={() => {}}
                 />
               ))}
+              
+              {/* Infinite Scroll Trigger & Loading Indicator */}
+              {!isSearchActive && (
+                <div ref={observerTarget} className="py-4 text-center">
+                  {isLoadingMore && (
+                    <div className="text-text font-anta text-sm">
+                      Loading more...
+                    </div>
+                  )}
+                  {!hasMore && allFriends.length > 0 && (
+                    <div className="text-gray-400 font-anta text-sm">
+                      No more friends to load
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
