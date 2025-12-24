@@ -1,92 +1,70 @@
 package com.clashcode.backend.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.clashcode.backend.exception.FileStorageException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class ImageFileStorageService {
 
-    private final Path fileStorageLocation;
+    private final Cloudinary cloudinary;
 
-    public ImageFileStorageService(@Value("${CLASH_CODE_FS_PATH}") String baseUploadDir) {
-        // Create profile-images subfolder within CLASH_CODE_FS_PATH
-        this.fileStorageLocation = Paths.get(baseUploadDir, "profile-images")
-                .toAbsolutePath()
-                .normalize();
-
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (IOException ex) {
-            throw new FileStorageException("Could not create upload directory: " + this.fileStorageLocation, ex);
-        }
+    public ImageFileStorageService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
     }
 
     public String storeFile(MultipartFile file, String username) {
-        // Validate file
         if (file.isEmpty()) {
             throw new FileStorageException("Failed to store empty file");
         }
 
-        // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new FileStorageException("Only image files are allowed");
         }
 
-        // Get file extension
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-        String fileExtension = "";
-        if (originalFilename.contains(".")) {
-            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-
-        // Create unique filename: username_timestamp_uuid.ext
-        String fileName = username + "_" + System.currentTimeMillis() + "_" +
-                UUID.randomUUID().toString().substring(0, 8) + fileExtension;
+        String publicId = "profile-images/" + username + "_" +
+                System.currentTimeMillis() + "_" +
+                UUID.randomUUID().toString().substring(0, 8);
 
         try {
-            // Check for invalid characters
-            if (fileName.contains("..")) {
-                throw new FileStorageException("Filename contains invalid path sequence " + fileName);
-            }
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                    ObjectUtils.asMap(
+                            "public_id", publicId,
+                            "resource_type", "image",
+                            "overwrite", true
+                    ));
 
-            // Copy file to target location
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
-            try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            }
+            return (String) uploadResult.get("secure_url");
 
-            return fileName;
-        } catch (IOException ex) {
-            throw new FileStorageException("Could not store file " + fileName, ex);
+        } catch (IOException e) {
+            throw new FileStorageException("Could not upload file to Cloudinary", e);
         }
     }
 
-    public void deleteFile(String fileName) {
-        if (fileName == null || fileName.isEmpty()) {
-            return;
-        }
+    public void deleteFile(String publicUrlOrPublicId) {
+        if (publicUrlOrPublicId == null || publicUrlOrPublicId.isEmpty()) return;
 
         try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
-            Files.deleteIfExists(filePath);
-        } catch (IOException ex) {
-            throw new FileStorageException("Could not delete file " + fileName, ex);
+            String publicId = publicUrlOrPublicId;
+            if (publicUrlOrPublicId.startsWith("http")) {
+                // Remove Cloudinary URL prefix and version
+                publicId = publicUrlOrPublicId
+                        .replaceAll("^https://res\\.cloudinary\\.com/[^/]+/image/upload/v[0-9]+/", "")
+                        .replaceAll("\\.[a-zA-Z0-9]+$", "");
+            }
+
+            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", "image"));
+
+        } catch (IOException e) {
+            throw new FileStorageException("Could not delete file from Cloudinary", e);
         }
     }
 
-    public Path loadFile(String fileName) {
-        return this.fileStorageLocation.resolve(fileName).normalize();
-    }
 }
