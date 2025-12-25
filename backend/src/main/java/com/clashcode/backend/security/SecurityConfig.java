@@ -84,10 +84,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
+        // Allow any origin (use patterns for dynamic URLs like ngrok)
         config.setAllowedOriginPatterns(List.of("*"));
 
+        // Allow HTTP methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+
+        // Allow headers
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "ngrok-skip-browser-warning"));
+
+        // Allow credentials (cookies, auth headers)
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
