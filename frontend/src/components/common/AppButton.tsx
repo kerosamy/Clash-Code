@@ -2,21 +2,26 @@ import React from "react";
 
 type FriendStatusVariant = "negative" | "positive";
 
-interface FriendStatusButtonProps {
+interface AppButtonProps {
     label: string;
-    onClick: () => void;
+    onClick: (e: any) => void;
     variant: FriendStatusVariant;
-}
+    size: "small" | "large";
+}``
 
-const FriendStatusButton: React.FC<FriendStatusButtonProps> = ({
+const AppButton: React.FC<AppButtonProps> = ({
     label,
     onClick,
     variant,
+    size = "large",
 }) => {
+    const sz = size === "small" ? "px-4 py-1 text-[10px]"
+                  : "px-4 py-2 text-lg";
+
     const baseClasses = `
     flex items-center justify-center
-    px-4 py-2 rounded-full border-2 
-    font-anta text-lg uppercase tracking-widest 
+    rounded-full border-2 ${sz}
+    font-anta uppercase tracking-widest 
     transition-all duration-300 hover:text-white
     `;
 
@@ -40,4 +45,4 @@ const FriendStatusButton: React.FC<FriendStatusButtonProps> = ({
     );
 };
 
-export default FriendStatusButton;
+export default AppButton;

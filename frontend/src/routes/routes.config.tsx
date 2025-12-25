@@ -55,12 +55,13 @@ import ProblemDetailsIcon from '../assets/icons/problem-statement.svg';
 import SubmitsIcon from '../assets/icons/subimt.svg';
 import { UserRole } from '../enums/UserRole';
 import UserManagement from '../pages/UserManagement';
-import ReviewProblems from '../pages/ReviewProblems';
+import ReviewProblems from '../pages/review/ReviewProblems';
 import WriteProblemStatmentIcon from '../assets/icons/writeProblemStatmentIcon.svg';
 import ProblemInfoIcon from '../assets/icons/problemInfoIcon.svg';
 import TestCasesIcon from '../assets/icons/testCasesIcon.svg';
 import Suggestions from '../assets/icons/Suggestions.svg';
 import NotificationsIcon from '../assets/icons/Bell.png';
+import ReviewProblem from '../pages/review/ReviewProblem';
 
 
 
@@ -140,8 +141,6 @@ export const routes: RouteConfig[] = [
       { path: 'submit', component: Submit }
     ]
   },
-
-  
   { 
     path: 'play-game', 
     name: 'Play Game', 
@@ -183,6 +182,14 @@ export const routes: RouteConfig[] = [
     name: 'Review Problems',
     icon: ListIcon,  
     component: ReviewProblems,
+    requiredRoles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+  },
+  {
+    path: 'review-problems/:id',
+    name: 'Review Problem Detail',
+    icon: ListIcon,  
+    component: ReviewProblem,
+    hideFromNav: true,
     requiredRoles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
   },
   // super admin only

@@ -43,7 +43,6 @@ public class ProblemAIReviewService {
 
         String currentHash = computeProblemHash(problem);
         Optional<ProblemAIReview> existingReviewOpt = problemAIReviewRepository.findById(problemId);
-
         if (existingReviewOpt.isPresent() && existingReviewOpt.get().getProblemHash().equals(currentHash)) {
             return existingReviewOpt.get().getReviewJSON();
         }
