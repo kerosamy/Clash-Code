@@ -58,3 +58,4 @@ Solution:
 [PROBLEM CONTENT END]
 
 Return ONLY valid JSON. Any extra text makes the response invalid.
+Don't start with ```json, your response must always begin with the opening braces and end with the closing braces of the json

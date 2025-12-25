@@ -78,8 +78,7 @@ export default function ReviewProblems() {
 
   return (
     <div className="flex flex-col h-[90vh] p-8 space-y-6">
-      <ReviewHeader totalProblems={totalProblems} />
-
+      <ReviewHeader title="Review Problems" totalProblems={totalProblems} />
       {/* Table Area */}
       <div className="flex-1 overflow-hidden rounded-xl border border-white/5 bg-sidebar/10 shadow-xl">
         <div className="h-full overflow-y-auto custom-scroll">

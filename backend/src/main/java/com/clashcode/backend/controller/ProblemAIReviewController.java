@@ -18,6 +18,8 @@ public class ProblemAIReviewController {
 
     @PostMapping("/ai-review/{problemId}")
     public ResponseEntity<String> getProblemAIReview(@PathVariable Long problemId) {
+        System.out.println(problemId);
+        System.out.println(ResponseEntity.ok(problemAIReviewService.getProblemAIReview(problemId)));
         return ResponseEntity.ok(problemAIReviewService.getProblemAIReview(problemId));
     }
 }

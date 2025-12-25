@@ -162,6 +162,7 @@ export const routes: RouteConfig[] = [
   },
   
   { path: 'leader-board', name: 'LeaderBoard', icon: LeaderboardIcon, component: LeaderBoard },
+  
   {
     path: 'add-problem',
     name: 'Add Problem',

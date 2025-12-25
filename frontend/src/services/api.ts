@@ -58,7 +58,6 @@ const handleApiError = (error: AxiosError<ErrorResponse>): never => {
 
 export const apiRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {
   try {
-    return null;
     const response: AxiosResponse<T> = await api.request<T>(config);
     return response.data;
   } 
