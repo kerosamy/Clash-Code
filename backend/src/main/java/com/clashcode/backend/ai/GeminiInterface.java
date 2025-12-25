@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GeminiInterface {
-    private static final String MODEL = "gemini-2.0-flash";
+    private static final String MODEL = "gemini-2.5-flash";
     private final Client client;
 
     public GeminiInterface(@Value("${GEMINI_API_KEY:}") String apiKey) {

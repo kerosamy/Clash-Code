@@ -21,9 +21,9 @@ public class ProblemAIReview {
     @JoinColumn(name = "problem_id")
     private Problem problem;
 
-    @Column(nullable = false)
+    @Column(name = "problem_hash", nullable = false)
     private String problemHash;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "review_json", columnDefinition = "TEXT")
     private String reviewJSON;
 }

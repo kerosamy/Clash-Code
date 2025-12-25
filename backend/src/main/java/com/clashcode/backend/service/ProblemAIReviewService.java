@@ -71,7 +71,7 @@ public class ProblemAIReviewService {
                 : "[]");
 
         values.put("solution", problem.getSolution() != null
-                ? problem.getSolution().toString()
+                ? problem.getSolution().getSolutionCode()
                 : "No solution provided");
 
         values.put("testCases", problem.getTestCases() != null
@@ -88,7 +88,7 @@ public class ProblemAIReviewService {
                 problem.getOutputFormat(),
                 String.valueOf(problem.getTimeLimit()),
                 String.valueOf(problem.getMemoryLimit()),
-                problem.getSolution() != null ? problem.getSolution().toString() : "",
+                problem.getSolution() != null ? problem.getSolution().getSolutionCode() : "",
                 problem.getTags().toString(),
                 testCaseService.getInputTestCasesForProblem(problem).toString()
         );
