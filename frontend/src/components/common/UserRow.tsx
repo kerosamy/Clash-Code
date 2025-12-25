@@ -84,7 +84,7 @@ export default function UserRow({
 
       {/* Status Column */}
       <div className="flex items-center justify-center gap-2">
-        {userStatus ? (
+        {userStatus && (
           <>
             {/* Status Dot */}
             <div className="relative flex items-center">
@@ -96,12 +96,12 @@ export default function UserRow({
             </div>
             
             {/* Status Label */}
-            <span className={`text-sm font-anta ${getStatusColor(userStatus)}`}>
+            {userStatus && (
+              <span className={`text-sm font-anta ${getStatusColor(userStatus)}`}>
               {getStatusLabel(userStatus)}
-            </span>
+            </span>)}
+            
           </>
-        ) : (
-          <span className="text-sm font-anta text-gray-500">Unknown</span>
         )}
       </div>
 

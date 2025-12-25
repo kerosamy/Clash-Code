@@ -62,9 +62,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                         /*To permit all requests, change .authenticated() to .permitAll()*/
                 )
-
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:5173/auth/callback", false)
+                        .defaultSuccessUrl("/auth/OAuthCallback", true) // redirect to your endpoint
                 )
 
                 // --- CHANGE THIS SECTION ---

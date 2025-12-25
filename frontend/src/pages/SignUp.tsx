@@ -13,6 +13,7 @@ import {
   validateRecoveryQuestion,
   validateRecoveryAnswer
 } from "../utils/validation";
+import { API_BASE } from '../services/api';
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -42,7 +43,7 @@ export default function SignUp() {
 
   const handleGoogleSignUp = () => {
     sessionStorage.setItem('oauth_flow', 'signup');
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    window.location.href = `${API_BASE}/oauth2/authorization/google`;
   };
 
   const validateAllInputs = () => {

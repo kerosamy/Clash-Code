@@ -123,8 +123,8 @@ public class AuthControllerTest {
         mockUser.setEmail("newuser@example.com");
         mockUser.setUsername("newuser");
 
-        when(authService.completeGoogleSignUp(any(SignUpCompletionDto.class), any(OAuth2AuthenticationToken.class)))
-                .thenReturn(mockUser);
+//        when(authService.completeGoogleSignUp(any(SignUpCompletionDto.class), any()))
+//                .thenReturn(mockUser);
         when(jwtService.generateToken(any(User.class))).thenReturn("mock-token");
 
         mockMvc.perform(post("/auth/GoogleSignUp/completeRegistration")

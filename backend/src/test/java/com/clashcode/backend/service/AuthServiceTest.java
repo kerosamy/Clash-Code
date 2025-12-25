@@ -169,6 +169,7 @@ public class AuthServiceTest {
     void testCompleteSignUp_Success() {
         SignUpCompletionDto request = new SignUpCompletionDto();
         request.setUsername("newuser");
+        request.setEmail("newuser");
 
         when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
@@ -182,7 +183,7 @@ public class AuthServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         // Act
-        User result = authService.completeGoogleSignUp(request, oAuth2Token);
+        User result = authService.completeGoogleSignUp(request);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -204,7 +205,7 @@ public class AuthServiceTest {
                 .thenReturn(Optional.of(new User()));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> authService.completeGoogleSignUp(request, oAuth2Token));
+                () -> authService.completeGoogleSignUp(request));
 
         assertEquals("Username already taken", exception.getMessage());
     }
