@@ -13,6 +13,7 @@ import { getUsername } from "../utils/jwtDecoder";
 interface PendingProblemRowProps {
   id: number;
   name: string;
+  index: number;
   author: string | null;
 }
 
@@ -33,6 +34,7 @@ export default function ReviewProblems() {
       const mapped = backendPage.content.map((p: any) => ({
         id: p.id,
         name: p.title ?? p.name,
+        index: p.index,
         author: p.author,
       }));
       setProblems(mapped);

@@ -1,4 +1,3 @@
-import React from "react";
 
 export default function AnimatedBackground() {
   const colors = {
@@ -47,14 +46,16 @@ export default function AnimatedBackground() {
               className="diamond border border-white/5 transition-all duration-700 ease-out hover:duration-75"
               style={{ backgroundColor: `${colors.container}44` }}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = colors.orange;
-                e.target.style.transform = "scale(1.1) translateZ(20px)";
-                e.target.style.opacity = "0.8";
+                const target = e.target as HTMLElement; // <-- type assertion
+                target.style.backgroundColor = colors.orange;
+                target.style.transform = "scale(1.1) translateZ(20px)";
+                target.style.opacity = "0.8";
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = `${colors.container}44`;
-                e.target.style.transform = "scale(0.95)";
-                e.target.style.opacity = "1";
+                const target = e.target as HTMLElement; // <-- type assertion
+                target.style.backgroundColor = `${colors.container}44`;
+                target.style.transform = "scale(0.95)";
+                target.style.opacity = "1";
               }}
             />
           ))}

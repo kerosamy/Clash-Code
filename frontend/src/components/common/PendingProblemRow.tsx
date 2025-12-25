@@ -1,4 +1,3 @@
-import React from "react";
 
 // Grid: Added click handling styles
 export const PENDING_GRID = 
@@ -19,7 +18,6 @@ interface PendingProblemRowProps {
 }
 
 export default function PendingProblemRow({
-  id,
   index,
   name,
   author,

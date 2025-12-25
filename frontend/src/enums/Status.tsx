@@ -1,5 +1,7 @@
-export enum Status {
-  Solved = "solved",
-  Attempted = "attempted",
-  Unsolved = "unsolved",
-}
+export const Status = {
+  Solved: "solved",
+  Attempted: "attempted",
+  Unsolved: "unsolved",
+} as const;
+
+export type Status = typeof Status[keyof typeof Status];

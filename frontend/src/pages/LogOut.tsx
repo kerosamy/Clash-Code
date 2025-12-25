@@ -6,7 +6,7 @@ import { clearActiveMatch, hasActiveMatch } from "../utils/matchState";
 
 export default function LogoutPage() {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen] = useState(true);
   const activeMatch = hasActiveMatch();
 
   const handleConfirm = () => {

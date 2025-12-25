@@ -116,6 +116,7 @@ export async function fetchFullProblemById(id: number): Promise<ProblemDto> {
 }
 
 export interface ProblemRequestDto {
+  id: number | null;
   title: string;
   inputFormat: string;
   outputFormat: string;

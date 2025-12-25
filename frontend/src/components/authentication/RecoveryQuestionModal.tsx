@@ -1,4 +1,3 @@
-import React from "react";
 import { RECOVERY_OPTIONS } from "../../utils/recoveryQuestions";
 
 interface RecoveryQuestionModalProps {
