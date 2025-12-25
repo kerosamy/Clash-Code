@@ -23,7 +23,7 @@ export default function ReviewProblem() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const numericId = Number(id);
-
+  const [errorAI, setErrorAI] = useState<string | null>(null);
   const [problem, setProblem] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -52,20 +52,29 @@ export default function ReviewProblem() {
 
   const handleAIRequest = async () => {
     if (loadingAI) return;
+    
     setLoadingAI(true);
+    setErrorAI(null); // Reset error state on new attempt
+    
     try {
       const responseText = await fetchAIReview(numericId);
+      // Validate that we got a response
+    if (responseText) {
       const parsedData = typeof responseText === "string" ? JSON.parse(responseText) : responseText;
-      
       setAiReview(parsedData);
-      // Auto-expand the summary so the user sees the result immediately
+      
+
+      window.location.reload();
+      setAiReview(parsedData);
       setShowFullReport(true);
-    } catch (err) {
+    } }catch (err: any) {
       console.error("AI Review failed", err);
+      // Capture the error message as a string
+      setErrorAI(err.message || "An unexpected error occurred during AI analysis.");
     } finally {
       setLoadingAI(false);
     }
-  };
+  
 
   const getScoreColor = (score: number) => {
     if (score >= 4) return "text-green-400 border-green-400/20 bg-green-400/5";
@@ -142,18 +151,25 @@ export default function ReviewProblem() {
       <div className="w-full py-0 text-white font-anta p-scroll-x">
         <div className="max-w-6xl mx-auto w-full px-8 pb-10">
           
-          {/* AI QUALITY SCORE SECTION */}
-          {(loadingAI || aiReview) && (
-            <div className="mb-12 p-6 rounded-xl border border-white/10 bg-sidebar/20 shadow-inner relative overflow-hidden">
-              {loadingAI && (
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center z-10">
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="text-orange animate-spin-slow" size={20} />
-                    <span className="text-xs font-black uppercase tracking-widest text-orange">AI Analyzing Content...</span>
-                  </div>
-                </div>
-              )}
-
+        {/* AI QUALITY SCORE SECTION */}
+{(loadingAI || aiReview || errorAI) && (
+  <div className="mb-12 p-6 rounded-xl border border-white/10 bg-sidebar/20 shadow-inner relative overflow-hidden">
+    
+    {/* Error State View */}
+    {errorAI && !loadingAI && (
+      <div className="flex flex-col items-center justify-center py-4 text-center">
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg">
+          <p className="text-red-400 text-sm font-bold mb-1">AI Analysis Failed</p>
+          <p className="text-red-400/70 text-xs font-anta">{errorAI}</p>
+          <button 
+            onClick={handleAIRequest}
+            className="mt-3 text-[10px] uppercase tracking-widest text-white underline underline-offset-4 hover:text-orange"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )}
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-6">
                   <div className="relative">
