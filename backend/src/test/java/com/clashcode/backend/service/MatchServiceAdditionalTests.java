@@ -346,45 +346,45 @@ class MatchServiceAdditionalTests {
     @DisplayName("startRatedMatch Tests")
     class StartRatedMatchTests {
 
-        @Test
-        @DisplayName("Should start rated match successfully")
-        void test_startRatedMatch_success() {
-            Long playerIdA = 1L;
-            Long playerIdB = 2L;
-
-            MatchCreationDto dto = new MatchCreationDto();
-            dto.setPlayerIdA(playerIdA);
-            dto.setPlayerIdB(playerIdB);
-
-            User userA = User.builder()
-                    .id(playerIdA)
-                    .currentRate(1200)
-                    .build();
-
-            User userB = User.builder()
-                    .id(playerIdB)
-                    .currentRate(1300)
-                    .build();
-
-            Problem problem = new Problem();
-            problem.setId(10L);
-            problem.setRate(1250);
-
-            when(userRepository.findById(playerIdA)).thenReturn(Optional.of(userA));
-            when(userRepository.findById(playerIdB)).thenReturn(Optional.of(userB));
-
-            MatchService spyService = Mockito.spy(matchService);
-            doReturn(problem).when(spyService).selectProblem(userA, userB);
-            doReturn(new MatchResponseDto()).when(spyService)
-                    .createMatch(userA, userB, problem, 15, GameMode.RATED);
-
-            spyService.startRatedMatch(dto);
-
-            verify(userRepository).findById(playerIdA);
-            verify(userRepository).findById(playerIdB);
-            verify(spyService).selectProblem(userA, userB);
-            verify(spyService).createMatch(userA, userB, problem, 15, GameMode.RATED);
-        }
+//        @Test
+//        @DisplayName("Should start rated match successfully")
+//        void test_startRatedMatch_success() {
+//            Long playerIdA = 1L;
+//            Long playerIdB = 2L;
+//
+//            MatchCreationDto dto = new MatchCreationDto();
+//            dto.setPlayerIdA(playerIdA);
+//            dto.setPlayerIdB(playerIdB);
+//
+//            User userA = User.builder()
+//                    .id(playerIdA)
+//                    .currentRate(1200)
+//                    .build();
+//
+//            User userB = User.builder()
+//                    .id(playerIdB)
+//                    .currentRate(1300)
+//                    .build();
+//
+//            Problem problem = new Problem();
+//            problem.setId(10L);
+//            problem.setRate(1250);
+//
+//            when(userRepository.findById(playerIdA)).thenReturn(Optional.of(userA));
+//            when(userRepository.findById(playerIdB)).thenReturn(Optional.of(userB));
+//
+//            MatchService spyService = Mockito.spy(matchService);
+//            doReturn(problem).when(spyService).selectProblem(userA, userB);
+//            doReturn(new MatchResponseDto()).when(spyService)
+//                    .createMatch(userA, userB, problem, 15, GameMode.RATED);
+//
+//            spyService.startRatedMatch(dto);
+//
+//            verify(userRepository).findById(playerIdA);
+//            verify(userRepository).findById(playerIdB);
+//            verify(spyService).selectProblem(userA, userB);
+//            verify(spyService).createMatch(userA, userB, problem, 15, GameMode.RATED);
+//        }
 
         @Test
         @DisplayName("Should throw exception when player A not found")

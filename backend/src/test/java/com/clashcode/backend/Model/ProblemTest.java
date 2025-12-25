@@ -115,8 +115,10 @@ class ProblemTest {
         List<ProblemTags> tags = new ArrayList<>();
         List<TestCase> testCases = new ArrayList<>();
 
-        Problem problem = new Problem(1L, 100L, "Title", "Input", "Output", "Statement", "Notes",
-                "Author", 1000, 256, ProblemStatus.APPROVED, solution, 1500, tags, testCases);
+        Problem problem = new Problem(
+                1L, 100L, "Title", "Input", "Output", "Statement", "Notes",
+                "Author", 1000, 256, ProblemStatus.APPROVED, solution, 1500, tags, testCases, null
+        );
 
         assertEquals(1L, problem.getId());
         assertEquals(100L, problem.getSubmissionsCount());
