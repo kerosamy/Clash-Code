@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ProblemAIReviewService {
@@ -33,32 +34,39 @@ public class ProblemAIReviewService {
         this.promptBuilder = promptBuilder;
     }
 
-    public String getProblemAIReview(Long problemId) throws IllegalAccessException {
+    public String getProblemAIReview(Long problemId) {
         Problem problem = problemRepository.findById(problemId)
                 .orElseThrow(ProblemNotFoundException::new);
 
         if (problem.getProblemStatus() != ProblemStatus.PENDING_APPROVAL)
-            throw new IllegalAccessException("Problem isn't in Review");
+            throw new IllegalArgumentException("Problem isn't in Review");
 
         String currentHash = computeProblemHash(problem);
-        ProblemAIReview existingReview = problemAIReviewRepository.findById(problemId)
-                .orElse(null);
+        Optional<ProblemAIReview> existingReviewOpt = problemAIReviewRepository.findById(problemId);
 
-        if (existingReview != null && existingReview.getProblemHash().equals(currentHash)) {
-            return existingReview.getReviewJSON();
+        if (existingReviewOpt.isPresent() && existingReviewOpt.get().getProblemHash().equals(currentHash)) {
+            return existingReviewOpt.get().getReviewJSON();
         }
 
         String prompt = buildPrompt(problem);
         String aiResponse = gemini.getResponse(prompt);
 
-        ProblemAIReview review = ProblemAIReview.builder()
-                .problem(problem)
-                .problemHash(currentHash)
-                .reviewJSON(aiResponse)
-                .build();
+        ProblemAIReview reviewToSave;
 
-        problemAIReviewRepository.save(review);
-        return review.getReviewJSON();
+        if (existingReviewOpt.isPresent()) {
+            reviewToSave = existingReviewOpt.get();
+            reviewToSave.setProblemHash(currentHash);
+            reviewToSave.setReviewJSON(aiResponse);
+        } else {
+            reviewToSave = ProblemAIReview.builder()
+                    .problem(problem)
+                    .problemHash(currentHash)
+                    .reviewJSON(aiResponse)
+                    .build();
+        }
+
+        problemAIReviewRepository.save(reviewToSave);
+        return reviewToSave.getReviewJSON();
     }
 
     private String buildPrompt(Problem problem) {
