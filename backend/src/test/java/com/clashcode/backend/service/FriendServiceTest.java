@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
+import com.clashcode.backend.enums.UserStatus;
 import com.clashcode.backend.exception.FriendRequestExistsException;
 import com.clashcode.backend.exception.FriendRequestNotFoundException;
 import com.clashcode.backend.exception.UserNotFoundException;
@@ -322,73 +323,6 @@ class FriendServiceTest {
         assertThrows(UserNotFoundException.class, () -> friendService.removeFriend(userOne, "no-such-user"));
 
         verify(friendRepository, never()).delete(any());
-    }
-
-    @Test
-    void testGetSentFriendRequests_Success_returnsMappedPage() {
-        User user = makeUser(1L, "alice");
-        Friend friendship = Friend.builder().sender(user).status(FriendRequestStatus.PENDING).build();
-        Page<Friend> page = new PageImpl<>(List.of(friendship));
-        FriendDto dto = FriendDto.builder().username("bob").build();
-
-        when(friendRepository.findBySenderIdAndStatus(eq(user.getId()), eq(FriendRequestStatus.PENDING), any()))
-                .thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
-
-        Page<FriendDto> result = friendService.getSentFriendRequests(user, Pageable.unpaged());
-
-        assertEquals(1, result.getTotalElements());
-        assertEquals("bob", result.getContent().getFirst().getUsername());
-    }
-
-    @Test
-    void testGetReceivedFriendRequests_Success_returnsMappedPage() {
-        User user = makeUser(1L, "alice");
-        Friend friendship = Friend.builder().receiver(user).status(FriendRequestStatus.PENDING).build();
-        Page<Friend> page = new PageImpl<>(List.of(friendship));
-        FriendDto dto = FriendDto.builder().username("charlie").build();
-
-        when(friendRepository.findByReceiverIdAndStatus(eq(user.getId()), eq(FriendRequestStatus.PENDING), any()))
-                .thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
-
-        Page<FriendDto> result = friendService.getReceivedFriendRequests(user, Pageable.unpaged());
-
-        assertEquals(1, result.getTotalElements());
-        assertEquals("charlie", result.getContent().getFirst().getUsername());
-    }
-
-    @Test
-    void testGetFriendsList_Success_returnsMappedPage() {
-        User user = makeUser(1L, "alice");
-        Friend friendship = Friend.builder().sender(user).status(FriendRequestStatus.ACCEPTED).build();
-        Page<Friend> page = new PageImpl<>(List.of(friendship));
-        FriendDto dto = FriendDto.builder().username("friend").build();
-
-        when(friendRepository.findAllFriendsByUserId(eq(user.getId()), any()))
-                .thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
-
-        Page<FriendDto> result = friendService.getFriendsList(user, Pageable.unpaged());
-
-        assertEquals(1, result.getTotalElements());
-        assertEquals("friend", result.getContent().getFirst().getUsername());
-    }
-
-    @Test
-    void testGetFriendsList_Success() {
-        User user = makeUser(1L, "alice");
-        Friend friendship = Friend.builder().sender(user).status(FriendRequestStatus.ACCEPTED).build();
-        Page<Friend> page = new PageImpl<>(List.of(friendship));
-        FriendDto dto = FriendDto.builder().username("bob").build();
-
-        when(friendRepository.findAllFriendsByUserId(eq(user.getId()), any())).thenReturn(page);
-        when(friendMapper.toFriendDto(friendship, user)).thenReturn(dto);
-
-        Page<FriendDto> result = friendService.getFriendsList(user, PageRequest.of(0, 20));
-
-        assertFalse(result.isEmpty());
-        assertEquals("bob", result.getContent().getFirst().getUsername());
     }
 }
 

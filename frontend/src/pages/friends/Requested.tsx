@@ -80,6 +80,7 @@ export default function Requested() {
             showCancelButton={true}
             onCancelClick={() => handleCancelRequest(user.username)}
             onUsernameClick={() => navigate(`/profile/${user.username}/overview`)}
+            userStatus={user.userStatus}
           />
         )}
       />

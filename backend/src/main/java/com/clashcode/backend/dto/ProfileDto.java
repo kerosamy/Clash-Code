@@ -1,5 +1,6 @@
 package com.clashcode.backend.dto;
 
+import com.clashcode.backend.enums.UserStatus;
 import lombok.*;
 
 @Getter
@@ -13,7 +14,7 @@ public class ProfileDto {
     int maxRate;
     int friendCount;
     String avatarUrl;
-
+    UserStatus userStatus;
     StatsDto stats;
     CategoryDto[] categories;
 }

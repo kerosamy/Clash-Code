@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Board from "../../components/common/Board";
 import UserRow from "../../components/common/UserRow";
-import FriendStatusButton from "../../components/common/FriendStatusButton";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import LogoLoader from "../../components/Loader/LogoLoader";
 import { waitForLoader } from "../../components/Loader/WaitLoader";
@@ -29,6 +28,7 @@ export default function MyFriends() {
 
       try {
         const response = await getFriendsList(currentPage, pageSize);
+        console.log("Fetched friends:", response);
         await waitForLoader(startTime);
         setFriends(response.content);
         setTotalPages(response.totalPages);
@@ -76,8 +76,8 @@ export default function MyFriends() {
 
       <Board
         data={friends}
-        columns={["#", "Name", "Action"]}
-        gridCols="grid-cols-[60px_1fr_auto]"
+        columns={["#", "Name", "Status", "Action"]}
+        gridCols="grid-cols-[60px_1fr_120px_auto]"
         renderRow={(user) => (
           <UserRow
             key={user.username}
@@ -102,6 +102,7 @@ export default function MyFriends() {
                 </button>
             }
             onUsernameClick={() => navigate(`/profile/${user.username}/overview`)}
+            userStatus={user.userStatus}
           />
         )}
       />

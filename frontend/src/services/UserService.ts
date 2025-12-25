@@ -1,4 +1,7 @@
+import type { UserStatus } from "../enums/UserStatus";
+import { useEffect } from "react";
 import { apiRequest } from "./api";
+import { hasActiveMatch } from "../utils/matchState";
 
 export interface BackendUserResponse {
   username: string;
@@ -7,6 +10,7 @@ export interface BackendUserResponse {
   maxRate: number;
   friendCount: number;
   avatarUrl: string;
+  userStatus: UserStatus;
   stats: {
     solvedProblems: number;
     attemptedProblems: number;
@@ -27,6 +31,7 @@ export interface UserProfileBasic {
   maxRate: number;
   friendCount: number;
   avatarUrl: string;
+  userStatus: UserStatus;
 }
 
 export interface UserStats {
@@ -68,6 +73,7 @@ export const splitUserData = (response: BackendUserResponse) => {
     maxRate: response.maxRate,
     friendCount: response.friendCount,
     avatarUrl: response.avatarUrl,
+    userStatus: response.userStatus,
   };
 
   const stats: UserStats = response.stats;
@@ -201,3 +207,47 @@ export async function getLeaderboard(
     params: { page, size },
   });
 }
+
+
+export function useOnlineStatus() {
+  useEffect(() => {
+    const updateStatus = () => {
+      const statusUrl = hasActiveMatch() 
+        ? '/users/status/in-match' 
+        : '/users/status/online';
+      
+      apiRequest<void>({
+        method: 'POST',
+        url: statusUrl,
+      }).catch(console.error);
+    };
+    updateStatus();
+    const interval = setInterval(() => {
+      updateStatus();
+    }, 30000); 
+
+    return () => clearInterval(interval);
+  }, []);
+}
+
+export async function updateStatusToOnline(): Promise<void> {
+    try {
+        await apiRequest<void>({
+            method: 'POST',
+            url: '/users/status/online',
+        });
+    } catch (error) {
+        console.error('Failed to update status to online:', error);
+    }
+};
+
+export async function updateStatusToInMatch(): Promise<void> {
+    try {
+        await apiRequest<void>({
+            method: 'POST',
+            url: '/users/status/in-match',
+        });
+    } catch (error) {
+        console.error('Failed to update status to in-match:', error);
+    }
+};

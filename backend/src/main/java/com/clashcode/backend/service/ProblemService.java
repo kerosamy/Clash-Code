@@ -3,7 +3,6 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.ProblemStatus;
 import com.clashcode.backend.enums.ProblemTags;
-import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.mapper.ProblemMapper;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.ProblemReview;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,19 +26,17 @@ public class ProblemService {
     private final TestCaseService testCaseService;
     private final ProblemMapper problemMapper;
     private final ProblemReviewRepository problemReviewRepository;
-    private final Judge0Client judge0Client;
 
     public ProblemService(ProblemRepository problemRepository,
                           TestCaseService testCaseService,
                           ProblemMapper problemMapper,
-                          ProblemReviewRepository problemReviewRepository,
-                          Judge0Client judge0Client) {
+                          ProblemReviewRepository problemReviewRepository
+    ) {
 
         this.problemMapper = problemMapper;
         this.problemRepository = problemRepository;
         this.testCaseService = testCaseService;
         this.problemReviewRepository = problemReviewRepository;
-        this.judge0Client = judge0Client;
     }
 
     public void addProblem(
@@ -94,8 +90,6 @@ public class ProblemService {
     ) {
         return testCaseService.addTestCases(files, problem, visibleFlags);
     }
-
-
 
     public PartialProblemResponseDto getPartialProblemById (Long id) {
         Problem problem = problemRepository.findById(id)

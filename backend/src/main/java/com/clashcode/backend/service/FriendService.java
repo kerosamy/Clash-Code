@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
+import com.clashcode.backend.enums.UserStatus;
 import com.clashcode.backend.exception.FriendRequestExistsException;
 import com.clashcode.backend.exception.FriendRequestNotFoundException;
 import com.clashcode.backend.exception.UserNotFoundException;
@@ -27,17 +28,20 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final FriendStatusMapper friendStatusMapper;
     private final FriendMapper friendMapper;
+    private final UserService userService;
 
     public FriendService(
             UserRepository userRepository,
             FriendRepository friendRepository,
             FriendStatusMapper friendStatusMapper,
-            FriendMapper friendMapper
+            FriendMapper friendMapper,
+            UserService userService
     ) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.friendStatusMapper = friendStatusMapper;
         this.friendMapper = friendMapper;
+        this.userService = userService;
     }
 
     public void sendFriendRequest(User sender, String receiverUsername) {
@@ -107,22 +111,33 @@ public class FriendService {
 
     public Page<FriendDto> getSentFriendRequests(User user, Pageable pageable) {
         return friendRepository.findBySenderIdAndStatus(user.getId(), FriendRequestStatus.PENDING, pageable)
-                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+                .map(friendship -> mapToFriendDto(friendship, user));
     }
 
     public Page<FriendDto> getReceivedFriendRequests(User user, Pageable pageable) {
         return friendRepository.findByReceiverIdAndStatus(user.getId(), FriendRequestStatus.PENDING, pageable)
-                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+                .map(friendship -> mapToFriendDto(friendship, user));
     }
 
     public Page<FriendDto> getFriendsList(User user, Pageable pageable) {
         return friendRepository.findAllFriendsByUserId(user.getId(), pageable)
-                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+                .map(friendship -> mapToFriendDto(friendship, user));
+    }
+
+    private FriendDto mapToFriendDto(Friend friendship, User currentUser) {
+        User otherUser = friendship.getSender().getId().equals(currentUser.getId())
+                ? friendship.getReceiver()
+                : friendship.getSender();
+
+
+        UserStatus otherUserStatus = userService.getUserStatus(otherUser.getId());
+
+        return friendMapper.toFriendDto(friendship, currentUser, otherUserStatus);
     }
 
     public Page<FriendDto> searchFriendsByUsername(User user, String query, Pageable pageable) {
         return friendRepository.findFriendsByUsernameContaining(user.getId(), query, pageable)
-                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+                .map(friendship -> mapToFriendDto(friendship, user));
     }
 
 }

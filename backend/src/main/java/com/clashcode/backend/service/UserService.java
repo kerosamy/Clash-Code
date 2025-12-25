@@ -15,9 +15,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -30,15 +32,23 @@ public class UserService {
     private final ImageFileStorageService imageFileStorageService;
     private final UserMapper userMapper = new UserMapper();
     private final FriendStatusMapper friendStatusMapper = new FriendStatusMapper();
+    private final RedisService redisService;
     private static final int RATING_PER_RANK = 300;
     private static final Ranks[] RANKS = Ranks.values();
 
-    public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
+    public UserService(UserRepository userRepository,
+                       FriendRepository friendRepository,
+                       SubmissionRepository submissionRepository,
+                       MatchParticipantRepository matchParticipantRepository,
+                       ImageFileStorageService imageFileStorageService,
+                       RedisService redisService
+    ) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.submissionRepository = submissionRepository;
         this.matchParticipantRepository = matchParticipantRepository;
         this.imageFileStorageService = imageFileStorageService;
+        this.redisService = redisService;
     }
 
     public List<UserSearchResponseDto> searchByUsername(String username) {
@@ -46,7 +56,8 @@ public class UserService {
                 .stream()
                 .map(user -> new UserSearchResponseDto(
                         user.getUsername(),
-                        getRank(user.getCurrentRate())
+                        getRank(user.getCurrentRate()),
+                        getUserStatus(user.getId())
                 )).toList();
     }
 
@@ -98,7 +109,14 @@ public class UserService {
         // Convert stored filename to full URL
         String imageUrl = buildImageUrl(user.getImgUrl());
 
-        return userMapper.toUserProfile(user, rank, friendCount, stats, categories, imageUrl);
+        return userMapper.toUserProfile(user,
+                rank,
+                friendCount,
+                stats,
+                categories,
+                imageUrl,
+                getUserStatus(user.getId())
+        );
     }
 
     public ProfileDto getUserProfile(String username) {
@@ -179,5 +197,43 @@ public class UserService {
         PageRequest pageRequest = PageRequest.of(page, size);
         return userRepository.findAllByOrderByCurrentRateDesc(pageRequest)
                 .map(userMapper::toLeaderboardDto);
+    }
+
+    public UserStatus getUserStatus(Long userId){
+        if(!isOnline(userId)){
+            return UserStatus.OFFLINE;
+        }
+
+        String status = redisService.getUserStatus(userId);
+
+        if("in-match".equals(status)){
+            return UserStatus.IN_MATCH;
+        }
+
+        return UserStatus.ONLINE;
+    }
+
+    public void markOnline(User user) {
+        try {
+            redisService.addUserToRedis(user.getId(), "online");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void markInMatch(User user) {
+        try {
+            redisService.addUserToRedis(user.getId(), "in-match");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isOnline(Long userId) {
+        try {
+            return redisService.searchUserFromRedis(userId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

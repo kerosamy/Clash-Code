@@ -3,6 +3,7 @@ package com.clashcode.backend.mapper;
 import com.clashcode.backend.dto.*;
 import com.clashcode.backend.enums.RecoveryQuestion;
 import com.clashcode.backend.enums.Roles;
+import com.clashcode.backend.enums.UserStatus;
 import com.clashcode.backend.model.User;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,8 @@ public class UserMapper {
             int friendCount,
             StatsDto stats,
             CategoryDto[] categories,
-            String imageUrl
+            String imageUrl,
+            UserStatus userStatus
     ) {
         return ProfileDto.builder()
                 .username(user.getUsername())
@@ -38,6 +40,7 @@ public class UserMapper {
                 .avatarUrl(imageUrl)  // Now using the full URL passed as parameter
                 .stats(stats)
                 .categories(categories)
+                .userStatus(userStatus)
                 .build();
     }
 

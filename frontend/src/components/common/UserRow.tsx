@@ -1,10 +1,14 @@
 import React from "react";
 import { Plus, X, Check } from "lucide-react";
 import { getRankColor } from "../../utils/colorMapper";
+import { UserStatus } from "../../enums/UserStatus";
+import { getStatusColor } from "../../utils/getUserStatusColor";
+import { getStatusLabel } from "../../utils/getUserStatusLabel";
 
 interface UserRowProps {
   order: number;
   username: string;
+  userStatus?: UserStatus;
   rank?: number;
   action?: React.ReactNode;
   onAddClick?: () => void;
@@ -21,6 +25,7 @@ interface UserRowProps {
 export default function UserRow({
   order,
   username,
+  userStatus, 
   rank = 0,
   action,
   onAddClick,
@@ -62,7 +67,7 @@ export default function UserRow({
   };
 
   return (
-    <div className="grid grid-cols-[60px_1fr_auto] gap-4 px-8 py-4 hover:bg-sidebar/30 transition-colors items-center border-b border-sidebar/50">
+    <div className="grid grid-cols-[60px_1fr_120px_auto] gap-4 px-8 py-4 hover:bg-sidebar/30 transition-colors items-center border-b border-sidebar/50">
       {/* Order */}
       <div className="text-text font-anta text-lg flex items-center justify-center">
         {order}
@@ -75,6 +80,29 @@ export default function UserRow({
         onClick={onUsernameClick}
       >
         {username}
+      </div>
+
+      {/* Status Column */}
+      <div className="flex items-center justify-center gap-2">
+        {userStatus ? (
+          <>
+            {/* Status Dot */}
+            <div className="relative flex items-center">
+              <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(userStatus).replace('text-', 'bg-')}`}>
+                {userStatus === UserStatus.ONLINE && (
+                  <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75"></div>
+                )}
+              </div>
+            </div>
+            
+            {/* Status Label */}
+            <span className={`text-sm font-anta ${getStatusColor(userStatus)}`}>
+              {getStatusLabel(userStatus)}
+            </span>
+          </>
+        ) : (
+          <span className="text-sm font-anta text-gray-500">Unknown</span>
+        )}
       </div>
 
       {/* Action */}

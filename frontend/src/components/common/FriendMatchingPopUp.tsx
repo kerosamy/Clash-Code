@@ -187,6 +187,7 @@ export default function FriendMatchingPopUp({ isOpen, onClose, onInvite }: Frien
               {displayFriends.map((friend, index) => (
                 <UserInvite
                   key={`${friend.username}-${index}`}
+                  userStatus={friend.userStatus}
                   order={index + 1}
                   username={friend.username}
                   rank={getRankName(friend.currentRate)}

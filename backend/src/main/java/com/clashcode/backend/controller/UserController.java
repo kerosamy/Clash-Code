@@ -75,4 +75,15 @@ public class UserController {
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(userService.getLeaderboard(page, size));
     }
+    @PostMapping("/status/online")
+    public ResponseEntity<Void> updateOnlineStatus(@AuthenticationPrincipal User user) {
+        userService.markOnline(user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/status/in-match")
+    public ResponseEntity<Void> updateInMatchStatus(@AuthenticationPrincipal User user) {
+        userService.markInMatch(user);
+        return ResponseEntity.noContent().build();
+    }
 }

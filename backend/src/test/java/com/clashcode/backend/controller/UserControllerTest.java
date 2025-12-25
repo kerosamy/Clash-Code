@@ -135,8 +135,8 @@ class UserControllerTest {
     @DisplayName("GET /users/search - Found")
     void searchUsers_found() throws Exception {
         List<UserSearchResponseDto> mockResults = List.of(
-                new UserSearchResponseDto("caro", "MASTER"),
-                new UserSearchResponseDto("caroline", "CHAMPION")
+                new UserSearchResponseDto("caro", "MASTER",null),
+                new UserSearchResponseDto("caroline", "CHAMPION",null)
         );
 
         when(userService.searchByUsername("car")).thenReturn(mockResults);
