@@ -3,7 +3,8 @@ import type { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 
 
-export const API_BASE = "https://fugally-nonrepatriable-belle.ngrok-free.dev";
+export const API_BASE = "http://localhost:8080";
+//https://fugally-nonrepatriable-belle.ngrok-free.dev
 
 const api = axios.create({
   baseURL: API_BASE,
