@@ -394,7 +394,7 @@ class MatchServiceTest {
 //
 //            verify(userRepository).saveAll(anyList());
 //        }
-//    }
+    }
 
     // ==================== MATCH INVITATION TESTS ====================
 

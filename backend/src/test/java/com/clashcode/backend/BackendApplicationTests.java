@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 class BackendApplicationTest {
 	@Test
 	void main_shouldStartApplicationWithoutErrors() {
+
 		assertDoesNotThrow(() -> BackendApplication.main(new String[]{}));
 	}
 }
