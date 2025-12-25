@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; 
-import Board from "../components/common/Board";
-import PendingProblemRow from "../components/common/PendingProblemRow";
-import RejectionModal from "../components/problem/RejectionModal"; // import modal
+import Board from "../../components/common/Board";
+import PendingProblemRow from "../../components/common/PendingProblemRow";
+import RejectionModal from "../../components/problem/RejectionModal"; // import modal
 import {
   fetchPendingProblems,
   approveProblem,
   rejectProblem,
-} from "../services/AdminService";
-import { getUsername } from "../utils/jwtDecoder";
+} from "../../services/AdminService";
+import { getUsername } from "../../utils/jwtDecoder";
+import ReviewHeader from "./ReviewHeader";
 
 interface PendingProblemRowProps {
   id: number;
@@ -77,38 +78,13 @@ export default function ReviewProblems() {
 
   return (
     <div className="flex flex-col h-[90vh] p-8 space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-anta text-white tracking-wide">
-            Review Problems
-          </h1>
-          <p className="text-text/60 text-sm mt-1 font-anta">
-            Curate and manage community submissions
-          </p>
-        </div>
-
-        {/* Counter Card */}
-        <div className="flex items-center gap-4 bg-sidebar/20 border border-white/5 rounded-xl px-6 py-3 backdrop-blur-sm">
-          <div className="flex flex-col items-end">
-            <span className="text-2xl font-anta text-orange leading-none">
-              {totalProblems}
-            </span>
-            <span className="text-[10px] font-anta text-text/60 uppercase tracking-widest">
-              Pending
-            </span>
-          </div>
-          <div className="h-8 w-[1px] bg-white/10" />
-          <div className="h-2 w-2 rounded-full bg-orange animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-        </div>
-      </div>
-
+      <ReviewHeader title="Review Problems" totalProblems={totalProblems} />
       {/* Table Area */}
       <div className="flex-1 overflow-hidden rounded-xl border border-white/5 bg-sidebar/10 shadow-xl">
         <div className="h-full overflow-y-auto custom-scroll">
           <Board<PendingProblemRowProps & { onApprove: () => void; onReject: () => void }>
             data={problems
-              .filter(p => p.author !== getUsername()) // filter out own submissions
+              .filter(p => p.author !== getUsername())
               .map((p, index) => ({
               ...p,
               index: index + 1 + page * 20,
@@ -125,7 +101,7 @@ export default function ReviewProblems() {
                 author={problem.author}
                 onApprove={problem.onApprove}
                 onReject={problem.onReject}
-                onRowClick={() => navigate(`/practice/problem/${problem.id}`)}
+                onRowClick={() => navigate(`/review-problems/${problem.id}`)}
                 onAuthorClick={() => navigate(`/profile/${problem.author}/overview`)}
               />
             )}
