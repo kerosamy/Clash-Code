@@ -1,5 +1,6 @@
 package com.clashcode.backend.ai;
 
+import com.clashcode.backend.exception.AIRequestFailedException;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,7 @@ public class GeminiInterface {
 
             return response.text();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to call Gemini API", e);
+            throw new AIRequestFailedException();
         }
     }
 }

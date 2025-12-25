@@ -2,6 +2,8 @@ package com.clashcode.backend.service;
 
 import com.clashcode.backend.ai.GeminiInterface;
 import com.clashcode.backend.ai.ProblemAIReviewPrompt;
+import com.clashcode.backend.enums.ProblemStatus;
+import com.clashcode.backend.exception.ProblemNotFoundException;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.ProblemAIReview;
 import com.clashcode.backend.repository.ProblemAIReviewRepository;
@@ -18,25 +20,27 @@ public class ProblemAIReviewService {
     private final ProblemRepository problemRepository;
     private final ProblemAIReviewRepository problemAIReviewRepository;
     private final ProblemAIReviewPrompt promptBuilder;
-    private final TestCaseService testCaseService;
 
     public ProblemAIReviewService(
             GeminiInterface geminiInterface,
             ProblemRepository problemRepository,
-            ProblemAIReviewRepository problemAIReviewRepository, ProblemAIReviewPrompt promptBuilder, TestCaseService testCaseService
+            ProblemAIReviewRepository problemAIReviewRepository,
+            ProblemAIReviewPrompt promptBuilder
     ) {
         this.gemini = geminiInterface;
         this.problemRepository = problemRepository;
         this.problemAIReviewRepository = problemAIReviewRepository;
         this.promptBuilder = promptBuilder;
-        this.testCaseService = testCaseService;
     }
 
-    public String getProblemAIReview(Long problemId) {
+    public String getProblemAIReview(Long problemId) throws IllegalAccessException {
         Problem problem = problemRepository.findById(problemId)
-                .orElseThrow(() -> new RuntimeException("Problem not found"));
-        String currentHash = computeProblemHash(problem);
+                .orElseThrow(ProblemNotFoundException::new);
 
+        if (problem.getProblemStatus() != ProblemStatus.PENDING_APPROVAL)
+            throw new IllegalAccessException("Problem isn't in Review");
+
+        String currentHash = computeProblemHash(problem);
         ProblemAIReview existingReview = problemAIReviewRepository.findById(problemId)
                 .orElse(null);
 
@@ -74,10 +78,6 @@ public class ProblemAIReviewService {
                 ? problem.getSolution().getSolutionCode()
                 : "No solution provided");
 
-        values.put("testCases", problem.getTestCases() != null
-                ? testCaseService.getInputTestCasesForProblem(problem).toString()
-                : "No test cases provided");
-
         return promptBuilder.build(values);
     }
 
@@ -89,8 +89,8 @@ public class ProblemAIReviewService {
                 String.valueOf(problem.getTimeLimit()),
                 String.valueOf(problem.getMemoryLimit()),
                 problem.getSolution() != null ? problem.getSolution().getSolutionCode() : "",
-                problem.getTags().toString(),
-                testCaseService.getInputTestCasesForProblem(problem).toString()
+                problem.getSolution() != null ? problem.getSolution().getLanguageVersion().toString() : "",
+                problem.getTags().toString()
         );
 
         return DigestUtils.sha256Hex(content);
