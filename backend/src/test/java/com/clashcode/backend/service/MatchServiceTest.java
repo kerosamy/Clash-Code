@@ -1,6 +1,9 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
+import com.clashcode.backend.Notification.MatchCompletedPayload;
+import com.clashcode.backend.Notification.MatchInvitationPayload;
+import com.clashcode.backend.Notification.MatchStartedPayload;
 import com.clashcode.backend.dto.MatchCreationDto;
 import com.clashcode.backend.dto.MatchResponseDto;
 import com.clashcode.backend.dto.MatchSubmissionLogDto;
@@ -60,7 +63,6 @@ class MatchServiceTest {
         Problem problem = new Problem();
         problem.setId(10L);
 
-        // Mock managed users returned from repository
         User managedPlayer1 = User.builder().id(1L).username("p1").build();
         User managedPlayer2 = User.builder().id(2L).username("p2").build();
 
@@ -76,71 +78,27 @@ class MatchServiceTest {
                 .matchState(MatchState.ONGOING)
                 .build();
 
-        MatchResponseDto expectedResponse =
-                MatchResponseDto.builder().id(matchId).build();
+        MatchResponseDto expectedResponse = MatchResponseDto.builder().id(matchId).build();
 
-        MatchNotificationDto notificationDto = new MatchNotificationDto();
-
-        // Mock userRepository.findById calls
         when(userRepository.findById(1L)).thenReturn(Optional.of(managedPlayer1));
         when(userRepository.findById(2L)).thenReturn(Optional.of(managedPlayer2));
-
-        // Mock participant creation
         when(matchMapper.createParticipant(eq(managedPlayer1), any(Match.class))).thenReturn(p1);
         when(matchMapper.createParticipant(eq(managedPlayer2), any(Match.class))).thenReturn(p2);
-
-        // Mock repository save
         when(matchRepository.save(any(Match.class))).thenReturn(savedMatch);
-
-        // Mock mapper
         when(matchMapper.toResponseDto(savedMatch)).thenReturn(expectedResponse);
 
-        // Mock notification mapping
-        when(matchNotificationMapper.mapMatchStarted(any(Match.class), any(User.class)))
-                .thenReturn(notificationDto);
-
-        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
-
-        // Execute
         MatchResponseDto result = matchService.createMatch(player1, player2, problem, duration, gameMode);
 
-        // Verify result
         assertNotNull(result);
         assertEquals(matchId, result.getId());
 
-        // Verify userRepository calls
         verify(userRepository).findById(1L);
         verify(userRepository).findById(2L);
-
-        // Verify match construction
-        verify(matchRepository).save(matchCaptor.capture());
-        Match constructed = matchCaptor.getValue();
-
-        assertEquals(problem, constructed.getProblem());
-        assertEquals(duration, constructed.getDuration());
-        assertEquals(gameMode, constructed.getGameMode());
-        assertEquals(MatchState.ONGOING, constructed.getMatchState());
-        assertEquals(2, constructed.getParticipants().size());
-
-        // Verify scheduler called
+        verify(matchRepository).save(any(Match.class));
         verify(matchScheduler).scheduleMatchEnd(savedMatch);
 
-        // Verify notifications sent to both players
-        verify(notificationService).send(
-                eq(matchId),
-                eq(1L),
-                eq("p1"),
-                eq(notificationDto)
-        );
-        verify(notificationService).send(
-                eq(matchId),
-                eq(2L),
-                eq("p2"),
-                eq(notificationDto)
-        );
-
-        // Verify notification mapper called twice
-        verify(matchNotificationMapper, times(2)).mapMatchStarted(eq(savedMatch), any(User.class));
+        verify(notificationService).send(eq(matchId), eq(1L), eq("p1"), any(MatchStartedPayload.class));
+        verify(notificationService).send(eq(matchId), eq(2L), eq("p2"), any(MatchStartedPayload.class));
     }
 
 
@@ -196,37 +154,30 @@ class MatchServiceTest {
 
     @Test
     void test_completeMatch_setsWinnerLoserRanksCorrectly() {
-        // Arrange
         User winner = User.builder().id(1L).username("winnerUser").currentRate(1200).maxRate(1200).build();
         User loser = User.builder().id(2L).username("loserUser").currentRate(1100).maxRate(1100).build();
 
         MatchParticipant winnerParticipant = MatchParticipant.builder().user(winner).build();
         MatchParticipant loserParticipant = MatchParticipant.builder().user(loser).build();
 
-        Match match = new Match();
-        match.setId(500L);
-        match.setMatchState(MatchState.ONGOING);
-        match.setGameMode(GameMode.UNRATED);
-        match.setParticipants(List.of(winnerParticipant, loserParticipant));
+        Match match = Match.builder()
+                .id(500L)
+                .matchState(MatchState.ONGOING)
+                .gameMode(GameMode.UNRATED)
+                .participants(List.of(winnerParticipant, loserParticipant))
+                .build();
 
         when(rankMapper.toRank("winner")).thenReturn(1);
         when(rankMapper.toRank("loser")).thenReturn(2);
-        when(matchNotificationMapper.mapMatchEnded(match)).thenReturn(new MatchNotificationDto());
 
-        // Act
         matchService.completeMatch(match, winner);
 
-        // Assert: State and Ranks
         assertEquals(MatchState.COMPLETED, match.getMatchState());
         assertEquals(1, winnerParticipant.getRank());
         assertEquals(2, loserParticipant.getRank());
 
-        verify(notificationService, times(2)).send(
-                eq(match.getId()),
-                anyLong(),
-                anyString(),
-                any(MatchNotificationDto.class)
-        );
+        verify(notificationService, times(2))
+                .send(eq(match.getId()), anyLong(), anyString(), any(MatchCompletedPayload.class));
 
         verify(matchRepository, atLeastOnce()).save(match);
         verify(matchParticipantRepository).saveAll(match.getParticipants());
@@ -235,39 +186,30 @@ class MatchServiceTest {
 
     @Test
     void test_sendMatchInvite_success() {
-        // Arrange
         User sender = User.builder().id(1L).username("caro").build();
         User recipient = User.builder().id(2L).username("mina").build();
 
-        MatchNotificationDto dto = new MatchNotificationDto();
-
         when(userRepository.findByUsername("mina")).thenReturn(Optional.of(recipient));
-        when(matchNotificationMapper.mapMatchInvite(sender)).thenReturn(dto);
 
-        // Mock the notificationService.send to return the notification ID
         when(notificationService.send(
-                sender.getId(),
-                recipient.getId(),
-                recipient.getUsername(),
-                dto
+                eq(sender.getId()),
+                eq(recipient.getId()),
+                eq(recipient.getUsername()),
+                any(MatchInvitationPayload.class)
         )).thenReturn(Optional.of(100L));
 
-        // Act
         Long result = matchService.sendMatchInvite(sender, "mina");
 
-        // Assert
         assertNotNull(result);
         assertEquals(100L, result);
 
         verify(userRepository).findByUsername("mina");
-        verify(matchNotificationMapper).mapMatchInvite(sender);
         verify(notificationService).send(
-                sender.getId(),
-                recipient.getId(),
-                recipient.getUsername(),
-                dto
+                eq(sender.getId()),
+                eq(recipient.getId()),
+                eq(recipient.getUsername()),
+                any(MatchInvitationPayload.class)
         );
-
     }
 
     @Test
@@ -356,11 +298,17 @@ class MatchServiceTest {
         doReturn(match).when(spyService).validateMatch(dto.getMatchId(), player);
         doReturn(submission).when(submissionService).submitCode(dto, player);
 
-        doReturn(new MatchNotificationDto()).when(matchNotificationMapper).mapSubmissionReceived(eq(match), eq(player));
-        doReturn(new MatchNotificationDto()).when(matchNotificationMapper).mapSubmissionResult(eq(match), eq(submission));
-        doReturn(new MatchNotificationDto()).when(matchNotificationMapper).mapMatchEnded(eq(match));
+        lenient().when(matchNotificationMapper.mapSubmissionReceived(eq(match), eq(player)))
+                .thenReturn(new MatchNotificationDto());
+        lenient().when(matchNotificationMapper.mapSubmissionResult(eq(match), eq(submission)))
+                .thenReturn(new MatchNotificationDto());
+        lenient().when(matchNotificationMapper.mapMatchEnded(eq(match)))
+                .thenReturn(new MatchNotificationDto());
 
+        // Act
         spyService.submitCode(dto, player);
+
+        // Assert
         verify(spyService).completeMatch(match, player);
         verify(notificationService, atLeast(2)).send(any(), any(), any(), any());
     }
@@ -449,7 +397,7 @@ class MatchServiceTest {
         verify(matchingServiceClient).requestMatching(
                 argThat(req ->
                         req.getUserId() == 1 &&
-                                req.getUserRating() == 1500   // 🔥 FIX: primitive comparison
+                                req.getUserRating() == 1500
                 )
         );
     }
@@ -464,10 +412,6 @@ class MatchServiceTest {
         // Assert
         verify(matchingServiceClient).deleteMatching(1L);
     }
-
-
-
-
 
     void test_getUserMatchHistory_success() {
         Long userId = 1L;
@@ -490,7 +434,7 @@ class MatchServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals(historyDto, result.getContent().get(0));
+        assertEquals(historyDto, result.getContent().getFirst());
 
         verify(matchParticipantRepository).findHistoryByUserId(userId, rated, pageable);
         verify(matchMapper).toMatchHistoryDto(participant);

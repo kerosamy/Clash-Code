@@ -38,7 +38,7 @@ public class FriendService {
             FriendRepository friendRepository,
             FriendStatusMapper friendStatusMapper,
             FriendMapper friendMapper,
-            UserService userService
+            UserService userService,
             NotificationService notificationService
     ) {
         this.userRepository = userRepository;

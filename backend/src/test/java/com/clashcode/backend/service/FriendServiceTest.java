@@ -48,6 +48,8 @@ class FriendServiceTest {
     @InjectMocks
     private FriendService friendService;
 
+    @Mock private NotificationService notificationService;
+
     // Helpers
     private User makeUser(Long id, String username) {
         User u = new User();
@@ -75,6 +77,9 @@ class FriendServiceTest {
         assertEquals(sender, saved.getSender());
         assertEquals(receiver, saved.getReceiver());
         assertEquals(FriendRequestStatus.PENDING, saved.getStatus());
+
+        verify(notificationService, times(1))
+                .send(eq(sender.getId()), eq(receiver.getId()), anyString(), any());
     }
 
     @Test
@@ -141,6 +146,9 @@ class FriendServiceTest {
 
         assertEquals(FriendRequestStatus.ACCEPTED, friendship.getStatus());
         verify(friendRepository, times(1)).save(friendship);
+
+        verify(notificationService, times(1))
+                .send(eq(receiver.getId()), eq(sender.getId()), eq("alice"), any());
     }
 
     @Test
