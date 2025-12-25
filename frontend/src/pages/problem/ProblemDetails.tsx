@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import ProblemSection from "../../components/problem/ProblemSectionProps";
+import ProblemSection from "../../components/problem/ProblemSection";
 import TestCases from "../../components/problem/TestCase";
 import LogoLoader from "../../components/Loader/LogoLoader";
 import { waitForLoader } from "../../components/Loader/WaitLoader";
 
 import { fetchProblemById } from "../../services/ProblemService";
 import { getProblemForMatch } from "../../services/MatchService";
+import TitleAndLimitsSection from "../../components/problem/TitleAndLimitsSection";
 
 export default function ProblemDetails() {
   const { id } = useParams<{ id: string }>();
@@ -67,13 +68,11 @@ export default function ProblemDetails() {
     <div className="w-full text-white font-anta my-8 p-scroll-x">
       <div className="max-w-6xl mx-auto w-full">
         {/* Title + Limits */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl mb-3">{problem.title}</h1>
-          <div className="text-sm text-text space-y-1">
-            <p>Time Limit Per Test: {problem.timeLimit} MS</p>
-            <p>Memory Limit Per Test: {problem.memoryLimit} MB</p>
-          </div>
-        </div>
+        <TitleAndLimitsSection 
+          title={problem.title}
+          timeLimit={problem.timeLimit}
+          memoryLimit={problem.memoryLimit}
+        />
 
         {/* Problem Statement */}
         <ProblemSection header="Problem Statement">

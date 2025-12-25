@@ -9,7 +9,7 @@ import {
     removeFriend,
     type FriendStatus,
 } from "../../services/FriendService";
-import FriendStatusButton from '../common/FriendStatusButton';
+import AppButton from '../common/AppButton';
 import ConfirmationModal from '../common/ConfirmationModal';
 import { generateInitialImage } from '../../utils/initialImageGenerator';
 import { UserStatus } from '../../enums/UserStatus';
@@ -311,10 +311,11 @@ export default function ProfileHeader({
                             >
                                 Request Pending
                             </span>
-                            <FriendStatusButton
+                            <AppButton
                                 label="Cancel Request"
                                 onClick={handleCancelRequest}
                                 variant="negative"
+                                size='large'
                             />
                         </div>
                     )}
@@ -328,10 +329,11 @@ export default function ProfileHeader({
                             >
                                 Friends
                             </span>
-                            <FriendStatusButton
+                            <AppButton
                                 label="Unfriend"
                                 onClick={() => setShowConfirm(true)}
                                 variant="negative"
+                                size='large'
                             />
                         </div>
                         <ConfirmationModal isOpen={showConfirm} onClose={() => setShowConfirm(false)}
@@ -346,15 +348,17 @@ export default function ProfileHeader({
 
                     {friendStatus === "PENDING_RECEIVED" && (
                         <div className="flex gap-2">
-                            <FriendStatusButton
+                            <AppButton
                                 label="Accept"
                                 onClick={handleAcceptFriend}
                                 variant="positive"
+                                size='large'
                             />
-                            <FriendStatusButton
+                            <AppButton
                                 label="Reject"
                                 onClick={handleRejectFriend}
                                 variant="negative"
+                                size='large'
                             />
                         </div>
                     )}

@@ -42,3 +42,11 @@ export const rejectProblem = async (id: number, note: string): Promise<void> => 
     },
   });
 };
+
+
+export const fetchAIReview = async (problemId: number): Promise<string> => {
+  return apiRequest<string>({
+    method: "POST",
+    url: `/ai-review/${problemId}`,
+  });
+};

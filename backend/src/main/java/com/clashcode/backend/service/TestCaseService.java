@@ -93,7 +93,6 @@ public class TestCaseService {
         List<String> OutputTestCases = new ArrayList<>();
         for (String path : testCaseRepository.findOutputPathsByProblem(problem)) {
             OutputTestCases.add(testCasesFileStorageService.getTestCaseContent(path));
-            System.out.println("Test" + testCasesFileStorageService.getTestCaseContent(path));
         }
         return OutputTestCases;
     }

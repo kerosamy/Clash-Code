@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import React from "react";
+import AppButton from "./AppButton";
+>>>>>>> 76675bbafcdf73846887160696e1166eba7e3ee1
 
 // Grid: Added click handling styles
 export const PENDING_GRID = 
@@ -61,41 +66,25 @@ export default function PendingProblemRow({
       {/* Empty column (Spacer) */}
       <span></span>
 
-      {/* Approve Button */}
-      <button
+      <AppButton
+        label="Approve"
         onClick={(e) => {
           e.stopPropagation(); // Prevent row click
           onApprove();
         }}
-        className="
-            flex items-center justify-center
-            border border-emerald-500/30 bg-emerald-500/5 text-emerald-400
-            hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]
-            px-4 py-1 rounded-full 
-            font-anta text-[10px] uppercase tracking-widest 
-            transition-all duration-300
-        "
-      >
-        Approve
-      </button>
+        variant="positive"
+        size="small"
+      />
 
-      {/* Reject Button */}
-      <button
+      <AppButton
+        label="Reject"
         onClick={(e) => {
           e.stopPropagation(); // Prevent row click
           onReject();
         }}
-        className="
-            flex items-center justify-center
-            border border-rose-500/30 bg-rose-500/5 text-rose-400
-            hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:shadow-[0_0_10px_rgba(225,29,72,0.3)]
-            px-4 py-1 rounded-full 
-            font-anta text-[10px] uppercase tracking-widest 
-            transition-all duration-300
-        "
-      >
-        Reject
-      </button>
+        variant="negative"
+        size="small"
+      />
     </div>
   );
 }
