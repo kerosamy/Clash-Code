@@ -2,6 +2,7 @@ package com.clashcode.backend.mapper;
 
 import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendStatus;
+import com.clashcode.backend.enums.UserStatus;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +41,7 @@ class FriendMapperTest {
 
         when(friendStatusMapper.map(alice, friendship)).thenReturn(FriendStatus.PENDING_SENT);
 
-        FriendDto result = friendMapper.toFriendDto(friendship, alice,null);
+        FriendDto result = friendMapper.toFriendDto(friendship, alice, UserStatus.ONLINE);
 
         assertEquals("bob", result.getUsername());
         assertEquals(1500, result.getCurrentRate());
@@ -60,7 +61,7 @@ class FriendMapperTest {
 
         when(friendStatusMapper.map(alice, friendship)).thenReturn(FriendStatus.PENDING_RECEIVED);
 
-        FriendDto result = friendMapper.toFriendDto(friendship, alice, null);
+        FriendDto result = friendMapper.toFriendDto(friendship, alice, UserStatus.ONLINE);
 
         assertEquals("bob", result.getUsername());
         assertEquals(FriendStatus.PENDING_RECEIVED, result.getStatus());

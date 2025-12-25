@@ -129,6 +129,7 @@ public class FriendService {
                 ? friendship.getReceiver()
                 : friendship.getSender();
 
+
         UserStatus otherUserStatus = userService.getUserStatus(otherUser.getId());
 
         return friendMapper.toFriendDto(friendship, currentUser, otherUserStatus);

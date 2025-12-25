@@ -1,10 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.*;
-import com.clashcode.backend.enums.FriendStatus;
-import com.clashcode.backend.enums.Ranks;
-import com.clashcode.backend.enums.Roles;
-import com.clashcode.backend.enums.SubmissionStatus;
+import com.clashcode.backend.enums.*;
 import com.clashcode.backend.exception.UserNotFoundException;
 import com.clashcode.backend.mapper.FriendStatusMapper;
 import com.clashcode.backend.mapper.UserMapper;
@@ -41,6 +38,7 @@ class UserServiceTest {
     @Mock private FriendRepository friendRepository;
     @Mock private UserMapper userMapper;
     @Mock private FriendStatusMapper friendStatusMapper;
+    @Mock private RedisService redisService;
 
     @InjectMocks
     private UserService userService;
@@ -290,4 +288,242 @@ class UserServiceTest {
         assertEquals(1, result.getContent().size());
         verify(userMapper).toLeaderboardDto(u1);
     }
+    @Test
+    void test_getUserStatus_WhenUserIsOffline_ShouldReturnOffline() {
+        // Arrange
+        Long userId = 123L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(false);
+
+        // Act
+        UserStatus result = userService.getUserStatus(userId);
+
+        // Assert
+        assertEquals(UserStatus.OFFLINE, result);
+        verify(redisService).searchUserFromRedis(userId);
+        verify(redisService, never()).getUserStatus(userId);
     }
+
+    @Test
+    void test_getUserStatus_WhenUserIsOnline_ShouldReturnOnline() {
+        // Arrange
+        Long userId = 123L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(true);
+        when(redisService.getUserStatus(userId)).thenReturn("online");
+
+        // Act
+        UserStatus result = userService.getUserStatus(userId);
+
+        // Assert
+        assertEquals(UserStatus.ONLINE, result);
+        verify(redisService).searchUserFromRedis(userId);
+        verify(redisService).getUserStatus(userId);
+    }
+
+    @Test
+    void test_getUserStatus_WhenUserIsInMatch_ShouldReturnInMatch() {
+        // Arrange
+        Long userId = 456L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(true);
+        when(redisService.getUserStatus(userId)).thenReturn("in-match");
+
+        // Act
+        UserStatus result = userService.getUserStatus(userId);
+
+        // Assert
+        assertEquals(UserStatus.IN_MATCH, result);
+        verify(redisService).searchUserFromRedis(userId);
+        verify(redisService).getUserStatus(userId);
+    }
+
+    @Test
+    void test_getUserStatus_WhenStatusIsUnknown_ShouldReturnOnline() {
+        // Arrange
+        Long userId = 789L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(true);
+        when(redisService.getUserStatus(userId)).thenReturn("some-random-status");
+
+        // Act
+        UserStatus result = userService.getUserStatus(userId);
+
+        // Assert
+        assertEquals(UserStatus.ONLINE, result);
+        verify(redisService).searchUserFromRedis(userId);
+        verify(redisService).getUserStatus(userId);
+    }
+
+    @Test
+    void test_getUserStatus_WhenStatusIsNull_ShouldReturnOnline() {
+        // Arrange
+        Long userId = 999L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(true);
+        when(redisService.getUserStatus(userId)).thenReturn(null);
+
+        // Act
+        UserStatus result = userService.getUserStatus(userId);
+
+        // Assert
+        assertEquals(UserStatus.ONLINE, result);
+        verify(redisService).searchUserFromRedis(userId);
+        verify(redisService).getUserStatus(userId);
+    }
+
+    @Test
+    void test_markOnline_ShouldAddUserToRedisWithOnlineStatus() {
+        // Arrange
+        User user = new User();
+        user.setId(123L);
+        user.setUsername("testUser");
+
+        // Act
+        userService.markOnline(user);
+
+        // Assert
+        verify(redisService).addUserToRedis(123L, "online");
+    }
+
+    @Test
+    void test_markOnline_WhenRedisThrowsException_ShouldCatchAndNotThrow() {
+        // Arrange
+        User user = new User();
+        user.setId(456L);
+        doThrow(new RuntimeException("Redis connection failed"))
+                .when(redisService).addUserToRedis(456L, "online");
+
+        // Act & Assert - should not throw exception
+        assertDoesNotThrow(() -> userService.markOnline(user));
+        verify(redisService).addUserToRedis(456L, "online");
+    }
+
+    @Test
+    void test_markInMatch_ShouldAddUserToRedisWithInMatchStatus() {
+        // Arrange
+        User user = new User();
+        user.setId(789L);
+        user.setUsername("playerInMatch");
+
+        // Act
+        userService.markInMatch(user);
+
+        // Assert
+        verify(redisService).addUserToRedis(789L, "in-match");
+    }
+
+    @Test
+    void test_markInMatch_WhenRedisThrowsException_ShouldCatchAndNotThrow() {
+        // Arrange
+        User user = new User();
+        user.setId(999L);
+        doThrow(new RuntimeException("Redis error"))
+                .when(redisService).addUserToRedis(999L, "in-match");
+
+        // Act & Assert - should not throw exception
+        assertDoesNotThrow(() -> userService.markInMatch(user));
+        verify(redisService).addUserToRedis(999L, "in-match");
+    }
+
+    @Test
+    void test_isOnline_WhenUserIsOnline_ShouldReturnTrue() {
+        // Arrange
+        Long userId = 123L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(true);
+
+        // Act
+        boolean result = userService.isOnline(userId);
+
+        // Assert
+        assertTrue(result);
+        verify(redisService).searchUserFromRedis(userId);
+    }
+
+    @Test
+    void test_isOnline_WhenUserIsOffline_ShouldReturnFalse() {
+        // Arrange
+        Long userId = 456L;
+        when(redisService.searchUserFromRedis(userId)).thenReturn(false);
+
+        // Act
+        boolean result = userService.isOnline(userId);
+
+        // Assert
+        assertFalse(result);
+        verify(redisService).searchUserFromRedis(userId);
+    }
+
+    @Test
+    void test_isOnline_WhenRedisThrowsException_ShouldReturnFalse() {
+        // Arrange
+        Long userId = 789L;
+        when(redisService.searchUserFromRedis(userId))
+                .thenThrow(new RuntimeException("Redis connection lost"));
+
+        // Act
+        boolean result = userService.isOnline(userId);
+
+        // Assert
+        assertFalse(result);
+        verify(redisService).searchUserFromRedis(userId);
+    }
+
+    @Test
+    void test_markOnline_ThenCheckStatus_ShouldBeOnline() {
+        // Arrange
+        User user = new User();
+        user.setId(100L);
+        when(redisService.searchUserFromRedis(100L)).thenReturn(true);
+        when(redisService.getUserStatus(100L)).thenReturn("online");
+
+        // Act
+        userService.markOnline(user);
+        UserStatus status = userService.getUserStatus(100L);
+
+        // Assert
+        assertEquals(UserStatus.ONLINE, status);
+        verify(redisService).addUserToRedis(100L, "online");
+        verify(redisService).getUserStatus(100L);
+    }
+
+    @Test
+    void test_markInMatch_ThenCheckStatus_ShouldBeInMatch() {
+        // Arrange
+        User user = new User();
+        user.setId(200L);
+        when(redisService.searchUserFromRedis(200L)).thenReturn(true);
+        when(redisService.getUserStatus(200L)).thenReturn("in-match");
+
+        // Act
+        userService.markInMatch(user);
+        UserStatus status = userService.getUserStatus(200L);
+
+        // Assert
+        assertEquals(UserStatus.IN_MATCH, status);
+        verify(redisService).addUserToRedis(200L, "in-match");
+        verify(redisService).getUserStatus(200L);
+    }
+
+    @Test
+    void test_statusTransition_OnlineToInMatchToOffline() {
+        // Arrange
+        User user = new User();
+        user.setId(300L);
+
+        // Online
+        when(redisService.searchUserFromRedis(300L)).thenReturn(true);
+        when(redisService.getUserStatus(300L)).thenReturn("online");
+        userService.markOnline(user);
+        assertEquals(UserStatus.ONLINE, userService.getUserStatus(300L));
+
+        // In Match
+        when(redisService.getUserStatus(300L)).thenReturn("in-match");
+        userService.markInMatch(user);
+        assertEquals(UserStatus.IN_MATCH, userService.getUserStatus(300L));
+
+        // Offline (TTL expired)
+        when(redisService.searchUserFromRedis(300L)).thenReturn(false);
+        assertEquals(UserStatus.OFFLINE, userService.getUserStatus(300L));
+
+        // Verify
+        verify(redisService).addUserToRedis(300L, "online");
+        verify(redisService).addUserToRedis(300L, "in-match");
+        verify(redisService, atLeast(3)).searchUserFromRedis(300L);
+    }
+}
