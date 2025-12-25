@@ -103,7 +103,8 @@ const TestCases: React.FC<TestCasesProps> = ({ onSave }) => {
 
       setTestCases(updated);
       setSaveMessage("Test cases executed successfully!");
-     
+      localStorage.setItem("last_compiled_code_draft", info.solutionCode);
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (error: any) {
       console.error("Failed to run test cases:", error);
