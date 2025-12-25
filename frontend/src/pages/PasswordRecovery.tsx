@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import InputField from "../components/authentication/InputField";
 import PasswordField from "../components/authentication/PasswordField";
-import { toast } from "react-toastify";
 import { getUsername } from "../utils/jwtDecoder";
 import { loginUser } from "../services/AuthService";
 import { 
@@ -17,6 +16,7 @@ import {
   validatePasswordMatch
 } from "../utils/validation";
 import { getQuestionDisplayText } from "../utils/recoveryQuestions";
+import AnimatedBackground from "../components/AnimatedBackground";
 
 export default function PasswordRecovery() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -151,8 +151,9 @@ export default function PasswordRecovery() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background font-anta">
-      <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white">
+    <div className="min-h-screen flex items-center justify-center bg-background font-anta relative overflow-hidden">
+                  <AnimatedBackground />
+      <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
