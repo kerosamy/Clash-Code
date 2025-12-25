@@ -16,6 +16,7 @@ import { getUsername } from "../../utils/jwtDecoder";
 import { wsService } from "../../services/ws";
 import { useMatchGuard } from "../../hooks/useMatchGuard";
 import { setActiveMatch, clearActiveMatch } from "../../utils/matchState";
+import { updateStatusToOnline , updateStatusToInMatch} from "../../services/UserService";
 
 interface MatchData {
     startAt: string;
@@ -48,6 +49,7 @@ export default function PlayGame() {
 
     useEffect(() => {
         if (id) {
+            updateStatusToInMatch();
             setActiveMatch(id);
         }
 
@@ -65,8 +67,8 @@ export default function PlayGame() {
             setMatchResults(results);
             setShowResultOverlay(true);
             setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
-            
             clearActiveMatch();
+            await updateStatusToOnline();
         } catch (error) {
             console.error("Failed to load match results", error);
         }

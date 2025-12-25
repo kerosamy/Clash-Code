@@ -136,7 +136,7 @@ public class FriendService {
 
     public Page<FriendDto> searchFriendsByUsername(User user, String query, Pageable pageable) {
         return friendRepository.findFriendsByUsernameContaining(user.getId(), query, pageable)
-                .map(friendship -> friendMapper.toFriendDto(friendship, user));
+                .map(friendship -> mapToFriendDto(friendship, user));
     }
 
 }

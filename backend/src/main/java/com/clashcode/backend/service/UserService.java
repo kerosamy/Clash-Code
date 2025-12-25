@@ -36,7 +36,13 @@ public class UserService {
     private static final int RATING_PER_RANK = 300;
     private static final Ranks[] RANKS = Ranks.values();
 
-    public UserService(UserRepository userRepository, FriendRepository friendRepository, SubmissionRepository submissionRepository, MatchParticipantRepository matchParticipantRepository, ImageFileStorageService imageFileStorageService) {
+    public UserService(UserRepository userRepository,
+                       FriendRepository friendRepository,
+                       SubmissionRepository submissionRepository,
+                       MatchParticipantRepository matchParticipantRepository,
+                       ImageFileStorageService imageFileStorageService,
+                       RedisService redisService
+    ) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.submissionRepository = submissionRepository;
@@ -197,13 +203,27 @@ public class UserService {
         if(!isOnline(userId)){
             return UserStatus.OFFLINE;
         }
+
+        String status = redisService.getUserStatus(userId);
+
+        if("in-match".equals(status)){
+            return UserStatus.IN_MATCH;
+        }
+
         return UserStatus.ONLINE;
-        //to do check if in match
     }
 
     public void markOnline(User user) {
         try {
-            redisService.addUserToRedis(user.getId());
+            redisService.addUserToRedis(user.getId(), "online");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void markInMatch(User user) {
+        try {
+            redisService.addUserToRedis(user.getId(), "in-match");
         } catch (Exception e) {
             e.printStackTrace();
         }

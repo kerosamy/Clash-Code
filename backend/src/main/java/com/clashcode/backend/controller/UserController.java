@@ -80,4 +80,10 @@ public class UserController {
         userService.markOnline(user);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/status/in-match")
+    public ResponseEntity<Void> updateInMatchStatus(@AuthenticationPrincipal User user) {
+        userService.markInMatch(user);
+        return ResponseEntity.noContent().build();
+    }
 }

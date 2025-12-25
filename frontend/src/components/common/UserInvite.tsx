@@ -1,11 +1,15 @@
 import { rankColors } from '../../utils/colorMapper';
 import { sendMatchInvite } from '../../services/NotificationService';
+import { UserStatus } from "../../enums/UserStatus";
+import { getStatusColor } from "../../utils/getUserStatusColor";
+import { getStatusLabel } from '../../utils/getUserStatusLabel';
 
 export interface UserInviteProps {
     order: number;
     username: string;
     rank: string;
-    onInviteClick: (notificationId: number, username: string) => void; // Modified signature
+    userStatus?: UserStatus;
+    onInviteClick: (notificationId: number, username: string) => void;
     onUsernameClick?: () => void;
     className?: string;
 }
@@ -14,6 +18,7 @@ export default function UserInvite({
     order,
     username,
     rank,
+    userStatus,
     onInviteClick,
     onUsernameClick,
     className = "",
@@ -21,11 +26,8 @@ export default function UserInvite({
 
     const handleInviteClick = async () => {
         try {
-            // Get the notification ID from the backend
             const notificationId = await sendMatchInvite(username);
             console.log('Match invitation sent, notification ID:', notificationId);
-            
-            // Pass both the notification ID and username to parent
             onInviteClick(notificationId, username); 
         } catch (error) {
             console.error('Failed to send match invitation:', error);
@@ -35,7 +37,7 @@ export default function UserInvite({
 
     return (
         <div
-            className={`grid grid-cols-[60px_1fr_120px] gap-4 px-6 py-3 items-center hover:bg-sidebar/20 transition-colors ${className}`}
+            className={`grid grid-cols-[60px_1fr_auto_120px] gap-4 px-6 py-3 items-center hover:bg-sidebar/20 transition-colors ${className}`}
         >
             <span className="text-text text-center font-anta text-sm">
                 {order}
@@ -48,6 +50,21 @@ export default function UserInvite({
             >
                 {username}
             </button>
+
+            {userStatus && (
+                <div className="flex items-center gap-2">
+                    <div className="relative flex items-center">
+                        <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(userStatus).replace('text-', 'bg-')}`}>
+                            {userStatus === UserStatus.ONLINE && (
+                                <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75"></div>
+                            )}
+                        </div>
+                    </div>
+                    <span className={`font-anta text-xs ${getStatusColor(userStatus)}`}>
+                        {getStatusLabel(userStatus)}
+                    </span>
+                </div>
+            )}
            
             <button
                 onClick={handleInviteClick}
