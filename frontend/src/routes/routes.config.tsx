@@ -8,7 +8,6 @@ import PlayGameHome from "../pages/play-game/playGameHome";
 import PlayGameMatch from  "../pages/play-game/playGameMatch";
 import LeaderBoard from '../pages/LeaderBoard';
 import AddProblem from '../pages/AddProblem';
-import Settings from '../pages/Settings';
 import SignUp from '../pages/SignUp';
 import LogIn from '../pages/LogIn';
 import NotFound from '../pages/NotFound';
@@ -47,7 +46,6 @@ import PracticeIcon from '../assets/icons/practice.svg';
 import SwordIcon from '../assets/icons/sword.svg';
 import LeaderboardIcon from '../assets/icons/leaderboard.svg';
 import AddProblemIcon from '../assets/icons/add-problem.svg';
-import SettingsIcon from '../assets/icons/settings.svg';
 import LogoutIcon from '../assets/icons/logout.svg';
 import ListIcon from '../assets/icons/list.svg';
 import ScoreIcon from '../assets/icons/scoreboard.svg';
@@ -209,7 +207,6 @@ export const routes: RouteConfig[] = [
     component: Notifications,
     hideFromNav: true
   },
-  { path: 'settings', name: 'Settings', icon: SettingsIcon, component: Settings },
   { path: 'log-out', name: 'Log Out', icon: LogoutIcon, component: LogOut },
 
 
