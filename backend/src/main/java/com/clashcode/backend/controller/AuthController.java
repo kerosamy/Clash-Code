@@ -6,10 +6,13 @@ import com.clashcode.backend.model.User;
 import com.clashcode.backend.dto.AuthResponseDto;
 import com.clashcode.backend.service.AuthService;
 import com.clashcode.backend.service.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 
 @RequestMapping("/auth")
@@ -73,18 +76,21 @@ public class AuthController {
 
     // GOOGLE LOGIN
     @GetMapping("/OAuthCallback")
-    public ResponseEntity<AuthResponseDto> handleGoogleOAuth(OAuth2AuthenticationToken token) {
-        User user = authService.handleGoogleOAuth(token); // <-- now returns User
-        return buildAuthResponse(user);
+    public void handleGoogleOAuthRedirect(OAuth2AuthenticationToken token, HttpServletResponse response) throws IOException {
+        User user = authService.handleGoogleOAuth(token);
+        String jwt = jwtService.generateToken(user);
+
+        // Redirect to frontend with token as query param
+        String frontendUrl = "http://localhost:5173/auth/callback?token=" + jwt;
+        response.sendRedirect(frontendUrl);
     }
 
     // GOOGLE SIGNUP COMPLETION
     @PostMapping("/GoogleSignUp/completeRegistration")
     public ResponseEntity<AuthResponseDto> completeSignUp(
-            @RequestBody SignUpCompletionDto dto,
-            OAuth2AuthenticationToken token
+            @RequestBody SignUpCompletionDto dto
     ) {
-        User createdUser = authService.completeGoogleSignUp(dto, token); // <-- returns User
+        User createdUser = authService.completeGoogleSignUp(dto);
         return buildAuthResponse(createdUser);
     }
 

@@ -76,7 +76,7 @@ export default function MyFriends() {
 
       <Board
         data={friends}
-        columns={["#", "Name", "Status", "Action"]}
+        columns={["#", "Name", "Action"]}
         gridCols="grid-cols-[60px_1fr_120px_auto]"
         renderRow={(user) => (
           <UserRow

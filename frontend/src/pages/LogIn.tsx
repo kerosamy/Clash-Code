@@ -7,6 +7,7 @@ import { getUsername } from '../utils/jwtDecoder';
 import { validateEmailOrUsername, validatePassword } from '../utils/validation';
 import { getOnGoingMatch } from '../services/MatchService';
 import AnimatedBackground from "../components/AnimatedBackground";
+import { API_BASE } from '../services/api';
 
 export default function LogIn() {
   const [email, setEmail] = useState('');
@@ -70,7 +71,7 @@ export default function LogIn() {
 
   const handleGoogleLogin = () => {
     sessionStorage.setItem('oauth_flow', 'login');
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    window.location.href = `${API_BASE}/oauth2/authorization/google`;
   };
 
   // Basic check for button disable state (UX optimization)

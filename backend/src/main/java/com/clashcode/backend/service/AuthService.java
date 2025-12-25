@@ -107,13 +107,12 @@ public class AuthService {
                     newUser.setEmail(email);
                     return newUser;
                 });
-
         user.setRole(Roles.USER);
         return user;
     }
 
-    public User completeGoogleSignUp(SignUpCompletionDto dto, OAuth2AuthenticationToken token) {
-        String email = token.getPrincipal().getAttribute("email");
+    public User completeGoogleSignUp(SignUpCompletionDto dto) {
+        String email = dto.getEmail();
 
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new RuntimeException("Username already taken");

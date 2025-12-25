@@ -17,6 +17,7 @@ import {
 } from "../utils/validation";
 import { getQuestionDisplayText } from "../utils/recoveryQuestions";
 import AnimatedBackground from "../components/AnimatedBackground";
+import { API_BASE } from '../services/api';
 
 export default function PasswordRecovery() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -44,7 +45,7 @@ export default function PasswordRecovery() {
   // ---------------- HANDLER: Google Login ----------------
   const handleGoogleLogin = () => {
     sessionStorage.setItem("oauth_flow", "login");
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    window.location.href = `${API_BASE}/oauth2/authorization/google`;
   };
 
   // ---------------- STEP 1: Fetch question ----------------
