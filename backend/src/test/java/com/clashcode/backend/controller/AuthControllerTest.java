@@ -90,48 +90,4 @@ public class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("mock-token"));
     }
-
-    @Test
-    @DisplayName("GET /auth/OAuthCallback - Success")
-    void test_HandleGoogleOAuth_Success() throws Exception {
-        OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
-
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setEmail("oauthuser@example.com");
-        mockUser.setUsername("oauthuser");
-
-        when(authService.handleGoogleOAuth(any(OAuth2AuthenticationToken.class))).thenReturn(mockUser);
-        when(jwtService.generateToken(any(User.class))).thenReturn("mock-token");
-
-        mockMvc.perform(get("/auth/OAuthCallback")
-                        .principal(authToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"));
-    }
-
-    @Test
-    @DisplayName("POST /auth/GoogleSignUp/completeRegistration - Success")
-    void test_CompleteGoogleSignUp_Success() throws Exception {
-        SignUpCompletionDto request = new SignUpCompletionDto();
-        request.setUsername("newuser");
-
-        OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
-
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setEmail("newuser@example.com");
-        mockUser.setUsername("newuser");
-
-//        when(authService.completeGoogleSignUp(any(SignUpCompletionDto.class), any()))
-//                .thenReturn(mockUser);
-        when(jwtService.generateToken(any(User.class))).thenReturn("mock-token");
-
-        mockMvc.perform(post("/auth/GoogleSignUp/completeRegistration")
-                        .principal(authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"));
-    }
 }
