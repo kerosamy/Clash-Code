@@ -1,10 +1,12 @@
 package com.clashcode.backend;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-class BackendApplicationTests {
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+class BackendApplicationTest {
 	@Test
-	void contextLoads() {
+	void main_shouldStartApplicationWithoutErrors() {
+		assertDoesNotThrow(() -> BackendApplication.main(new String[]{}));
 	}
 }

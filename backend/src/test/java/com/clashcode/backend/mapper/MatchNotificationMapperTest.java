@@ -3,6 +3,7 @@ package com.clashcode.backend.mapper;
 import com.clashcode.backend.Notification.Dtos.MatchNotificationDto;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
+import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.model.Match;
 import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
@@ -24,10 +25,7 @@ class MatchNotificationMapperTest {
     @Test
     void test_mapMatchInvite() {
         User sender = mock(User.class);
-        User recipient = mock(User.class);
-
         when(sender.getUsername()).thenReturn("Caro");
-        when(recipient.getUsername()).thenReturn("John");
 
         MatchNotificationDto dto = mapper.mapMatchInvite(sender);
 
@@ -36,6 +34,21 @@ class MatchNotificationMapperTest {
         assertEquals("Caro invites you to a match", dto.getMessage());
         assertEquals("Caro", dto.getSenderUsername());
         assertEquals(NotificationMode.PERSISTENT, dto.getMode());
+        assertNull(dto.getMatchId());
+    }
+
+    @Test
+    void test_mapMatchInvitationCanceled() {
+        User sender = mock(User.class);
+        when(sender.getUsername()).thenReturn("Alice");
+
+        MatchNotificationDto dto = mapper.mapMatchInvitationCanceled(sender);
+
+        assertEquals(NotificationType.MATCH_INVITATION_CANCELED, dto.getNotificationType());
+        assertEquals("Match Invitation Canceled", dto.getTitle());
+        assertEquals("Alice has canceled their match invitation", dto.getMessage());
+        assertEquals("Alice", dto.getSenderUsername());
+        assertEquals(NotificationMode.EPHEMERAL, dto.getMode());
         assertNull(dto.getMatchId());
     }
 
@@ -61,11 +74,9 @@ class MatchNotificationMapperTest {
     void test_mapSubmissionReceived() {
         Match match = mock(Match.class);
         User sender = mock(User.class);
-        User recipient = mock(User.class);
 
         when(match.getId()).thenReturn(202L);
         when(sender.getUsername()).thenReturn("Kero");
-        when(recipient.getUsername()).thenReturn("Mina");
 
         MatchNotificationDto dto = mapper.mapSubmissionReceived(match, sender);
 
@@ -81,14 +92,12 @@ class MatchNotificationMapperTest {
     void test_mapSubmissionResult() {
         Match match = mock(Match.class);
         Submission submission = mock(Submission.class);
-        User recipient = mock(User.class);
         User user = mock(User.class);
 
         when(match.getId()).thenReturn(303L);
         when(submission.getUser()).thenReturn(user);
         when(user.getUsername()).thenReturn("Jana");
-
-        when(submission.getStatus()).thenReturn(com.clashcode.backend.enums.SubmissionStatus.ACCEPTED);
+        when(submission.getStatus()).thenReturn(SubmissionStatus.ACCEPTED);
         when(submission.getNumberOfPassedTestCases()).thenReturn(5);
         when(submission.getNumberOfTestCases()).thenReturn(5);
 
@@ -103,6 +112,26 @@ class MatchNotificationMapperTest {
         assertEquals(5, dto.getPassedCases());
         assertEquals(5, dto.getTotalCases());
         assertEquals(303L, dto.getMatchId());
+    }
+
+    @Test
+    void test_mapSubmissionResult_wrongAnswer() {
+        Match match = mock(Match.class);
+        Submission submission = mock(Submission.class);
+        User user = mock(User.class);
+
+        when(match.getId()).thenReturn(404L);
+        when(submission.getUser()).thenReturn(user);
+        when(user.getUsername()).thenReturn("Bob");
+        when(submission.getStatus()).thenReturn(SubmissionStatus.WRONG_ANSWER);
+        when(submission.getNumberOfPassedTestCases()).thenReturn(3);
+        when(submission.getNumberOfTestCases()).thenReturn(5);
+
+        MatchNotificationDto dto = mapper.mapSubmissionResult(match, submission);
+
+        assertEquals("Bob got WRONG_ANSWER (3/5)", dto.getMessage());
+        assertEquals("WRONG_ANSWER", dto.getSubmissionStatus());
+        assertEquals(3, dto.getPassedCases());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.clashcode.backend.service;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.Roles;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.UserRepository;
 import com.clashcode.backend.enums.RecoveryQuestion;
@@ -210,4 +211,159 @@ public class AuthServiceTest {
         assertEquals("Username already taken", exception.getMessage());
     }
 
+    @Test
+    void getRecoveryQuestion_Success() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setRecoveryQuestion(RecoveryQuestion.FIRST_PET);
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        String result = authService.getRecoveryQuestion("user@example.com");
+
+        assertEquals("FIRST_PET", result);
+        verify(userRepository).findByEmail("user@example.com");
+    }
+
+    @Test
+    void getRecoveryQuestion_EmailNotFound_Throws() {
+        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.getRecoveryQuestion("notfound@example.com"));
+
+        assertEquals("Email not found", ex.getMessage());
+    }
+
+    @Test
+    void getRecoveryQuestion_GoogleUser_Throws() {
+        User user = new User();
+        user.setEmail("google@example.com");
+        user.setRecoveryQuestion(null);
+
+        when(userRepository.findByEmail("google@example.com")).thenReturn(Optional.of(user));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.getRecoveryQuestion("google@example.com"));
+
+        assertEquals("Google account user", ex.getMessage());
+    }
+
+    @Test
+    void verifyRecoveryAnswer_Success() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setRecoveryAnswer("Fluffy");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        boolean result = authService.verifyRecoveryAnswer("user@example.com", "Fluffy");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void verifyRecoveryAnswer_IncorrectAnswer_Throws() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setRecoveryAnswer("Fluffy");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.verifyRecoveryAnswer("user@example.com", "Wrong"));
+
+        assertEquals("Incorrect recovery answer.", ex.getMessage());
+    }
+
+    @Test
+    void verifyRecoveryAnswer_CaseInsensitive_Success() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setRecoveryAnswer("Fluffy");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        boolean result = authService.verifyRecoveryAnswer("user@example.com", "fluffy");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void verifyRecoveryAnswer_WithWhitespace_Success() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setRecoveryAnswer("Fluffy");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        boolean result = authService.verifyRecoveryAnswer("user@example.com", "  Fluffy  ");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void verifyRecoveryAnswer_NullAnswer_Throws() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setRecoveryAnswer(null);
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.verifyRecoveryAnswer("user@example.com", "Any"));
+
+        assertEquals("Incorrect recovery answer.", ex.getMessage());
+    }
+
+    @Test
+    void verifyRecoveryAnswer_UserNotFound_Throws() {
+        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.verifyRecoveryAnswer("notfound@example.com", "Any"));
+
+        assertEquals("Email not found.", ex.getMessage());
+    }
+
+    @Test
+    void resetPassword_Success() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setPassword("oldPassword");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
+
+        authService.resetPassword("user@example.com", "newPassword");
+
+        assertEquals("encodedNewPassword", user.getPassword());
+        verify(userRepository).save(user);
+        verify(passwordEncoder).encode("newPassword");
+    }
+
+    @Test
+    void resetPassword_UserNotFound_Throws() {
+        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> authService.resetPassword("notfound@example.com", "newPassword"));
+
+        assertEquals("Email not found.", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void handleGoogleOAuth_NewUser_CreatesUser() {
+        when(oAuth2Token.getPrincipal()).thenReturn(oAuth2User);
+        when(oAuth2User.getAttribute("email")).thenReturn("newuser@example.com");
+        when(userRepository.findByEmail("newuser@example.com")).thenReturn(Optional.empty());
+
+        User result = authService.handleGoogleOAuth(oAuth2Token);
+
+        assertNotNull(result);
+        assertEquals("newuser@example.com", result.getEmail());
+        assertEquals(Roles.USER, result.getRole());
+        verify(userRepository).findByEmail("newuser@example.com");
+    }
 }

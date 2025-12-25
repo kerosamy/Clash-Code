@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
@@ -612,7 +613,7 @@ class UserServiceTest {
 
         // Assert
         assertEquals(1, result.getTotalElements());
-        assertEquals("admin1", result.getContent().get(0).getUsername());
+        assertEquals("admin1", result.getContent().getFirst().getUsername());
         verify(userRepository).findAllByRole(eq(Roles.ADMIN), any());
     }
 
@@ -690,5 +691,106 @@ class UserServiceTest {
         // Assert
         assertNull(result);
     }
+    @Test
+    void updateProfileImage_Success() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setImgUrl(null);
 
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "avatar.jpg",
+                "image/jpeg",
+                "image content".getBytes()
+        );
+
+        when(imageFileStorageService.storeFile(file, "testuser"))
+                .thenReturn("https://cloudinary.com/avatar.jpg");
+
+        String result = userService.updateProfileImage(user, file);
+
+        assertEquals("https://cloudinary.com/avatar.jpg", result);
+        assertEquals("https://cloudinary.com/avatar.jpg", user.getImgUrl());
+        verify(imageFileStorageService).storeFile(file, "testuser");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateProfileImage_WithExistingImage_DeletesOld() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setImgUrl("old_image.jpg");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "new_avatar.jpg",
+                "image/jpeg",
+                "new image content".getBytes()
+        );
+
+        when(imageFileStorageService.storeFile(file, "testuser"))
+                .thenReturn("https://cloudinary.com/new_avatar.jpg");
+
+        String result = userService.updateProfileImage(user, file);
+
+        assertEquals("https://cloudinary.com/new_avatar.jpg", result);
+        verify(imageFileStorageService).deleteFile("old_image.jpg");
+        verify(imageFileStorageService).storeFile(file, "testuser");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void searchByUsername_WithLoggedInUser_Success() {
+        User loggedInUser = new User();
+        loggedInUser.setId(1L);
+
+        User foundUser = new User();
+        foundUser.setId(2L);
+        foundUser.setUsername("testuser");
+        foundUser.setCurrentRate(1200);
+
+        Friend friend = Friend.builder()
+                .sender(loggedInUser)
+                .receiver(foundUser)
+                .status(FriendRequestStatus.ACCEPTED)
+                .build();
+
+        Object[] row = {foundUser, friend};
+        List<Object[]> rows = List.<Object[]>of(row);
+
+        when(userRepository.searchByUsernameWithStatus(1L, "test"))
+                .thenReturn(rows);
+
+
+
+        FriendStatusMapper friendStatusMapper = mock(FriendStatusMapper.class);
+        when(friendStatusMapper.map(foundUser, friend)).thenReturn(FriendStatus.FRIENDS);
+        ReflectionTestUtils.setField(userService, "friendStatusMapper", friendStatusMapper);
+
+        List<UserSearchDto> result = userService.searchByUsername("test", loggedInUser);
+
+        assertEquals(1, result.size());
+        assertEquals("testuser", result.getFirst().getUsername());
+        assertEquals(1200, result.getFirst().getCurrentRate());
+    }
+
+    @Test
+    void getRank_BoundaryValues() {
+        assertEquals("BRONZE", userService.getRank(0));
+        assertEquals("BRONZE", userService.getRank(299));
+        assertEquals("SILVER", userService.getRank(300));
+        assertEquals("SILVER", userService.getRank(599));
+        assertEquals("GOLD", userService.getRank(600));
+        assertEquals("GOLD", userService.getRank(899));
+        assertEquals("DIAMOND", userService.getRank(900));
+        assertEquals("DIAMOND", userService.getRank(1199));
+        assertEquals("MASTER", userService.getRank(1200));
+        assertEquals("MASTER", userService.getRank(1499));
+        assertEquals("CHAMPION", userService.getRank(1500));
+        assertEquals("CHAMPION", userService.getRank(1799));
+        assertEquals("LEGEND", userService.getRank(1800));
+        assertEquals("LEGEND", userService.getRank(10000));
+    }
 }

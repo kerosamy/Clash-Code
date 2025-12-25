@@ -3,6 +3,7 @@ package com.clashcode.backend.service;
 import com.clashcode.backend.Notification.NotificationPayload;
 import com.clashcode.backend.enums.NotificationMode;
 import com.clashcode.backend.enums.NotificationType;
+import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.Notification;
 import com.clashcode.backend.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -412,5 +413,53 @@ class NotificationServiceTest {
                 .createdAt(Instant.now())
                 .read(false)
                 .build();
+    }
+    @Test
+    void getNotificationById_Success() {
+        Notification notification = Notification.builder()
+                .id(1L)
+                .recipientId(10L)
+                .senderId(5L)
+                .type(NotificationType.MATCH_INVITATION)
+                .title("Title")
+                .message("Message")
+                .build();
+
+        when(repository.findById(1L)).thenReturn(Optional.of(notification));
+
+        Notification result = notificationService.getNotificationById(1L, 10L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(repository).findById(1L);
+    }
+
+    @Test
+    void getNotificationById_NotFound_Throws() {
+        when(repository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> notificationService.getNotificationById(999L, 10L));
+    }
+
+    @Test
+    void getNotificationById_WrongRecipient_Throws() {
+        Notification notification = Notification.builder()
+                .id(1L)
+                .recipientId(10L)
+                .build();
+
+        when(repository.findById(1L)).thenReturn(Optional.of(notification));
+
+        assertThrows(UnauthorizedException.class,
+                () -> notificationService.getNotificationById(1L, 999L));
+    }
+
+    @Test
+    void markAsRead_NotificationNotFound_DoesNothing() {
+        when(repository.findById(999L)).thenReturn(Optional.empty());
+
+        assertDoesNotThrow(() -> notificationService.markAsRead(999L, 10L));
+        verify(repository, never()).save(any());
     }
 }

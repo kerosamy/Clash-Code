@@ -42,7 +42,7 @@ public class Notification {
     private boolean read = false;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         if (createdAt == null) {
             createdAt = Instant.now();
         }

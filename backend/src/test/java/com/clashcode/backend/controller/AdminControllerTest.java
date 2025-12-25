@@ -120,7 +120,6 @@ class AdminControllerTest {
         verify(problemService, times(1)).acceptProblem(1L);
     }
 
-
     @Test
     @DisplayName("GET /admin/problems/pending - empty result")
     void getPendingProblems_emptyResult() throws Exception {
@@ -132,29 +131,27 @@ class AdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isEmpty())
                 .andExpect(jsonPath("$.totalElements").value(0));
-                }
-                
-	@Test
-	@DisplayName("POST /admin/problems/{id}/reject - success")
-	void rejectProblem_success() throws Exception {
-	    Long problemId = 1L;
-	    String rejectionNote = "The constraints are too vague.";
+    }
 
-	    // No return value (void), so we use doNothing
-	    doNothing().when(problemService).rejectProblem(eq(problemId), anyString());
+    @Test
+    @DisplayName("POST /admin/problems/{id}/reject - success")
+    void rejectProblem_success() throws Exception {
+        Long problemId = 1L;
+        String rejectionNote = "The constraints are too vague.";
 
-	    mockMvc.perform(post("/admin/problems/1/reject")
-		            .contentType(MediaType.TEXT_PLAIN) // Note: Controller expects String body
-		            .content(rejectionNote))
-		    .andExpect(status().isOk());
+        doNothing().when(problemService).rejectProblem(eq(problemId), anyString());
 
-	    verify(problemService, times(1)).rejectProblem(eq(problemId), contains("too vague"));
-	}
+        mockMvc.perform(post("/admin/problems/1/reject")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content(rejectionNote))
+                .andExpect(status().isOk());
+
+        verify(problemService, times(1)).rejectProblem(eq(problemId), contains("too vague"));
+    }
 
     @Test
     @DisplayName("POST /admin/problems/{id}/accept - problem not found")
     void acceptProblem_notFound() throws Exception {
-
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"))
                 .when(problemService).acceptProblem(99L);
 
@@ -162,5 +159,28 @@ class AdminControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(problemService, times(1)).acceptProblem(99L);
+    }
+
+    @Test
+    @DisplayName("POST /admin/problems/{id}/reject - with empty note")
+    void rejectProblem_emptyNote() throws Exception {
+        doNothing().when(problemService).rejectProblem(eq(1L), eq("\"\""));
+
+        mockMvc.perform(post("/admin/problems/1/reject")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("\"\""))   // JSON empty string
+                .andExpect(status().isOk());
+
+        verify(problemService, times(1)).rejectProblem(eq(1L), eq("\"\""));
+    }
+
+    @Test
+    @DisplayName("GET /admin/problems/{id} - not found")
+    void getProblemDetails_notFound() throws Exception {
+        when(problemService.getPartialProblemById(999L))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        mockMvc.perform(get("/admin/problems/999"))
+                .andExpect(status().isNotFound());
     }
 }
