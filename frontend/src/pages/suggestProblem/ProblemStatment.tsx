@@ -79,6 +79,9 @@ export default function ProblemStatement({ onSave }: ProblemStatementProps) {
           <label className="block text-orange font-anta text-lg mb-2">
             Problem Title
           </label>
+          <span className={`text-xs font-anta ${title.length > 200 ? 'text-red-500' : 'text-gray-500'}`}>
+              {title.length}/200
+            </span>
           <input
             type="text"
             value={title}
@@ -93,6 +96,9 @@ export default function ProblemStatement({ onSave }: ProblemStatementProps) {
           <label className="block text-orange font-anta text-lg mb-2">
             Problem Statement
           </label>
+          <span className={`text-xs font-anta ${statement.length > 10000 ? 'text-red-500' : 'text-gray-500'}`}>
+              {statement.length}/10000
+            </span>
           <textarea
             value={statement}
             onChange={(e) => setStatement(e.target.value)}
@@ -107,6 +113,9 @@ export default function ProblemStatement({ onSave }: ProblemStatementProps) {
           <label className="block text-orange font-anta text-lg mb-2">
             Input Format
           </label>
+          <span className={`text-xs font-anta ${inputFormat.length > 2000 ? 'text-red-500' : 'text-gray-500'}`}>
+              {inputFormat.length}/2000
+            </span>
           <textarea
             value={inputFormat}
             onChange={(e) => setInputFormat(e.target.value)}
@@ -121,6 +130,9 @@ export default function ProblemStatement({ onSave }: ProblemStatementProps) {
           <label className="block text-orange font-anta text-lg mb-2">
             Output Format
           </label>
+          <span className={`text-xs font-anta ${outputFormat.length > 2000 ? 'text-red-500' : 'text-gray-500'}`}>
+              {outputFormat.length}/2000
+            </span>
           <textarea
             value={outputFormat}
             onChange={(e) => setOutputFormat(e.target.value)}
@@ -135,6 +147,9 @@ export default function ProblemStatement({ onSave }: ProblemStatementProps) {
           <label className="block text-orange font-anta text-lg mb-2">
             Notes (Optional)
           </label>
+          <span className={`text-xs font-anta ${notes.length > 5000 ? 'text-red-500' : 'text-gray-500'}`}>
+              {notes.length}/5000
+            </span>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
