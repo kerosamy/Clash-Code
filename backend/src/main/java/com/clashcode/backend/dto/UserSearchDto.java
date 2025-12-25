@@ -1,13 +1,9 @@
 package com.clashcode.backend.dto;
 
-import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor

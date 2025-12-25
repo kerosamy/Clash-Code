@@ -16,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,13 +27,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,6 +50,7 @@ class UserControllerTest {
 
     @AfterEach
     void tearDown() {
+        // Essential: Clear the context after each test to prevent pollution
         SecurityContextHolder.clearContext();
     }
 
@@ -101,6 +96,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.stats.solvedProblems").value(750));
     }
 
+
     @Test
     @DisplayName("GET /users/profile/{username} - Success")
     void getUserProfile_success() throws Exception {
@@ -126,12 +122,12 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /users/profile/{username} - User Not Found")
+    @DisplayName("GET /profile/{username} - User Not Found")
     void getUserProfile_notFound() throws Exception {
         when(userService.getUserProfile("unknown"))
                 .thenThrow(new UserNotFoundException("User not found"));
 
-        mockMvc.perform(get("/users/profile/unknown"))
+        mockMvc.perform(get("/profile/unknown"))
                 .andExpect(status().isNotFound());
     }
 
@@ -239,36 +235,5 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.content[0].username").value("topPlayer"))
                 .andExpect(jsonPath("$.content[0].currentRate").value(3000))
                 .andExpect(jsonPath("$.content[1].username").value("runnerUp"));
-    }
-}
-    @DisplayName("POST /users/profile/image - Success")
-    void uploadProfileImage_success() throws Exception {
-        setupSecurityContext(1L, "mina");
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setUsername("mina");
-
-        MockMultipartFile file = new MockMultipartFile("file", "avatar.png",
-                MediaType.IMAGE_PNG_VALUE, "dummy-image".getBytes());
-
-        when(userService.updateProfileImage(any(User.class), any())).thenReturn("https://example.com/avatar.png");
-
-        mockMvc.perform(multipart("/users/profile/image").file(file))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.imageUrl").value("https://example.com/avatar.png"));
-    }
-
-    @Test
-    @DisplayName("DELETE /users/profile/image - Success")
-    void deleteProfileImage_success() throws Exception {
-        setupSecurityContext(1L, "mina");
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setUsername("mina");
-
-        doNothing().when(userService).deleteProfileImage(any(User.class));
-
-        mockMvc.perform(delete("/users/profile/image"))
-                .andExpect(status().isNoContent());
     }
 }

@@ -2,10 +2,12 @@ package com.clashcode.backend.dto;
 
 import lombok.*;
 
-@Data
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Getter
+@Setter
 public class UserManagementDto {
     private Long id;
     private String username;
