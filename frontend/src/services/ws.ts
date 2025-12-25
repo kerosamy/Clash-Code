@@ -22,8 +22,9 @@ export class EnhancedWebSocketService {
     this.messageCallback = onMessage;
     this.statusCallback('connecting');
 
-    const WS_URL = 'ws://localhost:8080/ws';
+    const WS_URL = 'wss://fugally-nonrepatriable-belle.ngrok-free.dev/ws';
     // wss://fugally-nonrepatriable-belle.ngrok-free.dev/ws
+    //ws://localhost:8080/ws
     this.client = new Client({
       brokerURL: WS_URL,
       reconnectDelay: this.reconnectDelay,
