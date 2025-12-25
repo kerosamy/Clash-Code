@@ -7,10 +7,10 @@ import { fetchMyProfile } from "../../services/UserService";
 import { calculateNextRate, getRankColor } from "../../utils/calculateNextRate";
 import { RANKS } from "../../enums/Ranks";
 import type { NextRankInfo } from "../../utils/calculateNextRate";
-import { searchOpponent, cancelOpponentSearch, getMatchSubmissionLog } from "../../services/MatchService";
+import { searchOpponent, cancelOpponentSearch, getMatchSubmissionLog, getOnGoingMatch, getMatchDetails } from "../../services/MatchService";
 import { getUsername } from "../../utils/jwtDecoder";
-import { wsService } from "../../services/ws";
 import { setActiveMatch } from "../../utils/matchState";
+import { useWebSocket } from "../../contexts/WebSocketContext";
 
 interface UserStats {
     currentRate: number;
@@ -35,6 +35,7 @@ interface MatchData {
 
 export default function PlayGameHome() {
     const navigate = useNavigate();
+    const { notifications } = useWebSocket(); // CHANGED: Only get notifications, don't subscribe
     const [isFriendMatchingOpen, setIsFriendMatchingOpen] = useState<boolean>(false);
     const [isMatchmaking, setIsMatchmaking] = useState<boolean>(false);
     const [matchType, setMatchType] = useState<"opponent" | "friend">("opponent");
@@ -60,9 +61,54 @@ export default function PlayGameHome() {
         isMatchmakingRef.current = isMatchmaking;
     }, [isMatchmaking]);
 
+    // Combined initial data fetch - Check ongoing match FIRST, then fetch user data
     useEffect(() => {
-        const fetchUserData = async () => {
+        const initializeData = async () => {
             try {
+                // Check for ongoing match first
+                const currentUser = getUsername();
+                if (!currentUser) {
+                    setIsLoading(false);
+                    return;
+                }
+
+                const matchId = await getOnGoingMatch();
+                console.log('Ongoing match check:', matchId);
+                
+                if (matchId) {
+                    console.log('Found ongoing match, fetching details...');
+                    const [data, match] = await Promise.all([
+                        getMatchSubmissionLog(matchId),
+                        getMatchDetails(matchId)
+                    ]);
+
+                    const opponent = data.find(player => player.username !== currentUser);
+                    if (!opponent) {
+                        console.error("Opponent not found in submission log");
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    setMatchData({
+                        matchId: matchId,
+                        problemId: match.problemId,
+                        player1: {
+                            username: currentUser,
+                            avatarUrl: data.find(p => p.username === currentUser)?.avatarUrl || "",
+                            rank: data.find(p => p.username === currentUser)?.rank || "BRONZE",
+                        },
+                        player2: {
+                            username: opponent.username,
+                            avatarUrl: opponent.avatarUrl || "/default-avatar.png",
+                            rank: opponent.rank,
+                        },
+                    });
+
+                    setShowIntroAnimation(true);
+                    return; // Don't load other data if we're showing animation
+                }
+
+                // No ongoing match, fetch user profile
                 const profile = await fetchMyProfile();
                 const nextRankInfo = calculateNextRate(profile.currentRate);
                 
@@ -72,76 +118,74 @@ export default function PlayGameHome() {
                     nextRankInfo
                 });
             } catch (error) {
-                console.error("Failed to fetch user profile", error);
+                console.error("Failed to initialize data", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchUserData();
+        initializeData();
     }, []);
-    
+
+    // CHANGED: Listen to notifications from context instead of subscribing directly
     useEffect(() => {
-        const currentUser = getUsername();
-        if (!currentUser) return;
+        const matchStartedNotification = notifications.find(
+            n => n.metadata?.notificationType === 'MATCH_STARTED' && !n.read
+        );
 
-        wsService.connect(() => {
-            console.log("WS connected");
-
-            wsService.subscribe(`/topic/match-pop/${currentUser}`, async (payload: any) => {
+        if (matchStartedNotification) {
+            const handleMatchStarted = async () => {
                 try {
-                    if (payload.notificationType === "MATCH_STARTED") {
-                        const data = await getMatchSubmissionLog(payload.matchId);
+                    const payload = matchStartedNotification.metadata;
+                    console.log('Match started notification:', payload);
+                    const data = await getMatchSubmissionLog(payload.matchId);
 
-                        const currentUser = getUsername();
-                        if (!currentUser) return;
+                    const currentUser = getUsername();
+                    if (!currentUser) return;
 
-                        const opponent = data.find(player => player.username !== currentUser);
-                        if (!opponent) {
-                            console.error("Opponent not found in submission log");
-                            return;
-                        }
-
-                        setMatchData({
-                            matchId: payload.matchId,
-                            problemId: payload.problemId,
-                            player1: {
-                                username: currentUser,
-                                avatarUrl: data.find(p => p.username === currentUser)?.avatarUrl || "",
-                                rank: data.find(p => p.username === currentUser)?.rank || "BRONZE",
-                            },
-                            player2: {
-                                username: opponent.username,
-                                avatarUrl: opponent.avatarUrl || "/default-avatar.png",
-                                rank: opponent.rank,
-                            },
-                        });
-
-                        setIsMatchmaking(false);
-                        setShowIntroAnimation(true);
+                    const opponent = data.find(player => player.username !== currentUser);
+                    if (!opponent) {
+                        console.error("Opponent not found in submission log");
+                        return;
                     }
-                } catch (err) {
-                    console.error("WS parse error", err);
-                }
-            });
-        });
 
-        // Cleanup on unmount
+                    setMatchData({
+                        matchId: payload.matchId,
+                        problemId: payload.problemId,
+                        player1: {
+                            username: currentUser,
+                            avatarUrl: data.find(p => p.username === currentUser)?.avatarUrl || "",
+                            rank: data.find(p => p.username === currentUser)?.rank || "BRONZE",
+                        },
+                        player2: {
+                            username: opponent.username,
+                            avatarUrl: opponent.avatarUrl || "/default-avatar.png",
+                            rank: opponent.rank,
+                        },
+                    });
+
+                    setIsMatchmaking(false);
+                    setShowIntroAnimation(true);
+                } catch (err) {
+                    console.error("Failed to process match started", err);
+                }
+            };
+
+            handleMatchStarted();
+        }
+    }, [notifications]);
+
+    // Cleanup on unmount
+    useEffect(() => {
         return () => {
-            wsService.disconnect();
-            if (isMatchmakingRef.current) cancelOpponentSearch().catch(console.error);
-            if (isMatchmaking) {
-                handleCancelMatchmaking();
+            if (isMatchmakingRef.current) {
+                cancelOpponentSearch().catch(console.error);
             }
         };
-    }, [navigate]);
-
-
-
+    }, []);
 
     const handleAnimationComplete = () => {
         if (matchData) {
-            // Set active match before navigation
             setActiveMatch(matchData.matchId.toString());
             
             navigate(`/play-game/${matchData.matchId}`, {
@@ -178,7 +222,6 @@ export default function PlayGameHome() {
         }
     };
 
-
     const handleFriendInvite = (notificationId: number, username: string) => {
         setMatchType("friend");
         setInvitedUser(username);
@@ -196,7 +239,6 @@ export default function PlayGameHome() {
             />
         );
     }
-
 
     if (isMatchmaking) {
         return (
