@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Board from "../../components/common/Board";
 import SubmissionRow from "../../components/common/SubmissionRow";
 import { getUserSubmissions  , getSubmissionStatus} from "../../services/SubmissionsService";
@@ -7,6 +7,7 @@ import { SubmissionStatus } from "../../enums/SubmissionStatus";
 import SubmissionDetails from "../../components/common/SubmissionDetails";
 import LogoLoader from "../../components/Loader/LogoLoader";
 import { waitForLoader } from "../../components/Loader/WaitLoader";
+import { getUsername } from "../../utils/jwtDecoder";
 
 export interface Submission {
     submissionId: number;
@@ -29,6 +30,8 @@ export default function Submissions() {
     const [error, setError] = useState<string>("");
     const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { username: paramUsername } = useParams<{ username?: string }>();
+    const navigate = useNavigate();
 
 useEffect(() => {
     fetchSubmissions();
@@ -78,6 +81,9 @@ useEffect(() => {
 
 
     const fetchSubmissions = async () => {
+        if(paramUsername != getUsername()){
+            navigate('/not-found', { replace: true });
+        }
         setLoading(true);
         setError("");
         const startTime = Date.now();

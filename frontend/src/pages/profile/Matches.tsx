@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Board from "../../components/common/Board";
 import { getRankName, getRankColor } from "../../utils/colorMapper";
 import { getMatchHistory } from "../../services/MatchService";
@@ -132,6 +133,8 @@ export default function Matches() {
   const [filterType, setFilterType] = useState<string | null>("All Matches");
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const { username: paramUsername } = useParams<{ username?: string }>();
+  const navigate = useNavigate();
 
   const handleFilterChange = (newFilter: string | null) => {
     setFilterType(newFilter);
@@ -143,6 +146,9 @@ export default function Matches() {
   }, [page, filterType]); 
 
   const fetchData = async () => {
+    if(paramUsername != getUsername()){
+        navigate('/not-found', { replace: true });
+    }
     setLoading(true);
     try {
       const data = await getMatchHistory(page, 10, filterType);   
