@@ -62,9 +62,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                         /*To permit all requests, change .authenticated() to .permitAll()*/
                 )
-
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:5173/auth/callback", false)
+                        .defaultSuccessUrl("/auth/OAuthCallback", true) // redirect to your endpoint
                 )
 
                 // --- CHANGE THIS SECTION ---
@@ -84,10 +83,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
+        // Allow any origin (use patterns for dynamic URLs like ngrok)
         config.setAllowedOriginPatterns(List.of("*"));
 
+        // Allow HTTP methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+
+        // Allow headers
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "ngrok-skip-browser-warning"));
+
+        // Allow credentials (cookies, auth headers)
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

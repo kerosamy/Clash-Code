@@ -1,43 +1,33 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getGoogleToken } from "../services/AuthService";
+import { useNavigate, useLocation } from "react-router-dom";
 import { decodeToken } from "../utils/jwtDecoder";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const processOAuth = async () => {
-      try {
-        const response = await getGoogleToken();
-        const { token } = response;
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
 
-        if (!token) throw new Error("Authentication failed: No token received.");
-        
-        localStorage.setItem("token", token);
-        const decoded = decodeToken(token);
+    if (!token) {
+      setError("Authentication failed: No token received.");
+      setTimeout(() => navigate("/sign-up"), 2500);
+      return;
+    }
 
-        const email = decoded?.sub || "";
-        const username = decoded?.username || ""; 
+    localStorage.setItem("token", token);
+    const decoded = decodeToken(token);
 
-        sessionStorage.removeItem("oauth_flow");
+    const username = decoded?.username || "";
 
-        if (username && username.trim() !== "") {
-          navigate(`/profile/${username}/overview`, { replace: true });
-        } else {
-          navigate("/complete-registration", { 
-            state: { email },
-            replace: true 
-          });
-        }
-      } catch (err: any) {
-        setError(err.message || "Authentication failed.");
-        setTimeout(() => navigate("/sign-up"), 2500);
-      }
-    };
-
-    processOAuth();
-  }, [navigate]);
+    if (username && username.trim() !== "") {
+      navigate(`/profile/${username}/overview`, { replace: true });
+    } else {
+      navigate("/complete-registration", { state: { token }, replace: true });
+    }
+  }, [location, navigate]);
 
   if (error) {
     return (

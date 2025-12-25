@@ -14,8 +14,10 @@ export default function CompleteRegistration() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.state?.email) {
-      setEmail(location.state.email);
+    if (location.state?.token) {
+      const decoded = decodeToken(location.state.token);
+      const email = decoded?.sub || "";
+      setEmail(email);
     } 
     else {
       const token = localStorage.getItem("token");
@@ -46,7 +48,7 @@ export default function CompleteRegistration() {
     setErrors({});
 
     try {
-      await completeRegistration(username);
+      await completeRegistration(username,email);
       sessionStorage.removeItem("oauth_flow");
       await new Promise((resolve) => setTimeout(resolve, 1000));
 

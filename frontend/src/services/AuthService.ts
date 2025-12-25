@@ -70,11 +70,14 @@ export const getAuthenticatedUser = async (): Promise<UserResponse> => {
   });
 };
 
-export const completeRegistration = async (username: string) => {
+export const completeRegistration = async (username: string, email: string) => {
   const response = await apiRequest<LoginResponse>({
     method: "POST",
     url: `/auth/GoogleSignUp/completeRegistration`,
-    data: { username },
+    data: { 
+      username,
+      email, // send token here
+    },
     withCredentials: true,
   });
 

@@ -3,11 +3,15 @@ import type { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 
 
-const API_BASE = "http://localhost:8080/";
+export const API_BASE = "http://localhost:8080";
+//https://fugally-nonrepatriable-belle.ngrok-free.dev
 
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 10000,
+  headers: {
+    'ngrok-skip-browser-warning': 'true' // Add this!
+  }
 });
 
 
