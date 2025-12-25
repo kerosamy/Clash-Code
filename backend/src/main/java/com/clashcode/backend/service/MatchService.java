@@ -72,27 +72,57 @@ public class MatchService {
         this.matchingServiceClient = matchingServiceClient;
     }
 
+    private static final int DURATION_EASY = 15;      // minutes for problems rated 0–499
+    private static final int DURATION_MEDIUM = 30;    // minutes for problems rated 500–999
+    private static final int DURATION_HARD = 45;      // minutes for problems rated 1000–1499
+    private static final int DURATION_EXPERT = 60;    // minutes for problems rated 1500–2000
+
+    private static final int RATE_EASY_MAX = 500;
+    private static final int RATE_MEDIUM_MAX = 1000;
+    private static final int RATE_HARD_MAX = 1500;
+    private static final int RATE_EXPERT_MAX = 2000;
+
+    // Problem rating boundaries
+    private static final int MIN_RATE = 0;
+    private static final int MAX_RATE = 2000;
+
+    // Expansion step when no problems are found
+    private static final int EXPANSION_STEP = 100;
+
     public Problem selectProblem(User userA, User userB) {
         int avgRate = (userA.getCurrentRate() + userB.getCurrentRate()) / 2;
-        int minRate = avgRate - 300;
-        int maxRate = avgRate + 300;
+        int minRate = avgRate - EXPANSION_STEP;
+        int maxRate = avgRate + EXPANSION_STEP;
 
-        minRate = Math.max(minRate, 0);
-        maxRate = Math.min(maxRate, 2000);
+        minRate = Math.max(minRate, MIN_RATE);
+        maxRate = Math.min(maxRate, MAX_RATE);
 
         List<Problem> problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
 
-        while (problems.isEmpty() && (minRate > 0 || maxRate < 2000)) {
-            minRate = Math.max(minRate - 100, 0);
-            maxRate = Math.min(maxRate + 100, 2000);
+        while (problems.isEmpty() && (minRate > MIN_RATE || maxRate < MAX_RATE)) {
+            minRate = Math.max(minRate - EXPANSION_STEP, MIN_RATE);
+            maxRate = Math.min(maxRate + EXPANSION_STEP, MAX_RATE);
             problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
         }
 
         if (problems.isEmpty()) {
-            throw new IllegalStateException("No problems available in the full range 0–2000");
+            throw new IllegalStateException("No problems available in the full range " + MIN_RATE + "–" + MAX_RATE);
         }
 
         return problems.get(new Random().nextInt(problems.size()));
+    }
+
+    private int getDurationForProblem(Problem problem) {
+        int rate = problem.getRate();
+        if (rate < RATE_EASY_MAX) {
+            return DURATION_EASY;
+        } else if (rate < RATE_MEDIUM_MAX) {
+            return DURATION_MEDIUM;
+        } else if (rate < RATE_HARD_MAX) {
+            return DURATION_HARD;
+        } else {
+            return DURATION_EXPERT;
+        }
     }
 
     @Transactional
@@ -125,7 +155,8 @@ public class MatchService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + invite.getSenderId()));
 
         Problem problem = selectProblem(player1, player2);
-        return createMatch(player1, player2, problem, 30, GameMode.UNRATED);
+        int duration = getDurationForProblem(problem);
+        return createMatch(player1, player2, problem, duration, GameMode.UNRATED);
     }
 
     @Transactional
@@ -457,7 +488,8 @@ public class MatchService {
                 .orElseThrow(() -> new IllegalArgumentException("Player not found"));
 
         Problem problem = selectProblem(userA, userB);
-        createMatch(userA, userB, problem, 15, GameMode.RATED);
+        int duration = getDurationForProblem(problem);
+        createMatch(userA, userB, problem, duration, GameMode.RATED);
     }
 
     public void searchForOpponent(User user) {
