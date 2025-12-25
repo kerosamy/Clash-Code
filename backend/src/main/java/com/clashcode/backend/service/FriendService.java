@@ -1,5 +1,7 @@
 package com.clashcode.backend.service;
 
+import com.clashcode.backend.Notification.FriendRequestAcceptedPayload;
+import com.clashcode.backend.Notification.FriendRequestReceivedPayload;
 import com.clashcode.backend.dto.FriendDto;
 import com.clashcode.backend.enums.FriendRequestStatus;
 import com.clashcode.backend.enums.FriendStatus;
@@ -29,6 +31,7 @@ public class FriendService {
     private final FriendStatusMapper friendStatusMapper;
     private final FriendMapper friendMapper;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     public FriendService(
             UserRepository userRepository,
@@ -36,12 +39,14 @@ public class FriendService {
             FriendStatusMapper friendStatusMapper,
             FriendMapper friendMapper,
             UserService userService
+            NotificationService notificationService
     ) {
         this.userRepository = userRepository;
         this.friendRepository = friendRepository;
         this.friendStatusMapper = friendStatusMapper;
         this.friendMapper = friendMapper;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     public void sendFriendRequest(User sender, String receiverUsername) {
@@ -58,6 +63,18 @@ public class FriendService {
                 .build();
 
         friendRepository.save(newFriendship);
+        FriendRequestReceivedPayload payload = FriendRequestReceivedPayload.builder()
+                .senderUsername(sender.getUsername())
+                .senderAvatarUrl(sender.getImgUrl())
+                .senderId(sender.getId())
+                .build();
+
+        notificationService.send(
+                sender.getId(),
+                receiver.getId(),
+                receiver.getUsername(),
+                payload
+        );
     }
 
     public void acceptFriendRequest(User receiver, String senderUsername) {
@@ -69,6 +86,19 @@ public class FriendService {
             throw new FriendRequestExistsException("Already Accepted");
         friendship.setStatus(FriendRequestStatus.ACCEPTED);
         friendRepository.save(friendship);
+
+        FriendRequestAcceptedPayload payload = FriendRequestAcceptedPayload.builder()
+                .accepterUsername(receiver.getUsername())
+                .accepterAvatarUrl(receiver.getImgUrl())
+                .accepterId(receiver.getId())
+                .build();
+
+        notificationService.send(
+                receiver.getId(),
+                sender.getId(),
+                sender.getUsername(),
+                payload
+        );
     }
 
     public void rejectFriendRequest(User receiver, String senderUsername) {

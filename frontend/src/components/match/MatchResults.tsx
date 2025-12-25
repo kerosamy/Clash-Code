@@ -154,6 +154,7 @@ return (
 
                     {/* Navigate to Match Page on Click */}
                     <button 
+                        onClick={() => navigate(`/play-game`)}
                         className="flex-1 py-4 text-lg rounded-button bg-orange hover:bg-orange/90 text-white font-bold transition-all"
                     >
                         Match Page

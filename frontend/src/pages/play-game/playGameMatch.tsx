@@ -6,14 +6,12 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import DraggableTimer from "../../components/match/Timer";
 import MatchResults from "../../components/match/MatchResults";
 
-import ToastFeed from '../../components/common/PopNotification';
 import type { ToastNotification } from '../../components/common/PopNotification';
 
 import { matchSubRoutes } from '../../routes/routes.config';
 import { resignMatch, getMatchDetails, getMatchResults } from "../../services/MatchService"; 
 import type { MatchResultDto } from "../../services/MatchService";
-import { getUsername } from "../../utils/jwtDecoder";
-import { wsService } from "../../services/ws";
+import { useWebSocket } from "../../contexts/WebSocketContext";
 import { useMatchGuard } from "../../hooks/useMatchGuard";
 import { setActiveMatch, clearActiveMatch } from "../../utils/matchState";
 import { updateStatusToOnline , updateStatusToInMatch} from "../../services/UserService";
@@ -25,22 +23,12 @@ interface MatchData {
     problemId?: number;
 }
 
-interface WebSocketPayload {
-    notificationType: 'SUBMISSION_RECEIVED' | 'SUBMISSION_RESULT' | 'MATCH_COMPLETED' | 'USER_RESIGNED'; 
-    senderUsername: string;
-    submissionStatus?: string;
-    passedCases?: number;
-    totalCases?: number;
-    message?: string;
-    title?: string;
-}
-
 export default function PlayGame() {
     const { id } = useParams<{ id: string }>();
+    const { notifications } = useWebSocket();
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [matchData, setMatchData] = useState<MatchData | null>(null);
-    const [notifications, setNotifications] = useState<ToastNotification[]>([]);
     
     const [matchResults, setMatchResults] = useState<MatchResultDto | null>(null);
     const [showResultOverlay, setShowResultOverlay] = useState(false);
@@ -58,7 +46,7 @@ export default function PlayGame() {
                 clearActiveMatch();
             }
         };
-    }, [id]);
+    }, [id, isMatchActive]);
 
     const fetchAndShowResults = async () => {
         if (!id) return;
@@ -100,72 +88,26 @@ export default function PlayGame() {
     }, [id]); 
 
     useEffect(() => {
-        const currentUser = getUsername();
-        if (!currentUser) return;
+        const matchNotifications = notifications.filter(n => 
+            n.metadata?.matchId === Number(id) && 
+            !n.read &&
+            ['MATCH_COMPLETED', 'USER_RESIGNED'].includes(n.metadata?.notificationType)
+        );
 
-        wsService.connect(() => {
-            console.log("WS connected");
+        matchNotifications.forEach(notification => {
+            const payload = notification.metadata;
 
-            wsService.subscribe(`/topic/match-pop/${currentUser}`, (payload: WebSocketPayload) => {
-                handleWebSocketMessage(payload);
-            });
+            if (payload.notificationType === 'MATCH_COMPLETED') {
+                setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+                setTimeout(() => {
+                    fetchAndShowResults();
+                }, 1000); 
+            }
+            else if (payload.notificationType === 'USER_RESIGNED') {
+                setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
+            }
         });
-
-        return () => {
-            wsService.disconnect();
-        };
-    }, []);
-
-    const handleWebSocketMessage = (payload: WebSocketPayload) => {
-        const notifId = Date.now();
-        let newNotification: ToastNotification | null = null;
-
-        if(payload.notificationType === 'MATCH_COMPLETED'){
-            setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
-            
-            setTimeout(() => {
-                fetchAndShowResults();
-            }, 1000); 
-        }
-        else if (payload.notificationType === 'USER_RESIGNED') {
-            newNotification = {
-                id: notifId,
-                title: payload.title ?? "Opponent Resigned",
-                message: payload.message ?? `${payload.senderUsername} resigned. You win!`,
-                sender: payload.senderUsername,
-                type: 'success'
-            };
-
-            setMatchData(prev => prev ? { ...prev, state: "COMPLETED" } : null);
-        }
-        else if (payload.notificationType === 'SUBMISSION_RECEIVED') {
-            newNotification = {
-                id: notifId,
-                title: "Code Submitted",
-                message: `${payload.senderUsername} submitted a solution...`,
-                sender: payload.senderUsername,
-                type: 'info'
-            };
-        } 
-        else if (payload.notificationType === 'SUBMISSION_RESULT') {
-            const isSuccess = payload.submissionStatus === 'ACCEPTED';
-            newNotification = {
-                id: notifId,
-                title: "Submission Result",
-                message: `${payload.senderUsername} got ${payload.submissionStatus}\n` +
-                    `passed ${payload.passedCases}/${payload.totalCases} test cases.`,
-                sender: payload.senderUsername,
-                type: isSuccess ? 'success' : 'error'
-            };
-        }
-
-        if (newNotification) {
-            setNotifications((prev) => [...prev, newNotification!]);
-            setTimeout(() => {
-                setNotifications((prev) => prev.filter(n => n.id !== notifId));
-            }, 5000);
-        }
-    };
+    }, [notifications, id]);
 
     const handleResignFromMatch = async () => {
         if (!id) return;
@@ -245,7 +187,6 @@ export default function PlayGame() {
                 />
             )}
 
-            {/* Regular resign modal (from resign button) */}
             <ConfirmationModal
                 isOpen={isResignModalOpen}
                 onClose={() => setIsResignModalOpen(false)}
@@ -257,7 +198,6 @@ export default function PlayGame() {
                 isLoading={isProcessing}
             />
 
-            {/* Navigation block resign modal (from match guard) */}
             <ConfirmationModal
                 isOpen={showNavBlockModal}
                 onClose={handleNavBlockCancel}
@@ -267,8 +207,6 @@ export default function PlayGame() {
                 confirmText="Resign & Leave"
                 cancelText="Stay in Match"
             />
-
-            <ToastFeed notifications={notifications} />
         </div>
     );
 }

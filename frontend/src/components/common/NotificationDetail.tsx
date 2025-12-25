@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import type { NotificationRowProps } from "./NotificationRow";
 import { acceptMatchInvite, markNotificationAsRead } from "../../services/NotificationService";
+import { useNavigate } from "react-router";
+import { useLocation } from "react-router-dom";
 
 interface NotificationDetailProps {
   notification: NotificationRowProps;
@@ -44,8 +46,11 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
   const [isAccepting, setIsAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const isMatchInvite = notification.type === "MATCH_INVITATION";
+  const isFriendRequest = notification.type === "FRIEND_REQUEST_RECEIVED" || notification.type === "FRIEND_REQUEST_ACCEPTED";
 
   // Mark notification as read when component mounts
   useEffect(() => {
@@ -68,11 +73,25 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
       setIsAccepting(true);
       setError(null);
       await acceptMatchInvite(notification.id);
+      navigate(`../play-game`, { replace: true });
 
       setSuccess(true);
     } catch (err) {
       console.error("Failed to accept match invite:", err);
       setError(err instanceof Error ? err.message : "Failed to accept invite");
+      setIsAccepting(false);
+    }
+  };
+
+  const handleRedirectToProfile = async () => {
+    
+    try {
+      setError(null);
+      navigate(`../profile/${notification.senderUsername}`, { replace: true });
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to redirect to user profile");
       setIsAccepting(false);
     }
   };
@@ -202,6 +221,24 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
             ) : (
               "Accept Invite"
             )}
+          </button>
+        )}
+
+        {isFriendRequest && (
+          <button
+            type="button"
+            onClick={handleRedirectToProfile}
+            className="
+              flex items-center justify-center
+              border border-emerald-500/30 bg-emerald-500/5 text-emerald-500
+              hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]
+              px-10 py-3 rounded-full 
+              font-anta text-sm uppercase tracking-widest 
+              transition-all duration-300
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500/5 disabled:hover:text-emerald-500 disabled:hover:shadow-none
+            "
+          >
+            {notification.senderUsername}'s Profile
           </button>
         )}
         

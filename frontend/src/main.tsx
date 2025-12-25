@@ -7,7 +7,10 @@ import { routes, pages } from './routes/routes.config';
 
 import "@fontsource/anta/400.css";
 import RoleProtectedRoute from './routes/RoleProtectedRoute';
-import AuthProtectedRoute from './routes/AuthProtectedRoute'; // NEW IMPORT
+import AuthProtectedRoute from './routes/AuthProtectedRoute';
+import { WebSocketProvider } from './contexts/WebSocketContext';
+import { ConnectionStatus, GlobalNotificationToasts } 
+from './components/notifications/GlobalNotificationComponents';
 
 function mapRouteConfig() {
   return routes.map(({ path, component: Component, children, requiredRoles }) => {
@@ -60,6 +63,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <WebSocketProvider>
+      <RouterProvider router={router} />
+      <ConnectionStatus />
+      <GlobalNotificationToasts />
+    </WebSocketProvider>
   </StrictMode>
 );
