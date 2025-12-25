@@ -71,7 +71,7 @@ public class SubmissionService {
         List<ExecutionResultDto> executionResults = new ArrayList<>();
         for(int tcIndex = 0; tcIndex < inputs.size(); tcIndex++) {
             submission.setStatus(SubmissionStatus.RUNNING_ON_TEST);
-            submission.setNumberOfCurrentTestCase(tcIndex+1);
+            submission.setNumberOfCurrentTestCase(tcIndex + 1);
             submissionRepository.save(submission);
             ExecutionResultDto executionResult = judge0Client.executeAndCompare(
                     requestDto.getCode(),
@@ -83,6 +83,14 @@ public class SubmissionService {
             );
             executionResults.add(executionResult);
 
+            if ("Compilation Error".equalsIgnoreCase(executionResult.getStatus())
+                    || (executionResult.getResult() != null && executionResult.getResult().startsWith("Compilation Error"))) {
+
+                executionResult.setTimeTaken(0);
+                executionResult.setMemoryTaken(0);
+                executionResults.add(executionResult);
+                break;
+            }
         }
         submissionRepository.save(submissionMapper.toEntity(executionResults, submission));
         problem.setSubmissionsCount(problem.getSubmissionsCount()+1);
