@@ -1,11 +1,7 @@
 {
   "name": "frontend",
   "private": true,
-<<<<<<< HEAD
-  "homepage": "https://YOUR_USERNAME.github.io/YOUR_REPO_NAME",
-=======
   "homepage": "https://Mina-Nabil2004.github.io/Clash-Code",
->>>>>>> 76675bbafcdf73846887160696e1166eba7e3ee1
   "version": "0.0.0",
   "type": "module",
   "scripts": {

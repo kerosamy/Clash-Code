@@ -1,6 +1,6 @@
 
 export interface TitleAndLimitsProps {
-    title: string;
+    title: React.ReactNode;
     timeLimit: number; // in milliseconds
     memoryLimit: number; // in megabytes
 }

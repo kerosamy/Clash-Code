@@ -4,10 +4,10 @@ type FriendStatusVariant = "negative" | "positive";
 
 interface AppButtonProps {
     label: string;
-    onClick: (e: any) => void;
+    onClick?: (e: any) => void;
     variant: FriendStatusVariant;
     size: "small" | "large";
-}``
+}
 
 const AppButton: React.FC<AppButtonProps> = ({
     label,

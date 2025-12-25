@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-=======
-import React from "react";
 import AppButton from "./AppButton";
->>>>>>> 76675bbafcdf73846887160696e1166eba7e3ee1
 
 // Grid: Added click handling styles
 export const PENDING_GRID = 
