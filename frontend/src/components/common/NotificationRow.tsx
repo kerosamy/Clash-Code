@@ -32,7 +32,6 @@ const getNotificationCategory = (type: NotificationType): "Match" | "Friend" => 
 };
 
 export default function NotificationRow({
-  id,
   type,
   senderUsername,
   title,

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 import { clearToken } from "../utils/jwtDecoder";
@@ -6,7 +5,6 @@ import { clearActiveMatch, hasActiveMatch } from "../utils/matchState";
 
 export default function LogoutPage() {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
   const activeMatch = hasActiveMatch();
 
   const handleConfirm = () => {
@@ -22,7 +20,7 @@ export default function LogoutPage() {
 
   return (
     <ConfirmationModal
-      isOpen={isOpen}
+      isOpen={true}
       onClose={handleClose}
       onConfirm={handleConfirm}
       title="Confirm Logout"

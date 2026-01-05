@@ -96,7 +96,7 @@ export default function ReviewProblems() {
               <PendingProblemRow
                 key={problem.id}
                 id={problem.id}
-                index={problem.index}
+                index={problem.id}
                 name={problem.name}
                 author={problem.author}
                 onApprove={problem.onApprove}

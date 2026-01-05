@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 
 export interface TitleAndLimitsProps {
-    title: string;
+    title: ReactNode;
     timeLimit: number; // in milliseconds
     memoryLimit: number; // in megabytes
 }
