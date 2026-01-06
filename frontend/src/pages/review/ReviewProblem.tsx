@@ -63,8 +63,6 @@ export default function ReviewProblem() {
       const parsedData = typeof responseText === "string" ? JSON.parse(responseText) : responseText;
       setAiReview(parsedData);
       
-
-      window.location.reload();
       setAiReview(parsedData);
       setShowFullReport(true);
     } }catch (err: any) {
