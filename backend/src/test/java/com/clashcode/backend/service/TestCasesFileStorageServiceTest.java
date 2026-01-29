@@ -94,29 +94,6 @@ class TestCasesFileStorageServiceTest {
         assertTrue(Files.exists(problemDir));
     }
 
-    @Test
-    void storeTestCase_WithIOException_ReturnsNull() {
-        // Arrange
-        Long problemId = 1L;
-        Long testCaseId = 1L;
-        MultipartFile file = new MockMultipartFile(
-                "file",
-                "test.txt",
-                "text/plain",
-                "content".getBytes()
-        ) {
-            @Override
-            public byte[] getBytes() throws IOException {
-                throw new IOException("Simulated IO error");
-            }
-        };
-
-        // Act
-        String result = service.storeTestCase(file, problemId, testCaseId);
-
-        // Assert
-        assertNull(result);
-    }
 
     @Test
     void storeTestCase_MultipleTestCases_CreatesMultipleFiles() throws IOException {

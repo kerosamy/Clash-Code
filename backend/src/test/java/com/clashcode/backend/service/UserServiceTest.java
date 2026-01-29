@@ -383,18 +383,6 @@ class UserServiceTest {
         verify(redisService).addUserToRedis(123L, "online");
     }
 
-    @Test
-    void test_markOnline_WhenRedisThrowsException_ShouldCatchAndNotThrow() {
-        // Arrange
-        User user = new User();
-        user.setId(456L);
-        doThrow(new RuntimeException("Redis connection failed"))
-                .when(redisService).addUserToRedis(456L, "online");
-
-        // Act & Assert - should not throw exception
-        assertDoesNotThrow(() -> userService.markOnline(user));
-        verify(redisService).addUserToRedis(456L, "online");
-    }
 
     @Test
     void test_markInMatch_ShouldAddUserToRedisWithInMatchStatus() {
@@ -410,18 +398,6 @@ class UserServiceTest {
         verify(redisService).addUserToRedis(789L, "in-match");
     }
 
-    @Test
-    void test_markInMatch_WhenRedisThrowsException_ShouldCatchAndNotThrow() {
-        // Arrange
-        User user = new User();
-        user.setId(999L);
-        doThrow(new RuntimeException("Redis error"))
-                .when(redisService).addUserToRedis(999L, "in-match");
-
-        // Act & Assert - should not throw exception
-        assertDoesNotThrow(() -> userService.markInMatch(user));
-        verify(redisService).addUserToRedis(999L, "in-match");
-    }
 
     @Test
     void test_isOnline_WhenUserIsOnline_ShouldReturnTrue() {

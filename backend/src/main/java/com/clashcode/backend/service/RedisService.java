@@ -7,6 +7,7 @@ import java.time.Duration;
 
 @Service
 public class RedisService {
+
     private final RedisTemplate<String, String> redisTemplate;
     private static final long ONLINE_TTL_SECONDS = 45;
 
@@ -15,23 +16,31 @@ public class RedisService {
     }
 
     public void addUserToRedis(Long userId, String status) {
-        String key = getKey(userId);
-        redisTemplate.opsForValue()
-                .set(key, status, Duration.ofSeconds(ONLINE_TTL_SECONDS));
+        try {
+            redisTemplate.opsForValue()
+                    .set(getKey(userId), status, Duration.ofSeconds(ONLINE_TTL_SECONDS));
+        } catch (Exception ignored) {
+            // Redis failure should NOT crash business logic
+        }
     }
 
     public Boolean searchUserFromRedis(Long userId) {
-        String key = getKey(userId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(getKey(userId)));
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     public String getUserStatus(Long userId) {
-        String key = getKey(userId);
-        return redisTemplate.opsForValue().get(key);
+        try {
+            return redisTemplate.opsForValue().get(getKey(userId));
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private String getKey(Long userId) {
         return "online:user:" + userId;
     }
-
 }
