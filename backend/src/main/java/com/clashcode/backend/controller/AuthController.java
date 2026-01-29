@@ -81,7 +81,7 @@ public class AuthController {
         String jwt = jwtService.generateToken(user);
 
         // Redirect to frontend with token as query param
-        String frontendUrl = "http://localhost:5173/auth/callback?token=" + jwt;
+        String frontendUrl = "https://clash-code-frontend-delta.vercel.app/auth/callback?token=" + jwt;
         response.sendRedirect(frontendUrl);
     }
 

@@ -5,6 +5,8 @@ import InputField from "../components/authentication/InputField";
 import PasswordField from "../components/authentication/PasswordField";
 import RecoveryQuestionModal from "../components/authentication/RecoveryQuestionModal";
 import AnimatedBackground from "../components/AnimatedBackground";
+import ClashCodeLogo from "/src/assets/logo.svg";
+import GoogleLogo from "/src/assets/google-icon-1.png";
 import {
   validateUsername,
   validateEmail,
@@ -122,7 +124,7 @@ export default function SignUp() {
 
       <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white relative z-10">
         <div className="flex justify-center mb-6">
-          <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
+          <img src={ClashCodeLogo} alt="App Logo" className="w-48" />
         </div>
 
         {/* Global error banner (only shows if error isn't specific to username/email) */}
@@ -201,7 +203,7 @@ export default function SignUp() {
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <img
-            src="/src/assets/google-icon-1.png"
+            src={GoogleLogo}
             alt="Google Icon"
             className="w-7 h-7"
           />

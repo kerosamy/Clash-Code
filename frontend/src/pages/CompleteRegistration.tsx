@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import InputField from "../components/authentication/InputField.tsx";
 import { completeRegistration } from "../services/AuthService.ts";
 import { decodeToken } from "../utils/jwtDecoder.tsx";
-
+import ClashCodeLogo from "/src/assets/logo.svg";
 export default function CompleteRegistration() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -68,7 +68,7 @@ export default function CompleteRegistration() {
     <div className="min-h-screen flex items-center justify-center bg-background font-anta">
       <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white">
         <div className="flex justify-center mb-6">
-          <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
+          <img src={ClashCodeLogo} alt="App Logo" className="w-48" />
         </div>
       
         <h2 className="text-2xl mb-4 text-center">Complete Your Registration</h2>
