@@ -63,8 +63,6 @@ export default function ReviewProblem() {
       const parsedData = typeof responseText === "string" ? JSON.parse(responseText) : responseText;
       setAiReview(parsedData);
       
-
-      window.location.reload();
       setAiReview(parsedData);
       setShowFullReport(true);
     } }catch (err: any) {
@@ -74,7 +72,7 @@ export default function ReviewProblem() {
     } finally {
       setLoadingAI(false);
     }
-  
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 4) return "text-green-400 border-green-400/20 bg-green-400/5";
@@ -94,6 +92,7 @@ export default function ReviewProblem() {
     const [isOpen, setIsOpen] = useState(false);
     const details = aiReview?.[category];
     if (!details) return null;
+    
 
     return (
       <div className="relative inline-flex items-center ml-4 align-middle">

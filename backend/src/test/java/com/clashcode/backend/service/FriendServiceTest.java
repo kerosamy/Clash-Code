@@ -45,6 +45,9 @@ class FriendServiceTest {
     @Mock
     private FriendMapper friendMapper;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private FriendService friendService;
 
@@ -332,5 +335,104 @@ class FriendServiceTest {
 
         verify(friendRepository, never()).delete(any());
     }
+
+    @Test
+    void testGetSentFriendRequests_ReturnsMappedDtos() {
+        User sender = makeUser(1L, "alice");
+        User receiver = makeUser(2L, "bob");
+        Friend friendship = Friend.builder()
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.PENDING)
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Friend> page = new PageImpl<>(List.of(friendship));
+
+        when(friendRepository.findBySenderIdAndStatus(sender.getId(), FriendRequestStatus.PENDING, pageable))
+                .thenReturn(page);
+        when(userService.getUserStatus(receiver.getId())).thenReturn(UserStatus.ONLINE);
+        FriendDto dto = new FriendDto();
+        when(friendMapper.toFriendDto(friendship, sender, UserStatus.ONLINE)).thenReturn(dto);
+
+        Page<FriendDto> result = friendService.getSentFriendRequests(sender, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(dto, result.getContent().getFirst());
+    }
+
+    @Test
+    void testGetReceivedFriendRequests_ReturnsMappedDtos() {
+        User sender = makeUser(1L, "alice");
+        User receiver = makeUser(2L, "bob");
+        Friend friendship = Friend.builder()
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.PENDING)
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Friend> page = new PageImpl<>(List.of(friendship));
+
+        when(friendRepository.findByReceiverIdAndStatus(receiver.getId(), FriendRequestStatus.PENDING, pageable))
+                .thenReturn(page);
+        when(userService.getUserStatus(sender.getId())).thenReturn(UserStatus.OFFLINE);
+        FriendDto dto = new FriendDto();
+        when(friendMapper.toFriendDto(friendship, receiver, UserStatus.OFFLINE)).thenReturn(dto);
+
+        Page<FriendDto> result = friendService.getReceivedFriendRequests(receiver, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(dto, result.getContent().getFirst());
+    }
+
+    @Test
+    void testGetFriendsList_ReturnsMappedDtos() {
+        User user = makeUser(1L, "alice");
+        User friendUser = makeUser(2L, "bob");
+        Friend friendship = Friend.builder()
+                .sender(user)
+                .receiver(friendUser)
+                .status(FriendRequestStatus.ACCEPTED)
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Friend> page = new PageImpl<>(List.of(friendship));
+
+        when(friendRepository.findAllFriendsByUserId(user.getId(), pageable)).thenReturn(page);
+        when(userService.getUserStatus(friendUser.getId())).thenReturn(UserStatus.ONLINE);
+        FriendDto dto = new FriendDto();
+        when(friendMapper.toFriendDto(friendship, user, UserStatus.ONLINE)).thenReturn(dto);
+
+        Page<FriendDto> result = friendService.getFriendsList(user, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(dto, result.getContent().getFirst());
+    }
+
+    @Test
+    void testSearchFriendsByUsername_ReturnsMappedDtos() {
+        User user = makeUser(1L, "alice");
+        User friendUser = makeUser(2L, "bob");
+        Friend friendship = Friend.builder()
+                .sender(user)
+                .receiver(friendUser)
+                .status(FriendRequestStatus.ACCEPTED)
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Friend> page = new PageImpl<>(List.of(friendship));
+
+        when(friendRepository.findFriendsByUsernameContaining(user.getId(), "bo", pageable)).thenReturn(page);
+        when(userService.getUserStatus(friendUser.getId())).thenReturn(UserStatus.OFFLINE);
+        FriendDto dto = new FriendDto();
+        when(friendMapper.toFriendDto(friendship, user, UserStatus.OFFLINE)).thenReturn(dto);
+
+        Page<FriendDto> result = friendService.searchFriendsByUsername(user, "bo", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(dto, result.getContent().getFirst());
+    }
+
 }
 

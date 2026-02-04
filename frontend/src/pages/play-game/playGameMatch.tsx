@@ -6,8 +6,6 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import DraggableTimer from "../../components/match/Timer";
 import MatchResults from "../../components/match/MatchResults";
 
-import type { ToastNotification } from '../../components/common/PopNotification';
-
 import { matchSubRoutes } from '../../routes/routes.config';
 import { resignMatch, getMatchDetails, getMatchResults } from "../../services/MatchService"; 
 import type { MatchResultDto } from "../../services/MatchService";

@@ -86,7 +86,7 @@ class UserControllerTest {
 
         when(userService.getProfile(argThat(u ->
                 u.getId().equals(mockUser.getId()) &&
-                u.getUsername().equals(mockUser.getUsername())
+                        u.getUsername().equals(mockUser.getUsername())
         ))).thenReturn(mockProfile);
 
         mockMvc.perform(get("/users/profile").contentType(MediaType.APPLICATION_JSON))

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import type { NotificationRowProps } from "./NotificationRow";
 import { acceptMatchInvite, markNotificationAsRead } from "../../services/NotificationService";
 import { useNavigate } from "react-router";
-import { useLocation } from "react-router-dom";
 
 interface NotificationDetailProps {
   notification: NotificationRowProps;
@@ -47,7 +46,6 @@ export default function NotificationDetail({ notification, onReturn }: Notificat
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   const isMatchInvite = notification.type === "MATCH_INVITATION";
   const isFriendRequest = notification.type === "FRIEND_REQUEST_RECEIVED" || notification.type === "FRIEND_REQUEST_ACCEPTED";

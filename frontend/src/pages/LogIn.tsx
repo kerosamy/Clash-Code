@@ -8,6 +8,8 @@ import { validateEmailOrUsername, validatePassword } from '../utils/validation';
 import { getOnGoingMatch } from '../services/MatchService';
 import AnimatedBackground from "../components/AnimatedBackground";
 import { API_BASE } from '../services/api';
+import ClashCodeLogo from "/src/assets/logo.svg";
+import GoogleLogo from "/src/assets/google-icon-1.png";
 
 export default function LogIn() {
   const [email, setEmail] = useState('');
@@ -82,7 +84,7 @@ export default function LogIn() {
             <AnimatedBackground />
       <div className="bg-container p-8 rounded-button shadow-lg w-full max-w-md text-white relative z-10">
         <div className="flex justify-center mb-6">
-          <img src="/src/assets/logo.svg" alt="App Logo" className="w-48" />
+          <img src={ClashCodeLogo} alt="App Logo" className="w-48" />
         </div>
 
         {apiError && (
@@ -141,7 +143,7 @@ export default function LogIn() {
           disabled={isLoading}
           className="flex items-center justify-center gap-2 bg-background border border-gray-600 py-2 rounded-button w-full hover:bg-gray-800 transition-colors"
         >
-          <img src="src/assets/google-icon-1.png" alt="Google Icon" className="w-7 h-7" />
+          <img src={GoogleLogo} alt="Google Icon" className="w-7 h-7" />
           Log in with Google
         </button>
 

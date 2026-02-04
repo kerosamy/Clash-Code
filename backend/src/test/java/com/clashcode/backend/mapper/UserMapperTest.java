@@ -68,11 +68,7 @@ class UserMapperTest {
                 .imgUrl("https://example.com/avatar.png")
                 .build();
 
-        StatsDto stats = new StatsDto();
-        stats.setSolvedProblems(100);
-        stats.setAttemptedProblems(50);
-        stats.setMatchesPlayed(20);
-        stats.setMatchesWon(10);
+        StatsDto stats = new StatsDto(100,50,20,10);
 
         CategoryDto category1 = new CategoryDto("DP", 20);
         CategoryDto category2 = new CategoryDto("GRAPH", 30);

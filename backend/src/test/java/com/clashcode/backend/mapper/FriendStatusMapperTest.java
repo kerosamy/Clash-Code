@@ -11,12 +11,12 @@ class FriendStatusMapperTest {
     private final FriendStatusMapper mapper = new FriendStatusMapper();
 
     @Test
-    void map_shouldReturnNone_whenFriendshipIsNull() {
+    void test_map_shouldReturnNone_whenFriendshipIsNull() {
         assertEquals(FriendStatus.NONE, mapper.map(User.builder().id(1L).build(), null));
     }
 
     @Test
-    void map_shouldReturnFriends_whenStatusIsAccepted() {
+    void test_map_shouldReturnFriends_whenStatusIsAccepted() {
         User user = User.builder().id(1L).build();
         Friend f = Friend.builder().status(FriendRequestStatus.ACCEPTED)
                 .sender(user).receiver(User.builder().id(2L).build()).build();
@@ -24,7 +24,7 @@ class FriendStatusMapperTest {
     }
 
     @Test
-    void map_shouldReturnPendingSent_whenUserIsSender() {
+    void test_map_shouldReturnPendingSent_whenUserIsSender() {
         User user = User.builder().id(1L).build();
         Friend f = Friend.builder().status(FriendRequestStatus.PENDING)
                 .sender(user).receiver(User.builder().id(2L).build()).build();
@@ -32,10 +32,19 @@ class FriendStatusMapperTest {
     }
 
     @Test
-    void map_shouldReturnPendingReceived_whenUserIsReceiver() {
+    void test_map_shouldReturnPendingReceived_whenUserIsReceiver() {
         User user = User.builder().id(1L).build();
         Friend f = Friend.builder().status(FriendRequestStatus.PENDING)
                 .sender(User.builder().id(2L).build()).receiver(user).build();
         assertEquals(FriendStatus.PENDING_RECEIVED, mapper.map(user, f));
+    }
+
+    @Test
+    void test_map_shouldReturnNone_whenUserIsNeitherSenderNorReceiver() {
+        User user = User.builder().id(3L).build();
+        Friend f = Friend.builder().status(FriendRequestStatus.PENDING)
+                .sender(User.builder().id(1L).build())
+                .receiver(User.builder().id(2L).build()).build();
+        assertEquals(FriendStatus.NONE, mapper.map(user, f));
     }
 }

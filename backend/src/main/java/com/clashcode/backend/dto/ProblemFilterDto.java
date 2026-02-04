@@ -7,7 +7,7 @@ import lombok.*;
 import java.util.List;
 
 @Getter
-@Data
+@Setter
 public class ProblemFilterDto {
     private List<ProblemTags> tags;
     private Integer minRate;

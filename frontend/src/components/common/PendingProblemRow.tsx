@@ -1,4 +1,3 @@
-import React from "react";
 import AppButton from "./AppButton";
 
 // Grid: Added click handling styles
@@ -20,7 +19,6 @@ interface PendingProblemRowProps {
 }
 
 export default function PendingProblemRow({
-  id,
   index,
   name,
   author,

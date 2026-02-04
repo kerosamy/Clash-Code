@@ -48,7 +48,9 @@ public class ProblemAIReviewService {
         }
 
         String prompt = buildPrompt(problem);
+        System.out.println(prompt);
         String aiResponse = gemini.getResponse(prompt);
+        System.out.println(aiResponse);
 
         ProblemAIReview reviewToSave;
 

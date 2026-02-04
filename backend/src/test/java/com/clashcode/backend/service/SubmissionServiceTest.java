@@ -7,9 +7,11 @@ import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.enums.SubmissionStatus;
 import com.clashcode.backend.judge.Judge0.Judge0Client;
 import com.clashcode.backend.mapper.SubmissionMapper;
+import com.clashcode.backend.model.Match;
 import com.clashcode.backend.model.Problem;
 import com.clashcode.backend.model.Submission;
 import com.clashcode.backend.model.User;
+import com.clashcode.backend.repository.MatchRepository;
 import com.clashcode.backend.repository.ProblemRepository;
 import com.clashcode.backend.repository.SubmissionRepository;
 import com.clashcode.backend.repository.UserRepository;
@@ -32,6 +34,9 @@ class SubmissionServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private MatchRepository matchRepository;
 
     @Mock
     private ProblemRepository problemRepository;
@@ -215,6 +220,129 @@ class SubmissionServiceTest {
         assertThrows(RuntimeException.class,
                 () -> submissionService.getProblemTitleById(777L));
     }
+    @Test
+    void submitCode_WithMatch_Success() {
+        SubmissionRequestDto dto = new SubmissionRequestDto();
+        dto.setCode("print(1)");
+        dto.setCodeLanguage("PYTHON_3_8");
+        dto.setMatchId(10L);
 
+        User user = new User();
+        user.setId(1L);
 
+        Problem problem = Problem.builder()
+                .id(1L)
+                .timeLimit(1000)
+                .memoryLimit(128)
+                .submissionsCount(5L)
+                .build();
+
+        Match match = Match.builder()
+                .id(10L)
+                .problem(problem)
+                .build();
+
+        List<String> inputs = List.of("1");
+        List<String> outputs = List.of("1");
+
+        Submission submission = new Submission();
+        submission.setId(50L);
+        submission.setStatus(SubmissionStatus.WAITING);
+
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+        when(testCaseService.getInputTestCasesForProblem(problem)).thenReturn(inputs);
+        when(testCaseService.getOutputTestCasesForProblem(problem)).thenReturn(outputs);
+        when(submissionMapper.toEntity(dto, user, problem, 1)).thenReturn(submission);
+        when(submissionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(judge0Client.executeAndCompare(any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(new ExecutionResultDto());
+        when(submissionMapper.toEntity(anyList(), eq(submission))).thenReturn(submission);
+
+        Submission result = submissionService.submitCode(dto, user);
+
+        assertNotNull(result);
+        assertEquals(match, submission.getMatch());
+        verify(matchRepository).findById(10L);
+        verify(problemRepository).save(problem);
+        assertEquals(6L, problem.getSubmissionsCount());
+    }
+
+    @Test
+    void submitCode_CompilationError_StopsExecution() {
+        SubmissionRequestDto dto = new SubmissionRequestDto();
+        dto.setCode("invalid code");
+        dto.setCodeLanguage("JAVA");
+        dto.setProblemId(1L);
+
+        User user = new User();
+        user.setId(1L);
+
+        Problem problem = Problem.builder()
+                .id(1L)
+                .timeLimit(1000)
+                .memoryLimit(128)
+                .submissionsCount(0L)
+                .build();
+
+        List<String> inputs = List.of("1", "2", "3");
+        List<String> outputs = List.of("1", "2", "3");
+
+        Submission submission = new Submission();
+        submission.setId(50L);
+
+        ExecutionResultDto compileError = new ExecutionResultDto();
+        compileError.setStatus("Compilation Error");
+        compileError.setResult("Compilation Error: syntax error");
+
+        when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
+        when(testCaseService.getInputTestCasesForProblem(problem)).thenReturn(inputs);
+        when(testCaseService.getOutputTestCasesForProblem(problem)).thenReturn(outputs);
+        when(submissionMapper.toEntity(dto, user, problem, 3)).thenReturn(submission);
+        when(submissionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(judge0Client.executeAndCompare(any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(compileError);
+        when(submissionMapper.toEntity(anyList(), eq(submission))).thenReturn(submission);
+
+        Submission result = submissionService.submitCode(dto, user);
+
+        assertNotNull(result);
+        verify(judge0Client, times(1)).executeAndCompare(any(), any(), any(), any(), anyInt(), anyInt());
+    }
+
+    @Test
+    void submitCode_MatchNotFound_ThrowsException() {
+        SubmissionRequestDto dto = new SubmissionRequestDto();
+        dto.setMatchId(999L);
+
+        User user = new User();
+
+        when(matchRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> submissionService.submitCode(dto, user));
+    }
+
+    @Test
+    void getSubmissionsByUser_ReturnsReversedList() {
+        List<Submission> submissions = List.of(new Submission(), new Submission());
+        List<SubmissionListDto> dtoList = List.of(new SubmissionListDto(), new SubmissionListDto());
+
+        when(submissionRepository.findByUserId(10L)).thenReturn(submissions);
+        when(submissionMapper.toListDto(submissions)).thenReturn(dtoList);
+
+        List<SubmissionListDto> result = submissionService.getSubmissionsByUser(10L);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(submissionRepository).findByUserId(10L);
+    }
+
+    @Test
+    void getSubmissionStatusById_NotFound_ThrowsException() {
+        when(submissionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> submissionService.getSubmissionStatusById(999L));
+    }
 }
+

@@ -1,10 +1,13 @@
 package com.clashcode.backend.controller;
 
 import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.ProblemStatus;
+import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.JwtService;
 import com.clashcode.backend.service.ProblemService;
 import com.clashcode.backend.service.TestCaseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,15 +18,22 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,15 +61,56 @@ class ProblemControllerTest {
     @MockitoBean
     private TestCaseService testCaseService;
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
-    // ---------------- Add Problem Test ----------------
+    private void setupSecurityContext() {
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setUsername("testuser");
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(mockUser, null, Collections.emptyList())
+        );
+    }
+
     @Test
-    @DisplayName("POST /problem - Add Problem ")
-    void testAddProblem() throws Exception {
+    @DisplayName("POST /problem/suggest - Add Problem with authenticated user")
+    void testAddProblem_withAuth() throws Exception {
+        setupSecurityContext();
+
         ProblemRequestDto request = new ProblemRequestDto();
         request.setTitle("Add Two Integers");
 
-        doNothing().when(problemService).addProblem(any(), any(),any());
+        doNothing().when(problemService).addProblem(any(), any(), any());
+
+        MockMultipartFile problemPart = new MockMultipartFile(
+                "problem",
+                "",
+                "application/json",
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        MockMultipartFile testcasesPart = new MockMultipartFile(
+                "testcases",
+                "testcase.txt",
+                "text/plain",
+                "dummy content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/problem/suggest")
+                        .file(problemPart)
+                        .file(testcasesPart)
+                        .with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /problem - Add Problem without authentication")
+    void testAddProblem_noAuth() throws Exception {
+        ProblemRequestDto request = new ProblemRequestDto();
+        request.setTitle("Add Two Integers");
 
         MockMultipartFile problemPart = new MockMultipartFile(
                 "problem",
@@ -82,7 +133,6 @@ class ProblemControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // ---------------- Get Problem Test ----------------
     @Test
     @DisplayName("GET /problem/{id} - Success")
     void testGetProblem() throws Exception {
@@ -98,7 +148,21 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.title").value("Add Two Integers"));
     }
 
-    // ---------------- Browse Problems Test ----------------
+    @Test
+    @DisplayName("GET /problem/draft/{id} - Success")
+    void testGetFullProblem() throws Exception {
+        FullProblemResponseDto response = new FullProblemResponseDto();
+        response.setId(1L);
+        response.setTitle("Full Problem");
+
+        when(problemService.getFullProblemById(1L)).thenReturn(response);
+
+        mockMvc.perform(get("/problem/draft/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Full Problem"));
+    }
+
     @Test
     @DisplayName("GET /problem/browse - Success")
     void testBrowseProblems() throws Exception {
@@ -125,7 +189,6 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.content[1].title").value("Subtract Two Integers"));
     }
 
-    // ---------------- Filter Problems Test ----------------
     @Test
     @DisplayName("POST /problem/browse/filter - Success")
     void testBrowseFiltered() throws Exception {
@@ -159,7 +222,6 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.content[0].title").value("Multiply Two Integers"));
     }
 
-    // ---------------- Search Problems Test ----------------
     @Test
     @DisplayName("GET /problem/search - Success")
     void testSearchByName() throws Exception {
@@ -204,24 +266,62 @@ class ProblemControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0]").value("5"))
                 .andExpect(jsonPath("$[1]").value("10"));
+
+        verify(testCaseService, times(1)).runTestCases(any(TestcaseRunRequestDto.class));
+    }
+
+
+    @Test
+    @DisplayName("GET /problem/my-suggestions - Success without status filter")
+    void testGetMySuggestions_noStatusFilter() throws Exception {
+        setupSecurityContext();
+
+        ProblemListDto problem = new ProblemListDto();
+        problem.setId(1L);
+        problem.setTitle("My Problem");
+
+        Page<ProblemListDto> page = new PageImpl<>(List.of(problem));
+        when(problemService.getMySuggestedProblems("testuser", null, 0, 10))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/problem/my-suggestions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1));
     }
 
     @Test
-    @DisplayName("POST /problem/run-test-cases - Empty Inputs")
-    void testCompileTestCasesEmpty() throws Exception {
-        TestcaseRunRequestDto requestDto = new TestcaseRunRequestDto();
-        requestDto.setStdin(List.of());
-        requestDto.setSourceCode("print('hello')");
-        requestDto.setLanguage("python");
+    @DisplayName("GET /problem/my-suggestions - Success with status filter")
+    void testGetMySuggestions_withStatusFilter() throws Exception {
+        setupSecurityContext();
 
-        when(testCaseService.runTestCases(any(TestcaseRunRequestDto.class)))
-                .thenReturn(List.of());
+        ProblemListDto problem = new ProblemListDto();
+        problem.setId(1L);
+        problem.setTitle("My Pending Problem");
 
-        mockMvc.perform(post("/problem/run-test-cases")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto))
-                        .with(csrf()))
+        Page<ProblemListDto> page = new PageImpl<>(List.of(problem));
+        when(problemService.getMySuggestedProblems("testuser", ProblemStatus.PENDING_APPROVAL, 0, 10))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/problem/my-suggestions")
+                        .param("status", "PENDING_APPROVAL"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content[0].id").value(1));
+    }
+
+
+    @Test
+    @DisplayName("GET /problem/my-suggestions - Custom pagination")
+    void testGetMySuggestions_customPagination() throws Exception {
+        setupSecurityContext();
+
+        Page<ProblemListDto> page = new PageImpl<>(List.of());
+        when(problemService.getMySuggestedProblems("testuser", null, 2, 20))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/problem/my-suggestions")
+                        .param("page", "2")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 }

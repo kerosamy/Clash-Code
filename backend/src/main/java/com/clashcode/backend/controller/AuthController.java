@@ -81,7 +81,7 @@ public class AuthController {
         String jwt = jwtService.generateToken(user);
 
         // Redirect to frontend with token as query param
-        String frontendUrl = "http://localhost:5173/auth/callback?token=" + jwt;
+        String frontendUrl = "https://clash-code-frontend-delta.vercel.app/auth/callback?token=" + jwt;
         response.sendRedirect(frontendUrl);
     }
 
@@ -102,9 +102,9 @@ public class AuthController {
         return ResponseEntity.ok(user); // returns minimal user info (id, email, username)
     }
 
-    private ResponseEntity<AuthResponseDto> buildAuthResponse(User user) {
+    ResponseEntity<AuthResponseDto> buildAuthResponse(User user) {
         String jwtToken = jwtService.generateToken(user);
-        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken, jwtService.getExpirationTime());
+        AuthResponseDto authResponseDto = new AuthResponseDto(jwtToken);
         return ResponseEntity.ok(authResponseDto);
     }
 }

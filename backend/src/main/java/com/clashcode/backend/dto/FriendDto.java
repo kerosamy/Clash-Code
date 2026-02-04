@@ -2,17 +2,16 @@ package com.clashcode.backend.dto;
 
 import com.clashcode.backend.enums.FriendStatus;
 import com.clashcode.backend.enums.UserStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class FriendDto {
     private String username;
     private Integer currentRate;

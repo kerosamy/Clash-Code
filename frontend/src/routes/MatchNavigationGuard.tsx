@@ -23,7 +23,7 @@ const MatchNavigationGuard = ({ children }: MatchNavigationGuardProps) => {
     const isCurrentlyInMatch = location.pathname.includes('/play-game/');
     const isNavigatingToMatch = nextLocation.location.pathname.includes('/play-game/');
     
-    return matchId && isCurrentlyInMatch && !isNavigatingToMatch;
+    return Boolean(matchId && isCurrentlyInMatch && !isNavigatingToMatch);
   };
 
   const blocker = useBlocker(shouldBlockNavigation);

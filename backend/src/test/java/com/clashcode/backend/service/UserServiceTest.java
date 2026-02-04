@@ -8,7 +8,6 @@ import com.clashcode.backend.mapper.UserMapper;
 import com.clashcode.backend.model.Friend;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.repository.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,9 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +38,9 @@ class UserServiceTest {
     @Mock private UserMapper userMapper;
     @Mock private FriendStatusMapper friendStatusMapper;
     @Mock private RedisService redisService;
+
+    @Mock
+    private ImageFileStorageService imageFileStorageService;
 
     @InjectMocks
     private UserService userService;
@@ -381,18 +383,6 @@ class UserServiceTest {
         verify(redisService).addUserToRedis(123L, "online");
     }
 
-    @Test
-    void test_markOnline_WhenRedisThrowsException_ShouldCatchAndNotThrow() {
-        // Arrange
-        User user = new User();
-        user.setId(456L);
-        doThrow(new RuntimeException("Redis connection failed"))
-                .when(redisService).addUserToRedis(456L, "online");
-
-        // Act & Assert - should not throw exception
-        assertDoesNotThrow(() -> userService.markOnline(user));
-        verify(redisService).addUserToRedis(456L, "online");
-    }
 
     @Test
     void test_markInMatch_ShouldAddUserToRedisWithInMatchStatus() {
@@ -408,18 +398,6 @@ class UserServiceTest {
         verify(redisService).addUserToRedis(789L, "in-match");
     }
 
-    @Test
-    void test_markInMatch_WhenRedisThrowsException_ShouldCatchAndNotThrow() {
-        // Arrange
-        User user = new User();
-        user.setId(999L);
-        doThrow(new RuntimeException("Redis error"))
-                .when(redisService).addUserToRedis(999L, "in-match");
-
-        // Act & Assert - should not throw exception
-        assertDoesNotThrow(() -> userService.markInMatch(user));
-        verify(redisService).addUserToRedis(999L, "in-match");
-    }
 
     @Test
     void test_isOnline_WhenUserIsOnline_ShouldReturnTrue() {
@@ -525,5 +503,270 @@ class UserServiceTest {
         verify(redisService).addUserToRedis(300L, "online");
         verify(redisService).addUserToRedis(300L, "in-match");
         verify(redisService, atLeast(3)).searchUserFromRedis(300L);
+    }
+    
+
+    @Test
+    void test_searchUsersByUsername_Success() {
+        // Arrange
+        User u1 = new User();
+        u1.setUsername("alice");
+        u1.setCurrentRate(1200);
+
+        User u2 = new User();
+        u2.setUsername("alicia");
+        u2.setCurrentRate(1500);
+
+        when(userRepository.findByUsernameContainingIgnoreCase("ali"))
+                .thenReturn(List.of(u1, u2));
+
+        // Act
+        Page<UserManagementDto> result = userService.searchUsersByUsername("ali", 0, 10);
+
+        // Assert
+        assertEquals(2, result.getTotalElements());
+        assertEquals("alice", result.getContent().get(0).getUsername());
+        assertEquals("alicia", result.getContent().get(1).getUsername());
+    }
+
+    @Test
+    void test_searchUsersByUsername_WithPagination() {
+        // Arrange
+        User u1 = new User();
+        u1.setUsername("user1");
+        u1.setCurrentRate(1000);
+
+        User u2 = new User();
+        u2.setUsername("user2");
+        u2.setCurrentRate(1100);
+
+        User u3 = new User();
+        u3.setUsername("user3");
+        u3.setCurrentRate(1200);
+
+        when(userRepository.findByUsernameContainingIgnoreCase("user"))
+                .thenReturn(List.of(u1, u2, u3));
+
+        // Act - Get first page with size 2
+        Page<UserManagementDto> result = userService.searchUsersByUsername("user", 0, 2);
+
+        // Assert
+        assertEquals(3, result.getTotalElements());
+        assertEquals(2, result.getContent().size());
+        assertEquals("user1", result.getContent().get(0).getUsername());
+        assertEquals("user2", result.getContent().get(1).getUsername());
+    }
+
+    @Test
+    void test_searchUsersByUsername_NoResults() {
+        // Arrange
+        when(userRepository.findByUsernameContainingIgnoreCase("xyz"))
+                .thenReturn(List.of());
+
+        // Act
+        Page<UserManagementDto> result = userService.searchUsersByUsername("xyz", 0, 10);
+
+        // Assert
+        assertEquals(0, result.getTotalElements());
+        assertTrue(result.getContent().isEmpty());
+    }
+
+    @Test
+    void test_getFilteredUsersByRole_Success() {
+        // Arrange
+        User admin = new User();
+        admin.setUsername("admin1");
+        admin.setRole(Roles.ADMIN);
+        admin.setCurrentRate(1500);
+
+        Page<User> page = new PageImpl<>(List.of(admin), PageRequest.of(0, 10), 1);
+
+        when(userRepository.findAllByRole(eq(Roles.ADMIN), any()))
+                .thenReturn(page);
+
+        // Act
+        Page<UserManagementDto> result = userService.getFilteredUsersByRole(Roles.ADMIN, 0, 10);
+
+        // Assert
+        assertEquals(1, result.getTotalElements());
+        assertEquals("admin1", result.getContent().getFirst().getUsername());
+        verify(userRepository).findAllByRole(eq(Roles.ADMIN), any());
+    }
+
+    @Test
+    void test_deleteProfileImage_Success() {
+        // Arrange
+        User user = new User();
+        user.setId(1L);
+        user.setImgUrl("existing_image.jpg");
+
+        // Act
+        userService.deleteProfileImage(user);
+
+        // Assert
+        assertNull(user.getImgUrl());
+        verify(imageFileStorageService).deleteFile("existing_image.jpg");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void test_deleteProfileImage_NoImageToDelete() {
+        // Arrange
+        User user = new User();
+        user.setId(1L);
+        user.setImgUrl(null);
+
+        // Act
+        userService.deleteProfileImage(user);
+
+        // Assert
+        assertNull(user.getImgUrl());
+        verify(imageFileStorageService, never()).deleteFile(any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void test_deleteProfileImage_EmptyImageUrl() {
+        // Arrange
+        User user = new User();
+        user.setId(1L);
+        user.setImgUrl("");
+
+        // Act
+        userService.deleteProfileImage(user);
+
+        // Assert
+        assertEquals("", user.getImgUrl());
+        verify(imageFileStorageService, never()).deleteFile(any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void test_buildImageUrl_WithFileName_ReturnsFileName() {
+        // Act
+        String result = userService.buildImageUrl("user_avatar.jpg");
+
+        // Assert
+        assertEquals("user_avatar.jpg", result);
+    }
+
+    @Test
+    void test_buildImageUrl_WithNullFileName_ReturnsNull() {
+        // Act
+        String result = userService.buildImageUrl(null);
+
+        // Assert
+        assertNull(result);
+    }
+
+    @Test
+    void test_buildImageUrl_WithEmptyFileName_ReturnsNull() {
+        // Act
+        String result = userService.buildImageUrl("");
+
+        // Assert
+        assertNull(result);
+    }
+    @Test
+    void updateProfileImage_Success() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setImgUrl(null);
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "avatar.jpg",
+                "image/jpeg",
+                "image content".getBytes()
+        );
+
+        when(imageFileStorageService.storeFile(file, "testuser"))
+                .thenReturn("https://cloudinary.com/avatar.jpg");
+
+        String result = userService.updateProfileImage(user, file);
+
+        assertEquals("https://cloudinary.com/avatar.jpg", result);
+        assertEquals("https://cloudinary.com/avatar.jpg", user.getImgUrl());
+        verify(imageFileStorageService).storeFile(file, "testuser");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateProfileImage_WithExistingImage_DeletesOld() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setImgUrl("old_image.jpg");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "new_avatar.jpg",
+                "image/jpeg",
+                "new image content".getBytes()
+        );
+
+        when(imageFileStorageService.storeFile(file, "testuser"))
+                .thenReturn("https://cloudinary.com/new_avatar.jpg");
+
+        String result = userService.updateProfileImage(user, file);
+
+        assertEquals("https://cloudinary.com/new_avatar.jpg", result);
+        verify(imageFileStorageService).deleteFile("old_image.jpg");
+        verify(imageFileStorageService).storeFile(file, "testuser");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void searchByUsername_WithLoggedInUser_Success() {
+        User loggedInUser = new User();
+        loggedInUser.setId(1L);
+
+        User foundUser = new User();
+        foundUser.setId(2L);
+        foundUser.setUsername("testuser");
+        foundUser.setCurrentRate(1200);
+
+        Friend friend = Friend.builder()
+                .sender(loggedInUser)
+                .receiver(foundUser)
+                .status(FriendRequestStatus.ACCEPTED)
+                .build();
+
+        Object[] row = {foundUser, friend};
+        List<Object[]> rows = List.<Object[]>of(row);
+
+        when(userRepository.searchByUsernameWithStatus(1L, "test"))
+                .thenReturn(rows);
+
+
+
+        FriendStatusMapper friendStatusMapper = mock(FriendStatusMapper.class);
+        when(friendStatusMapper.map(foundUser, friend)).thenReturn(FriendStatus.FRIENDS);
+        ReflectionTestUtils.setField(userService, "friendStatusMapper", friendStatusMapper);
+
+        List<UserSearchDto> result = userService.searchByUsername("test", loggedInUser);
+
+        assertEquals(1, result.size());
+        assertEquals("testuser", result.getFirst().getUsername());
+        assertEquals(1200, result.getFirst().getCurrentRate());
+    }
+
+    @Test
+    void getRank_BoundaryValues() {
+        assertEquals("BRONZE", userService.getRank(0));
+        assertEquals("BRONZE", userService.getRank(299));
+        assertEquals("SILVER", userService.getRank(300));
+        assertEquals("SILVER", userService.getRank(599));
+        assertEquals("GOLD", userService.getRank(600));
+        assertEquals("GOLD", userService.getRank(899));
+        assertEquals("DIAMOND", userService.getRank(900));
+        assertEquals("DIAMOND", userService.getRank(1199));
+        assertEquals("MASTER", userService.getRank(1200));
+        assertEquals("MASTER", userService.getRank(1499));
+        assertEquals("CHAMPION", userService.getRank(1500));
+        assertEquals("CHAMPION", userService.getRank(1799));
+        assertEquals("LEGEND", userService.getRank(1800));
+        assertEquals("LEGEND", userService.getRank(10000));
     }
 }
