@@ -3,8 +3,9 @@ import type { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 
 
-export const API_BASE = "https://fugally-nonrepatriable-belle.ngrok-free.dev";
+export const API_BASE = "https://clash-code-production.up.railway.app";
 //https://fugally-nonrepatriable-belle.ngrok-free.dev
+//https://clash-code-production.up.railway.app/
 
 const api = axios.create({
   baseURL: API_BASE,
