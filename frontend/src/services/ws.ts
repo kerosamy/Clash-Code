@@ -22,7 +22,9 @@ export class EnhancedWebSocketService {
     this.messageCallback = onMessage;
     this.statusCallback('connecting');
 
-    const WS_URL = 'wss://clash-code-production.up.railway.app/ws';
+    const WS_URL = "wss://clash-code-production-3790.up.railway.app/ws";
+    //https://clash-code-production.up.railway.app/ws
+    //wss://clash-code-production-3790.up.railway.app/ws
     // wss://fugally-nonrepatriable-belle.ngrok-free.dev/ws
     // wss://clash-code-production.up.railway.app/ws
     this.client = new Client({
