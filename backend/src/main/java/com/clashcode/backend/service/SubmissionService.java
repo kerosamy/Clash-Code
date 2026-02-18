@@ -121,4 +121,8 @@ public class SubmissionService {
                 .map(Problem::getTitle)
                 .orElseThrow(() -> new RuntimeException("Problem not found"));
     }
+
+    public Boolean isJudgeAvailable(){
+        return judge0Client.isJudgeAvailable();
+    }
 }

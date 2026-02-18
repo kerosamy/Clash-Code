@@ -5,7 +5,7 @@ import { LanguageVersion } from "../../enums/LanguageVersion";
 import SingleSelectDropdown from "../../components/common/SingleSelectDropDown";
 import Editor from "@monaco-editor/react";
 import { monacoLanguageMap } from "../../utils/languageMap";
-import { submitCode } from "../../services/SubmissionsService";
+import { checkJudgeHealth, submitCode } from "../../services/SubmissionsService";
 import{ getProblemTitle } from "../../services/SubmissionsService";
 import { getUsername } from "../../utils/jwtDecoder";
 import { submitMatchCode } from "../../services/MatchService"; 
@@ -44,6 +44,8 @@ export default function Submit() {
         setSubmitMessage("");
 
         try {
+            await checkJudgeHealth();
+            
             if (isMatchRoute) {
                 // match submission
                 submitMatchCode(Number(id), {
@@ -65,7 +67,7 @@ export default function Submit() {
                 }, 500);
             }
             } catch (error) {
-            setSubmitMessage("Failed to submit code. Please try again.");
+            setSubmitMessage("Judge is unavailable now please try again later.");
             } finally {
             setIsSubmitting(false);
         }

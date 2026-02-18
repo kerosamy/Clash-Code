@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 @Service
-public class TestCasesFileStorageService {
+public class TestCasesFileStorageService implements TestCasesStorageService{
     @Value("${clashcode.filesystem.base-path}")
     private String basePath ;
 

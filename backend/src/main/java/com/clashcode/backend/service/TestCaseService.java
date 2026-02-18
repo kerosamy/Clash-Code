@@ -17,13 +17,13 @@ import java.util.List;
 public class TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
-    private final TestCasesFileStorageService testCasesFileStorageService;
+    private final TestCasesStorageService testCasesStorageService;
     private final Judge0Client judge0Client;
     public TestCaseService(TestCaseRepository testCaseRepository ,
-                           TestCasesFileStorageService testCasesFileStorageService,
+                           TestCasesStorageService testCasesStorageService,
                            Judge0Client judge0Client) {
         this.testCaseRepository = testCaseRepository;
-        this.testCasesFileStorageService = testCasesFileStorageService;
+        this.testCasesStorageService = testCasesStorageService;
         this.judge0Client = judge0Client;
     }
 
@@ -41,14 +41,14 @@ public class TestCaseService {
             TestCase testCase = testCases.get(i);
             MultipartFile file = files.get(i);
 
-            String inputPath = testCasesFileStorageService.storeTestCase(
+            String inputPath = testCasesStorageService.storeTestCase(
                     file,
                     problem.getId(),
                     testCase.getId()
             );
 
             testCase.setInputPath(inputPath);
-            String input = testCasesFileStorageService.getTestCaseContent(inputPath);
+            String input = testCasesStorageService.getTestCaseContent(inputPath);
 
             String expectedOutput = judge0Client.executeAndReturnOutput(
                     input,
@@ -58,7 +58,7 @@ public class TestCaseService {
                     problem.getMemoryLimit()
             );
 
-            String outputPath = testCasesFileStorageService.storeTestCaseOutput(
+            String outputPath = testCasesStorageService.storeTestCaseOutput(
                     expectedOutput,
                     problem.getId(),
                     testCase.getId()
@@ -73,8 +73,8 @@ public class TestCaseService {
 
         for (TestCase testCase : testCaseRepository.findByProblemAndVisibleTrue(problem)) {
             TestCaseResponseDto testCaseResponseDto = new TestCaseResponseDto();
-            testCaseResponseDto.setInput(testCasesFileStorageService.getTestCaseContent(testCase.getInputPath()));
-            testCaseResponseDto.setOutput(testCasesFileStorageService.getTestCaseContent(testCase.getOutputPath()));
+            testCaseResponseDto.setInput(testCasesStorageService.getTestCaseContent(testCase.getInputPath()));
+            testCaseResponseDto.setOutput(testCasesStorageService.getTestCaseContent(testCase.getOutputPath()));
             visibleTestCases.add(testCaseResponseDto);
         }
 
@@ -84,7 +84,7 @@ public class TestCaseService {
     public List<String> getInputTestCasesForProblem(Problem problem) {
         List<String> inputTestCases = new ArrayList<>();
         for (String path : testCaseRepository.findInputPathsByProblem(problem)) {
-            inputTestCases.add(testCasesFileStorageService.getTestCaseContent(path));
+            inputTestCases.add(testCasesStorageService.getTestCaseContent(path));
         }
         return inputTestCases;
     }
@@ -92,14 +92,14 @@ public class TestCaseService {
     public List<String> getOutputTestCasesForProblem(Problem problem) {
         List<String> OutputTestCases = new ArrayList<>();
         for (String path : testCaseRepository.findOutputPathsByProblem(problem)) {
-            OutputTestCases.add(testCasesFileStorageService.getTestCaseContent(path));
+            OutputTestCases.add(testCasesStorageService.getTestCaseContent(path));
         }
         return OutputTestCases;
     }
 
     @Transactional
     public void deleteByProblem(Problem problem) {
-        testCasesFileStorageService.deleteTestCasesDirectory(problem.getId());
+        testCasesStorageService.deleteTestCasesDirectory(problem.getId());
         testCaseRepository.deleteByProblem(problem);
     }
 

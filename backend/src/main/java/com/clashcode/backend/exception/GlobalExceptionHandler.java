@@ -28,4 +28,13 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST); // 400
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
+        Map<String, Object> body = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "error", ex.getMessage()
+        );
+        return new ResponseEntity<>(body, HttpStatus.BAD_GATEWAY); // 502
+    }
 }

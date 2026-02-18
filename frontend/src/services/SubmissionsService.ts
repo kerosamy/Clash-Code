@@ -85,3 +85,10 @@ export async function getSubmissionDetails(
     url: `/submissions/details/${submissionId}`,
   });
 }
+
+export async function checkJudgeHealth(): Promise<void> {
+  return apiRequest<void>({
+    method: "GET",
+    url: "/submissions/judge/health",
+  });
+}

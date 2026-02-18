@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -104,6 +105,13 @@ public class Judge0Client implements CodeExecutor {
             return response.getBody();
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize request", e);
+        } catch (org.springframework.web.client.ResourceAccessException ex) {
+            throw new RuntimeException("Judge service is unavailable (connection error).", ex);
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            throw new RuntimeException("Judge service returned error: "
+                    + ex.getStatusCode(), ex);
+        } catch (RestClientException ex) {
+            throw new RuntimeException("Unexpected error while contacting Judge service.", ex);
         }
     }
 
@@ -145,4 +153,17 @@ public class Judge0Client implements CodeExecutor {
         }
         throw new RuntimeException("Timeout waiting for Judge0 result after " + (maxRetries * delayMillis) + " ms");
     }
+
+
+    public boolean isJudgeAvailable() {
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.getForEntity(JUDGE0_URL + "/languages", String.class);
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

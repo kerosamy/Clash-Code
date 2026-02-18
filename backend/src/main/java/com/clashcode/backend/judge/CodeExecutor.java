@@ -21,4 +21,6 @@ public interface CodeExecutor {
         Integer memoryLimit
     );
 
+    boolean isJudgeAvailable();
+
 }

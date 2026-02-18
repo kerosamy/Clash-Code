@@ -6,12 +6,14 @@ import com.clashcode.backend.dto.SubmissionRequestDto;
 import com.clashcode.backend.exception.UnauthorizedException;
 import com.clashcode.backend.model.User;
 import com.clashcode.backend.service.SubmissionService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/submissions")
@@ -59,4 +61,17 @@ public class SubmissionController {
     public ResponseEntity<String> getProblemTitleById(@PathVariable Long problemId) {
         return ResponseEntity.ok(submissionService.getProblemTitleById(problemId));
     }
+
+    @GetMapping("/judge/health")
+    public ResponseEntity<?> checkJudgeHealth() {
+        boolean available = submissionService.isJudgeAvailable();
+
+        if (available) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Judge service unavailable"));
+        }
+    }
+
 }
