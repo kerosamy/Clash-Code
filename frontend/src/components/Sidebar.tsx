@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { routes } from '../routes/routes.config';
 import { useFilteredRoutes } from '../hooks/useFilteredRoutes';
 import { getUsername } from "../utils/jwtDecoder";
+import  ClashCodeLogo  from  "/src/assets/logo.svg"
 
 export default function Sidebar() {
   const sidebarRoutes = routes.filter(route => !route.path.includes('practice/prob'));
@@ -11,7 +12,7 @@ export default function Sidebar() {
   return (
     <aside className="bg-sidebar w-sidebar min-w-sidebar min-h-screen p-sideBar-pad font-anta">
       <div className="mb-6 mt-4">
-        <img src="/src/assets/logo.svg" alt="App Logo" className="w-full" />
+        <img src={ClashCodeLogo} alt="App Logo" className="w-full" />
       </div>
       
       <nav className="flex flex-col gap-2" aria-label="Main navigation">
