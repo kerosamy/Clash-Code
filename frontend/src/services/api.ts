@@ -3,7 +3,7 @@ import type { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 
 
-export const API_BASE = "https://clash-code-production-3790.up.railway.app";
+export const API_BASE = "https://clash-code-production-3790.up.railway.app/";
 //https://fugally-nonrepatriable-belle.ngrok-free.dev
 //https://clash-code-production.up.railway.app/
 

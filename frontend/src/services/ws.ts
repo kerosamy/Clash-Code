@@ -1,5 +1,6 @@
 // src/services/websocket.service.ts
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting';
 
@@ -22,16 +23,17 @@ export class EnhancedWebSocketService {
     this.messageCallback = onMessage;
     this.statusCallback('connecting');
 
+    // Use https:// (not wss://) for SockJS — it handles the upgrade internally
     const WS_URL = "https://clash-code-production-3790.up.railway.app/ws";
-    // wss://fugally-nonrepatriable-belle.ngrok-free.dev/ws
-    // wss://clash-code-production.up.railway.app/ws
+
     this.client = new Client({
-      brokerURL: WS_URL,
+      // SockJS factory instead of brokerURL — required for Railway/SockJS deployments
+      webSocketFactory: () => new SockJS(WS_URL),
       reconnectDelay: this.reconnectDelay,
       heartbeatIncoming: 20000,
       heartbeatOutgoing: 20000,
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
-      
+
       debug: (str) => {
         if (str.includes('ERROR')) console.error('STOMP:', str);
       },
@@ -51,7 +53,7 @@ export class EnhancedWebSocketService {
       onStompError: (frame) => {
         console.error('❌ STOMP error:', frame.headers['message']);
         this.statusCallback?.('error');
-        
+
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
           this.statusCallback?.('reconnecting');
