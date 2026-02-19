@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
     @Bean
     public WebClient matchingWebClient(WebClient.Builder builder,
-                                       @Value("${MATCHING_SERVICE_URL}") String url) {
+                                       @Value("${matching.service.url}") String url) {
         return builder
                 .baseUrl(url)
                 .build();

@@ -10,7 +10,7 @@ public class WebClientConfig {
 
     @Bean
     public WebClient matchingWebClient(WebClient.Builder builder,
-                                       @Value("${BACKEND_URL}") String url) {
+                                       @Value("${backend.url}") String url) {
         return builder
                 .baseUrl(url)
                 .build();
