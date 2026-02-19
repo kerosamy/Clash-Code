@@ -7,6 +7,7 @@ import com.clashcode.backend.dto.AuthResponseDto;
 import com.clashcode.backend.service.AuthService;
 import com.clashcode.backend.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -21,10 +22,14 @@ public class AuthController {
 
     private final JwtService jwtService;
     private final AuthService authService;
+    private final String frontendUrl;
 
-    public AuthController(JwtService jwtService, AuthService authService) {
+
+    public AuthController(JwtService jwtService, AuthService authService,
+                          @Value("${frontend.url}") String frontendUrl) {
         this.jwtService = jwtService;
         this.authService = authService;
+        this.frontendUrl = frontendUrl;
     }
 
     @PostMapping("/signup")
@@ -81,8 +86,7 @@ public class AuthController {
         String jwt = jwtService.generateToken(user);
 
         // Redirect to frontend with token as query param
-        String frontendUrl = "https://clash-code-frontend-delta.vercel.app/auth/callback?token=" + jwt;
-        response.sendRedirect(frontendUrl);
+        response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
     }
 
     // GOOGLE SIGNUP COMPLETION

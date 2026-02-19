@@ -252,7 +252,7 @@ public class AuthControllerTest {
 
         when(jwtService.generateToken(any(User.class))).thenReturn("direct-token");
 
-        AuthController controller = new AuthController(jwtService, authService);
+        AuthController controller = new AuthController(jwtService, authService, null);
         var response = controller.buildAuthResponse(mockUser);
 
         assert response.getBody().getToken().equals("direct-token");
