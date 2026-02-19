@@ -75,7 +75,7 @@ public class AuthController {
     }
 
     // GOOGLE LOGIN
-    @GetMapping("/login/oauth2/code/google")
+    @GetMapping("/OAuthCallback")
     public void handleGoogleOAuthRedirect(OAuth2AuthenticationToken token, HttpServletResponse response) throws IOException {
         User user = authService.handleGoogleOAuth(token);
         String jwt = jwtService.generateToken(user);
