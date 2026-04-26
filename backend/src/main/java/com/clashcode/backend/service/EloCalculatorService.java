@@ -11,6 +11,8 @@ public class EloCalculatorService {
         double difficultyMultiplier = Math.max(0.5, Math.min(2.0, difficulty / 1000.0));
         double kFactor = BASE_K * difficultyMultiplier;
 
-        return (int) Math.round(currentRating + kFactor * (actualScore - expectedScore));
+        int newRating = (int) Math.round(currentRating + kFactor * (actualScore - expectedScore));
+
+        return Math.max(0, newRating);
     }
 }
