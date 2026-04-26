@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html, body {
+  overflow: overlay; /* Deprecated but makes scrollbar overlay */
+  scrollbar-gutter: stable; /* Prevents layout shift */
+}
+
+/* For modern browsers - overlay scrollbar */
+html, body {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox - hides scrollbar */
+  -ms-overflow-style: none; /* IE/Edge - hides scrollbar */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari - hides scrollbar */
+}
+
+
+.container-title {
+  @apply text-container-title text-orange;
+}
+
+/* Normal sidebar item */
+.sidebar-list {
+  @apply flex items-center text-sideBar-list cursor-pointer w-full whitespace-nowrap
+         rounded-lg px-4 py-3 gap-3 text-text
+         hover:bg-white/10 hover:backdrop-blur-sm
+         transition-colors duration-200;
+}
+
+/* Active sidebar item */
+.sidebar-list-active {
+  @apply flex items-center text-sideBar-list cursor-pointer w-full whitespace-nowrap
+         rounded-lg px-4 py-3 gap-3 text-white
+         bg-white/15 backdrop-blur-sm
+         transition-colors duration-200;
+}
+
+/* Scrollable item */
+.custom-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #0B0F1E; /* your sidebar color */
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 138, 76, 0.4); /* orange/40 */
+  border-radius: 8px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 138, 76, 0.6);
+}

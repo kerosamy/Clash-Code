@@ -1,0 +1,519 @@
+package com.clashcode.backend.service;
+
+import com.clashcode.backend.Notification.*;
+import com.clashcode.backend.dto.*;
+import com.clashcode.backend.enums.GameMode;
+import com.clashcode.backend.enums.MatchState;
+import com.clashcode.backend.enums.NotificationType;
+import com.clashcode.backend.enums.SubmissionStatus;
+import com.clashcode.backend.exception.UnauthorizedException;
+import com.clashcode.backend.exception.UserNotFoundException;
+import com.clashcode.backend.mapper.MatchMapper;
+import com.clashcode.backend.mapper.RankMapper;
+import com.clashcode.backend.matching.MatchingServiceClient;
+import com.clashcode.backend.matching.dto.MatchingRequestDto;
+import com.clashcode.backend.model.*;
+import com.clashcode.backend.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
+@Service
+public class MatchService {
+
+    private final UserRepository userRepository;
+    private final ProblemRepository problemRepository;
+    private final MatchRepository matchRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
+    private final MatchMapper matchMapper;
+    private final SubmissionRepository submissionRepository;
+    private final RankMapper rankMapper;
+    private final MatchScheduler matchScheduler;
+    private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
+    private final SubmissionService submissionService;
+    private final ProblemService problemService;
+    private final MatchingServiceClient matchingServiceClient;
+
+    public MatchService(
+            UserRepository userRepository,
+            ProblemRepository problemRepository,
+            MatchRepository matchRepository,
+            MatchParticipantRepository matchParticipantRepository,
+            MatchMapper matchMapper,
+            SubmissionRepository submissionRepository,
+            RankMapper rankMapper,
+            MatchScheduler matchScheduler,
+            NotificationService notificationService,
+            NotificationRepository notificationRepository,
+            SubmissionService submissionService,
+            ProblemService problemService,
+            MatchingServiceClient matchingServiceClient
+    ) {
+        this.userRepository = userRepository;
+        this.problemRepository = problemRepository;
+        this.matchRepository = matchRepository;
+        this.matchParticipantRepository = matchParticipantRepository;
+        this.matchMapper = matchMapper;
+        this.submissionRepository = submissionRepository;
+        this.rankMapper = rankMapper;
+        this.matchScheduler = matchScheduler;
+        this.notificationService = notificationService;
+        this.notificationRepository = notificationRepository;
+        this.submissionService = submissionService;
+        this.problemService = problemService;
+        this.matchingServiceClient = matchingServiceClient;
+    }
+
+    private static final int DURATION_EASY = 15;      // minutes for problems rated 0–499
+    private static final int DURATION_MEDIUM = 30;    // minutes for problems rated 500–999
+    private static final int DURATION_HARD = 45;      // minutes for problems rated 1000–1499
+    private static final int DURATION_EXPERT = 60;    // minutes for problems rated 1500–2000
+
+    private static final int RATE_EASY_MAX = 500;
+    private static final int RATE_MEDIUM_MAX = 1000;
+    private static final int RATE_HARD_MAX = 1500;
+    private static final int RATE_EXPERT_MAX = 2000;
+
+    // Problem rating boundaries
+    private static final int MIN_RATE = 0;
+    private static final int MAX_RATE = 2000;
+
+    // Expansion step when no problems are found
+    private static final int EXPANSION_STEP = 100;
+
+    public Problem selectProblem(User userA, User userB) {
+        int avgRate = (userA.getCurrentRate() + userB.getCurrentRate()) / 2;
+        int minRate = avgRate - EXPANSION_STEP;
+        int maxRate = avgRate + EXPANSION_STEP;
+
+        minRate = Math.max(minRate, MIN_RATE);
+        maxRate = Math.min(maxRate, MAX_RATE);
+
+        List<Problem> problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
+
+        while (problems.isEmpty() && (minRate > MIN_RATE || maxRate < MAX_RATE)) {
+            minRate = Math.max(minRate - EXPANSION_STEP, MIN_RATE);
+            maxRate = Math.min(maxRate + EXPANSION_STEP, MAX_RATE);
+            problems = problemRepository.findProblemsInRateRange(minRate, maxRate);
+        }
+
+        if (problems.isEmpty()) {
+            throw new IllegalStateException("No problems available in the full range " + MIN_RATE + "–" + MAX_RATE);
+        }
+
+        return problems.get(new Random().nextInt(problems.size()));
+    }
+
+    private int getDurationForProblem(Problem problem) {
+        int rate = problem.getRate();
+        if (rate < RATE_EASY_MAX) {
+            return DURATION_EASY;
+        } else if (rate < RATE_MEDIUM_MAX) {
+            return DURATION_MEDIUM;
+        } else if (rate < RATE_HARD_MAX) {
+            return DURATION_HARD;
+        } else {
+            return DURATION_EXPERT;
+        }
+    }
+
+    @Transactional
+    public Long sendMatchInvite(User sender, String recipientUsername) {
+        User recipient = userRepository.findByUsername(recipientUsername)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username " + recipientUsername));
+
+        MatchInvitationPayload payload = MatchInvitationPayload.builder()
+                .senderUsername(sender.getUsername())
+                .senderAvatarUrl(sender.getImgUrl())
+                .senderId(sender.getId())
+                .build();
+
+        return notificationService.send(
+                sender.getId(),
+                recipient.getId(),
+                recipient.getUsername(),
+                payload
+        ).orElseThrow(() -> new IllegalStateException("Failed to create notification"));
+    }
+
+    public MatchResponseDto acceptMatchInvite(User player1, long notificationId) {
+        Notification invite = notificationRepository.findById(notificationId).orElseThrow();
+
+        if (!invite.getRecipientId().equals(player1.getId())) {
+            throw new UnauthorizedException("Not your invite");
+        }
+
+        User player2 = userRepository.findById(invite.getSenderId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + invite.getSenderId()));
+
+        Problem problem = selectProblem(player1, player2);
+        int duration = getDurationForProblem(problem);
+        return createMatch(player1, player2, problem, duration, GameMode.UNRATED);
+    }
+
+    @Transactional
+    public void cancelMatchInvite(User sender, long notificationId) {
+        Notification invite = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+
+        if (!invite.getSenderId().equals(sender.getId())) {
+            throw new UnauthorizedException("You can only cancel your own invitations");
+        }
+
+        if (invite.getType() != NotificationType.MATCH_INVITATION) {
+            throw new IllegalArgumentException("This is not a match invitation");
+        }
+
+        invite.setType(NotificationType.MATCH_INVITATION_CANCELED);
+        invite.setTitle("Match Invitation Canceled");
+        invite.setMessage(sender.getUsername() + " has canceled their match invitation");
+        notificationRepository.save(invite);
+
+        User recipient = userRepository.findById(invite.getRecipientId())
+                .orElseThrow(() -> new UserNotFoundException("Recipient not found"));
+
+        MatchInvitationCanceledPayload payload = MatchInvitationCanceledPayload.builder()
+                .senderUsername(sender.getUsername())
+                .build();
+
+        notificationService.send(
+                sender.getId(),
+                recipient.getId(),
+                recipient.getUsername(),
+                payload
+        );
+    }
+
+    @Transactional
+    public MatchResponseDto createMatch(
+            User player1,
+            User player2,
+            Problem problem,
+            int duration,
+            GameMode gameMode
+    ) {
+        User managedPlayer1 = userRepository.findById(player1.getId())
+                .orElseThrow(() -> new UserNotFoundException("Player 1 not found"));
+        User managedPlayer2 = userRepository.findById(player2.getId())
+                .orElseThrow(() -> new UserNotFoundException("Player 2 not found"));
+
+        Match match = Match.builder()
+                .duration(duration)
+                .gameMode(gameMode)
+                .matchState(MatchState.ONGOING)
+                .problem(problem)
+                .build();
+
+        MatchParticipant p1 = matchMapper.createParticipant(managedPlayer1, match);
+        MatchParticipant p2 = matchMapper.createParticipant(managedPlayer2, match);
+
+        match.getParticipants().add(p1);
+        match.getParticipants().add(p2);
+
+        Match savedMatch = matchRepository.save(match);
+        matchScheduler.scheduleMatchEnd(savedMatch);
+
+        savedMatch.getParticipants().forEach(mp -> {
+            MatchStartedPayload payload = MatchStartedPayload.builder()
+                    .matchId(savedMatch.getId())
+                    .problemId(savedMatch.getProblem().getId())
+                    .build();
+
+            notificationService.send(
+                    savedMatch.getId(),
+                    mp.getUser().getId(),
+                    mp.getUser().getUsername(),
+                    payload
+            );
+        });
+
+        return matchMapper.toResponseDto(savedMatch);
+    }
+
+    public Match validateMatch(Long matchId, User user) {
+        if (matchId == null) return null;
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+
+        if (match.getMatchState() != MatchState.ONGOING) {
+            throw new IllegalStateException("Match is not ongoing, submissions are not allowed");
+        }
+        boolean isParticipant = match.getParticipants().stream()
+                .anyMatch(mp -> mp.getUser().getId().equals(user.getId()));
+
+        if (!isParticipant) {
+            throw new IllegalArgumentException(
+                    "User " + user.getUsername() + " (ID: " + user.getId() + ") is not a participant in match " + matchId
+            );
+        }
+        return match;
+    }
+
+    @Transactional
+    public List<MatchSubmissionLogDto> getMatchSubmissionLog(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+        return match.getParticipants().stream()
+                .map(participant -> {
+                    List<Submission> submissions = submissionRepository
+                            .findByUserIdAndMatchId(participant.getUser().getId(), matchId);
+                    return matchMapper.toMatchSubmissionLogDto(participant, submissions);
+                })
+                .toList();
+    }
+
+    public void submitCode(SubmissionRequestDto submissionRequestDto, User player) {
+        Match match = validateMatch(submissionRequestDto.getMatchId(), player);
+
+        match.getParticipants().forEach(mp -> {
+            SubmissionReceivedPayload payload = SubmissionReceivedPayload.builder()
+                    .senderUsername(player.getUsername())
+                    .matchId(match.getId())
+                    .build();
+
+            notificationService.send(
+                    player.getId(),
+                    mp.getUser().getId(),
+                    mp.getUser().getUsername(),
+                    payload
+            );
+        });
+
+        Submission submission = submissionService.submitCode(submissionRequestDto, player);
+
+        match.getParticipants().forEach(mp -> {
+            SubmissionResultPayload payload = SubmissionResultPayload.builder()
+                    .senderUsername(player.getUsername())
+                    .submissionStatus(submission.getStatus().toString())
+                    .passedCases(submission.getNumberOfPassedTestCases())
+                    .totalCases(submission.getNumberOfTestCases())
+                    .matchId(match.getId())
+                    .build();
+
+            notificationService.send(
+                    player.getId(),
+                    mp.getUser().getId(),
+                    mp.getUser().getUsername(),
+                    payload
+            );
+        });
+
+        if (submission.getStatus() == SubmissionStatus.ACCEPTED) {
+            completeMatch(match, player);
+        }
+    }
+
+    @Transactional
+    public void completeMatch(Match match, User winner) {
+        if (match == null) throw new IllegalArgumentException("Match cannot be null");
+        if (match.getMatchState() == MatchState.COMPLETED) return;
+
+        MatchParticipant winnerParticipant = null;
+        MatchParticipant loserParticipant = null;
+
+        if (winner != null) {
+            winnerParticipant = match.getParticipants().stream()
+                    .filter(mp -> mp.getUser().getId().equals(winner.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            loserParticipant = match.getParticipants().stream()
+                    .filter(mp -> !mp.getUser().getId().equals(winner.getId()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        List<MatchParticipant> participants = match.getParticipants();
+        if (participants == null || participants.size() != 2) {
+            throw new IllegalStateException("Match must have exactly 2 participants");
+        }
+
+        if (winnerParticipant != null && loserParticipant != null) {
+            winnerParticipant.setRank(rankMapper.toRank("winner"));
+            loserParticipant.setRank(rankMapper.toRank("loser"));
+        } else {
+            participants.forEach(mp -> mp.setRank(rankMapper.toRank("draw")));
+            winnerParticipant = null;
+            System.out.println("Match ended in a draw or invalid winner");
+        }
+
+        match.setMatchState(MatchState.COMPLETED);
+        matchRepository.save(match);
+        matchParticipantRepository.saveAll(participants);
+
+        for (MatchParticipant participant : participants) {
+            MatchCompletedPayload payload = MatchCompletedPayload.builder()
+                    .matchId(match.getId())
+                    .build();
+
+            notificationService.send(
+                    match.getId(),
+                    participant.getUser().getId(),
+                    participant.getUser().getUsername(),
+                    payload
+            );
+        }
+
+        if (match.getGameMode() == GameMode.RATED && participants.size() == 2) {
+            updateParticipantRatings(match, winnerParticipant != null ? winnerParticipant.getUser() : null);
+        }
+
+        for (MatchParticipant mp : participants) {
+            User user = mp.getUser();
+            if (user.getCurrentRate() < 0) user.setCurrentRate(0);
+            user.setMaxRate(Math.max(user.getMaxRate(), user.getCurrentRate()));
+        }
+
+        matchRepository.save(match);
+        userRepository.saveAll(participants.stream()
+                .map(MatchParticipant::getUser)
+                .toList());
+    }
+
+    @Transactional
+    public void resignMatch(Long matchId, User resigningUser) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+
+        if (match.getMatchState() != MatchState.ONGOING) {
+            throw new IllegalStateException("Cannot resign a completed match");
+        }
+
+        MatchParticipant winnerParticipant = match.getParticipants().stream()
+                .filter(mp -> !mp.getUser().getId().equals(resigningUser.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Other participant not found"));
+
+        UserResignedPayload payload = UserResignedPayload.builder()
+                .senderUsername(resigningUser.getUsername())
+                .matchId(match.getId())
+                .build();
+
+        notificationService.send(
+                resigningUser.getId(),
+                winnerParticipant.getUser().getId(),
+                winnerParticipant.getUser().getUsername(),
+                payload
+        );
+
+        completeMatch(match, winnerParticipant.getUser());
+    }
+
+    public PartialProblemResponseDto getMatchProblem(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Match not found"));
+        Problem problem = match.getProblem();
+        return problemService.getPartialProblemById(problem.getId());
+    }
+
+    public MatchResponseDto getMatchDetails(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+        return matchMapper.toResponseDto(match);
+    }
+
+    public MatchResultDto getMatchResults(Long matchId, User user) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with ID: " + matchId));
+
+        MatchParticipant participant = match.getParticipants().stream()
+                .filter(mp -> mp.getUser().getId().equals(user.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("User is not a participant in this match"));
+
+        boolean isRated = match.getGameMode() == GameMode.RATED;
+        return matchMapper.toMatchResultDto(isRated, participant);
+    }
+
+    private void updateParticipantRatings(Match match, User winner) {
+        List<MatchParticipant> participants = match.getParticipants();
+        if (participants.size() != 2) return;
+
+        MatchParticipant mpA = participants.get(0);
+        MatchParticipant mpB = participants.get(1);
+
+        User userA = mpA.getUser();
+        User userB = mpB.getUser();
+
+        int oldRatingA = userA.getCurrentRate();
+        int oldRatingB = userB.getCurrentRate();
+        int difficulty = match.getProblem().getRate();
+
+        double expectedA = EloCalculatorService.calculateExpectedScore(oldRatingA, oldRatingB);
+        double expectedB = 1.0 - expectedA;
+
+        double scoreA, scoreB;
+        if (winner == null) {
+            scoreA = 0.5;
+            scoreB = 0.5;
+        } else if (winner.getId().equals(userA.getId())) {
+            scoreA = 1.0;
+            scoreB = 0.0;
+        } else {
+            scoreA = 0.0;
+            scoreB = 1.0;
+        }
+
+        int newRatingA = EloCalculatorService.calculateNewRating(oldRatingA, expectedA, scoreA, difficulty);
+        int newRatingB = EloCalculatorService.calculateNewRating(oldRatingB, expectedB, scoreB, difficulty);
+
+        mpA.setRateChange(newRatingA - oldRatingA);
+        mpA.setNewRating(newRatingA);
+
+        mpB.setRateChange(newRatingB - oldRatingB);
+        mpB.setNewRating(newRatingB);
+
+        userA.setCurrentRate(newRatingA);
+        userA.setMaxRate(Math.max(userA.getMaxRate(), newRatingA));
+
+        userB.setCurrentRate(newRatingB);
+        userB.setMaxRate(Math.max(userB.getMaxRate(), newRatingB));
+    }
+
+    @Transactional
+    public void startRatedMatch(MatchCreationDto dto) {
+        User userA = userRepository.findById(dto.getPlayerIdA())
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
+
+        User userB = userRepository.findById(dto.getPlayerIdB())
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
+
+        Problem problem = selectProblem(userA, userB);
+        int duration = getDurationForProblem(problem);
+        createMatch(userA, userB, problem, duration, GameMode.RATED);
+    }
+
+    public void searchForOpponent(User user) {
+        matchingServiceClient.requestMatching(
+                new MatchingRequestDto(
+                        user.getId(),
+                        user.getCurrentRate()
+                )
+        );
+    }
+
+    public void cancelSearchForOpponent(User user) {
+        matchingServiceClient.deleteMatching(user.getId());
+    }
+
+    @Transactional
+    public Page<MatchHistoryDto> getUserMatchHistory(Long userId, Boolean rated, Pageable pageable) {
+        return matchParticipantRepository.findHistoryByUserId(userId, rated, pageable)
+                .map(matchMapper::toMatchHistoryDto);
+    }
+
+    public Optional<Long> getOnGoingMatch(User user) {
+        Optional<Long> x = matchParticipantRepository.getOnGoingMatchByUserId(user.getId(), MatchState.ONGOING);
+        System.out.println(x);
+        return x;
+    }
+}
